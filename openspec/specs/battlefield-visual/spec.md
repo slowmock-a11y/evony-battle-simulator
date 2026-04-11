@@ -1,61 +1,32 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Battlefield layout with troop blocks
-The battlefield visual SHALL display two armies facing each other with troop blocks arranged vertically by range: Siege at top (back line), Ranged below, Mounted below, Ground at bottom (front line). Each troop block SHALL show the troop type name, active tier layers with current counts, and a total.
+The battlefield visual SHALL display two armies facing each other with unit markers positioned spatially on a map. Markers SHALL be arranged vertically by range (Siege at top, Ground at bottom) and advance horizontally toward the center based on troop speed and current battle phase. Each unit marker SHALL show the troop type letter, current total count, and type name. Tier-by-tier detail SHALL be accessible via click interaction rather than displayed inline.
 
 #### Scenario: Initial battlefield display
 - **WHEN** the user clicks a simulate button and results are available
-- **THEN** the battlefield shows attacker troop blocks on the left and defender troop blocks on the right, with only types that have troops > 0
+- **THEN** the battlefield shows attacker unit markers on the left and defender unit markers on the right, positioned at their starting edges
 
-#### Scenario: Troop block content
+#### Scenario: Unit marker content
 - **WHEN** the attacker has Mounted T14 (5000) and Mounted T13 (3000)
-- **THEN** the Mounted block shows "T14: 5,000" and "T13: 3,000" with "Total: 8,000"
-
-### Requirement: Color coding per troop type
-Each troop type SHALL have a distinct color: Ground (brown/earth), Ranged (green), Mounted (blue), Siege (red/orange). These colors SHALL be used for block backgrounds, arrows, and log entries.
-
-#### Scenario: Troop block colors
-- **WHEN** the battlefield displays troop blocks
-- **THEN** Mounted blocks use blue tones and Ground blocks use brown/earth tones
+- **THEN** the Mounted marker shows letter "M" in a blue circle, "8,000" below, and "Mounted" below that
 
 ### Requirement: Active phase highlighting
-During step playback, the currently acting troop block SHALL be visually highlighted with a distinct border or glow. An arrow SHALL connect the attacking block to the target block, displaying the damage dealt and kills inflicted.
+During step playback, the currently acting unit marker SHALL be visually highlighted with a glow effect. An animated SVG arrow SHALL connect the attacking marker to the target marker, displaying the damage dealt and kills inflicted at the midpoint.
 
 #### Scenario: Step shows attack arrow
 - **WHEN** the current step is ATT Range T14 attacking DEF Mounted T14
-- **THEN** the attacker's Ranged block is highlighted, an arrow points to the defender's Mounted block, and damage/kills numbers are shown on or near the arrow
+- **THEN** the attacker's Ranged marker glows, an SVG arrow animates from it to the defender's Mounted marker, and damage/kills text is shown at the arrow midpoint
 
 ### Requirement: Remaining troop fill bars
-Each tier within a troop block SHALL display a fill bar showing the ratio of current troops to starting troops. The bar SHALL deplete as troops are killed.
+REMOVED — tier-level fill bars are replaced by the click-to-detail panel showing per-tier counts with losses.
 
-#### Scenario: Troops partially eliminated
-- **WHEN** Mounted T14 started at 5000 and currently has 3000
-- **THEN** the fill bar shows 60% filled
-
-### Requirement: Summary bar
-A summary bar SHALL always be visible showing per-type totals for both sides: starting count, current count, and percentage lost. A health bar SHALL show each army's total remaining troops as a percentage.
-
-#### Scenario: Summary after round 2
-- **WHEN** the attacker started with 25000 total troops and has 14912 remaining
-- **THEN** the summary shows "TOTAL: 25,000 → 14,912 (-40%)" with a health bar at 60%
-
-### Requirement: Battle end state
-When the battle ends, the battlefield SHALL display the winner, total rounds, surviving troop counts, and total losses for both sides. Eliminated troop blocks SHALL appear faded/dashed. Reset and Replay buttons SHALL be shown.
-
-#### Scenario: Attacker wins
-- **WHEN** the battle ends with the defender at zero troops
-- **THEN** the display shows "ATTACKER WINS", the defender's blocks are faded, surviving attacker troops are shown, and Reset/Replay buttons appear
+**Reason**: Inline fill bars per tier cluttered the spatial map layout. Per-tier detail is now accessible via click.
+**Migration**: Click any unit marker to see tier-by-tier breakdown with current/starting counts and losses.
 
 ### Requirement: Hover tooltips on troop blocks
-Hovering over a troop block SHALL display a tooltip showing effective stats (base + buff) for that troop type: effective ATK, DEF, HP, and the targeting priority chain.
+Hovering over a unit marker SHALL display a tooltip showing the troop type, side, targeting priority chain, and active buff percentages.
 
 #### Scenario: Hover with buffs applied
-- **WHEN** the user hovers over Mounted T14 with +150% ATK buff
-- **THEN** tooltip shows "ATK: 6,670 (+150% → 16,675), DEF: 4,400, HP: 12,050, Targets: Ground > Siege > Mounted > Range"
-
-### Requirement: Phase progress indicator
-A phase indicator SHALL show the four phases (Siege, Ranged, Mounted, Ground) as dots or segments, with the active phase highlighted. This SHALL update during step and round playback.
-
-#### Scenario: Ranged phase active
-- **WHEN** the simulation is in the Ranged phase
-- **THEN** the Siege dot shows as completed, the Ranged dot shows as active, Mounted and Ground dots show as pending
+- **WHEN** the user hovers over the attacker's Mounted marker with +150% ATK buff
+- **THEN** tooltip shows "Mounted (ATT), Targets: Ground > Siege > Mounted > Range, Buffs: ATK +150%"

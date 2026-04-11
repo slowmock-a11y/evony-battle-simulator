@@ -10,28 +10,31 @@ var Battlefield = (function () {
     var attackerBuffs, defenderBuffs;
     var currentPhaseIndex = -1; // -1 = pre-battle
 
-    // Troop speeds (from TroopData base stats)
-    var SPEEDS = { GROUND: 350, RANGED: 100, MOUNTED: 600, SIEGE: 75 };
-    var MAX_SPEED = 600;
+    var BATTLEFIELD_LENGTH = 5200;
 
     // Y positions: top = back line (long range), bottom = front line
     var Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80 };
 
     var TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S' };
 
-    // Calculate unit X position based on speed and current phase progress
-    function calcPosition(type, side) {
-        var timeFactor = currentPhaseIndex >= 0 ? (currentPhaseIndex + 1) / 4 : 0;
-        var speedFactor = 0.25 + 0.75 * (SPEEDS[type] / MAX_SPEED);
-        var advance = Math.min(1, timeFactor * speedFactor);
+    // Engine positions (0–5200), updated from events
+    var currentPositions = null;
 
-        var x;
-        if (side === 'ATT') {
-            x = 8 + 38 * advance;
-        } else {
-            x = 92 - 38 * advance;
-        }
-        return { x: x, y: Y_POSITIONS[type] };
+    function defaultPositions() {
+        return {
+            ATT: { SIEGE: 0, RANGED: 0, MOUNTED: 0, GROUND: 0 },
+            DEF: { SIEGE: BATTLEFIELD_LENGTH, RANGED: BATTLEFIELD_LENGTH, MOUNTED: BATTLEFIELD_LENGTH, GROUND: BATTLEFIELD_LENGTH }
+        };
+    }
+
+    function mapToScreen(engineX) {
+        return 5 + (engineX / BATTLEFIELD_LENGTH) * 90;
+    }
+
+    function calcPosition(type, side) {
+        var pos = currentPositions || defaultPositions();
+        var sideKey = side === 'ATT' ? 'ATT' : 'DEF';
+        return { x: mapToScreen(pos[sideKey][type]), y: Y_POSITIONS[type] };
     }
 
     function init() {
@@ -107,6 +110,9 @@ var Battlefield = (function () {
         if (!startAttacker) {
             startAttacker = snapshotArmy(attArmy);
             startDefender = snapshotArmy(defArmy);
+            if (!currentPositions) {
+                currentPositions = defaultPositions();
+            }
         }
 
         // Hide detail panel on re-render
@@ -383,6 +389,7 @@ var Battlefield = (function () {
         if (detailPanelEl) detailPanelEl.style.display = 'none';
         clearHighlights();
         currentPhaseIndex = -1;
+        currentPositions = null;
         startAttacker = null;
         startDefender = null;
         currentAttackerArmy = null;
@@ -451,10 +458,13 @@ var Battlefield = (function () {
 
     // --- Phase Indicator ---
 
-    function setPhase(phase) {
+    function setPhase(phase, positions) {
         // Update phase index
         var idx = TroopData.PHASE_ORDER.indexOf(phase);
         if (idx >= 0) currentPhaseIndex = idx;
+
+        // Update positions from engine
+        if (positions) currentPositions = positions;
 
         // Update phase dots
         var dots = document.querySelectorAll('.phase-dot');

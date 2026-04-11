@@ -135,6 +135,50 @@ Higher tier attacks before lower tier.
 
 ---
 
+## Battlefield
+
+Linear battlefield, 5200 units long. Attacker starts at position 0, defender at position 5200.
+
+```
+Attacker start (0)                              Defender start (5200)
+    ├──────────────── 5200 units ────────────────┤
+```
+
+Each troop type has its own independent position on the field (8 positions total: 4 per side). Troops never share a forced formation — they advance and hold independently.
+
+---
+
+## Movement Model
+
+Each round, before attacking, each troop type evaluates movement:
+
+1. **Check:** Is any enemy unit within range from current position?
+2. **YES → Hold.** Stay at current position. Fire at highest-priority target in range.
+3. **NO → Advance.** Move forward by `speed` units toward the enemy side. Fire if now in range.
+
+Key rules:
+- **Speed is distance per round:** Mounted moves 600 units/round, Ground 350, Ranged 100, Siege 75.
+- **Direction is always forward:** Attacker moves toward 5200, defender moves toward 0. Troops never reverse.
+- **Hold triggers on any enemy in range**, not just the priority target. A ranged troop holds and fires even if only a low-priority siege unit is in range.
+- **Melee collision:** When two troops would pass through each other, they stop at melee range (50 units apart).
+- **No passing:** An attacker troop can never reach a position beyond any defender troop (and vice versa). They converge, stop on contact, and remaining enemies are always further ahead.
+
+**Engagement cascade on a 5200 field (typical, both sides identical):**
+
+```
+Round ~4:  Siege finds approaching Mounted in range (2178). Holds, fires.
+Round ~5:  Mounted pairs lock in melee near midfield.
+Round ~6:  Both Siege firing into the melee zone.
+Round ~8:  Ground pairs lock in melee.
+Round ~17: Ranged finally reach engagement range (slow speed 100).
+```
+
+Ranged troops are late to the fight despite having the second-longest range — their low speed (100) dominates. Siege engages earlier due to massive range (2178) offsetting slow speed (75).
+
+**Confidence:** Movement direction, hold rule, independent positions, and battlefield length confirmed by user. Speed-as-distance-per-round confirmed.
+
+---
+
 ## Targeting Priority
 
 Each troop type has a full priority chain determining **who** it attacks (1 = first choice, 4 = last):

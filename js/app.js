@@ -111,10 +111,14 @@ var App = (function () {
     }
 
     function onEvent(evt, index, total) {
-        applyEvent(evt);
-        Battlefield.render(displayAtt, displayDef, attBuffs, defBuffs);
-        Battlefield.highlightAttack(evt);
-        Battlefield.setPhase(evt.phase);
+        if (evt.eventType === 'attack') {
+            applyEvent(evt);
+            Battlefield.render(displayAtt, displayDef, attBuffs, defBuffs);
+            Battlefield.highlightAttack(evt);
+        } else {
+            Battlefield.clearHighlights();
+        }
+        Battlefield.setPhase(evt.phase, evt.positions);
         Battlefield.updateSummary(displayAtt, displayDef);
         BattleLog.addEntry(evt, index, total);
     }

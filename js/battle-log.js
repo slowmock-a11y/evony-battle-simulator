@@ -17,26 +17,45 @@ var BattleLog = (function () {
 
     function addEntry(event, index, total) {
         var info = TroopData.TYPES[event.phase];
-        var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
-        var sourceName = TroopData.TYPES[event.sourceType].name;
-        var targetName = TroopData.TYPES[event.targetType].name;
-
         var el = document.createElement('div');
         el.className = 'log-entry';
         el.dataset.phase = event.phase;
         el.dataset.round = event.round;
-        el.dataset.side = event.side;
+        el.dataset.side = event.side || 'MOVE';
 
-        el.innerHTML =
-            '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
-            '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
-            sideLabel + ' ' + sourceName + ' T' + event.sourceTier + ' (' + event.sourceCount.toLocaleString() + ')</span>' +
-            ' → ' +
-            '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
-            targetName + ' T' + event.targetTier + '</span>: ' +
-            '<span class="log-damage">' + event.damage.toLocaleString() + ' dmg</span>, ' +
-            '<span class="log-kills">' + event.kills.toLocaleString() + ' killed</span>' +
-            ' (' + event.remaining.toLocaleString() + ' left)';
+        if (event.eventType === 'move') {
+            // Compact movement lines
+            var moveHtml = '<span class="log-round">R' + event.round + '.' + info.name + '</span> ';
+            var parts = [];
+            for (var i = 0; i < event.moves.length; i++) {
+                var m = event.moves[i];
+                var typeName = TroopData.TYPES[m.type].name;
+                var colorClass = TroopData.TYPES[m.type].colorClass;
+                if (m.held) {
+                    parts.push('<span class="' + colorClass + '">' + m.side + ' ' + typeName + ' holds at ' + Math.round(m.to) + '</span>');
+                } else {
+                    parts.push('<span class="' + colorClass + '">' + m.side + ' ' + typeName + ' \u2192 ' + Math.round(m.to) + '</span>');
+                }
+            }
+            moveHtml += parts.join(', ');
+            el.innerHTML = moveHtml;
+        } else {
+            // Attack entry (existing format)
+            var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
+            var sourceName = TroopData.TYPES[event.sourceType].name;
+            var targetName = TroopData.TYPES[event.targetType].name;
+
+            el.innerHTML =
+                '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
+                '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
+                sideLabel + ' ' + sourceName + ' T' + event.sourceTier + ' (' + event.sourceCount.toLocaleString() + ')</span>' +
+                ' \u2192 ' +
+                '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
+                targetName + ' T' + event.targetTier + '</span>: ' +
+                '<span class="log-damage">' + event.damage.toLocaleString() + ' dmg</span>, ' +
+                '<span class="log-kills">' + event.kills.toLocaleString() + ' killed</span>' +
+                ' (' + event.remaining.toLocaleString() + ' left)';
+        }
 
         entries.push(el);
         logContainer.appendChild(el);
@@ -71,6 +90,8 @@ var BattleLog = (function () {
         if (roundFilter && el.dataset.round !== roundFilter) visible = false;
         if (el.dataset.side === 'ATTACKER' && !showAtt) visible = false;
         if (el.dataset.side === 'DEFENDER' && !showDef) visible = false;
+        // Movement events show both sides — hide only if both are filtered out
+        if (el.dataset.side === 'MOVE' && !showAtt && !showDef) visible = false;
 
         el.classList.toggle('hidden', !visible);
     }
