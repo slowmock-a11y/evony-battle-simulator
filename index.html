@@ -10,20 +10,20 @@
     <header>
         <h1>Evony Battle Simulator</h1>
         <p class="subtitle">March vs March PvP</p>
+        <nav class="view-tabs">
+            <button class="view-tab active" data-view="simulator">Simulator</button>
+            <button class="view-tab" data-view="about">About</button>
+            <button class="view-tab" data-view="mechanics">Battle Mechanics</button>
+        </nav>
     </header>
 
     <main>
+        <div id="view-simulator">
         <section class="army-panels">
             <div id="attacker-panel" class="army-panel">
                 <h2>Attacker</h2>
                 <div class="panel-controls">
                     <select class="preset-select"><option value="">Preset...</option></select>
-                    <div class="bulk-actions">
-                        <button class="btn btn-sm bulk-zero">All: 0</button>
-                        <button class="btn btn-sm bulk-default">All: 1000</button>
-                        <input type="number" class="bulk-custom-val" min="0" value="5000" />
-                        <button class="btn btn-sm bulk-custom">Apply</button>
-                    </div>
                 </div>
                 <div class="buff-section"></div>
                 <div class="troop-grid"></div>
@@ -37,12 +37,6 @@
                 <h2>Defender</h2>
                 <div class="panel-controls">
                     <select class="preset-select"><option value="">Preset...</option></select>
-                    <div class="bulk-actions">
-                        <button class="btn btn-sm bulk-zero">All: 0</button>
-                        <button class="btn btn-sm bulk-default">All: 1000</button>
-                        <input type="number" class="bulk-custom-val" min="0" value="5000" />
-                        <button class="btn btn-sm bulk-custom">Apply</button>
-                    </div>
                 </div>
                 <div class="buff-section"></div>
                 <div class="troop-grid"></div>
@@ -98,8 +92,154 @@
             </div>
             <div class="comparison-panel" id="comparison-panel"></div>
         </section>
+        </div><!-- /view-simulator -->
+
+        <div id="view-about" class="info-page" style="display:none">
+            <section class="info-content">
+                <h2>About</h2>
+                <p class="info-lead">
+                    The <strong>Evony Battle Simulator</strong> models march-vs-march PvP combat using community-researched battle mechanics.
+                    Configure two armies, set buff percentages, and watch the engagement unfold step-by-step on a spatial battlefield.
+                </p>
+
+                <h3>Key Features</h3>
+                <ul class="info-list">
+                    <li><strong>Army Configuration</strong> &mdash; Set troop counts per type and tier (T1&ndash;T14) for attacker and defender, with ATK/DEF/HP buff percentages.</li>
+                    <li><strong>Presets &amp; Mirroring</strong> &mdash; Save army configurations as presets; mirror attacker to defender for quick symmetric setups.</li>
+                    <li><strong>Step / Round / Full Playback</strong> &mdash; Advance the battle one attack at a time, one full round, or run to completion, with adjustable speed.</li>
+                    <li><strong>Spatial Battlefield</strong> &mdash; A 5,200-unit linear field with troop movement, range indicators, and attack arrows.</li>
+                    <li><strong>Battle Log &amp; Summary</strong> &mdash; Filterable log of every attack event, plus a side-by-side loss comparison panel.</li>
+                </ul>
+
+                <h3>Not Yet Modeled</h3>
+                <p>These real-game mechanics are excluded from the current simulator:</p>
+                <ul class="info-list info-list-muted">
+                    <li>Generals (base stats, ascending stars)</li>
+                    <li>General Skills &amp; Specialties</li>
+                    <li>Equipment on generals</li>
+                    <li>Research / Technology buffs</li>
+                    <li>Civilization &amp; Alliance buffs</li>
+                    <li>Monarch Gear &amp; Sub-city buffs</li>
+                    <li>Wounded / Killed ratio</li>
+                    <li>Wall / Trap mechanics (city attacks only)</li>
+                    <li>Rally mechanics (multi-march)</li>
+                </ul>
+            </section>
+        </div><!-- /view-about -->
+
+        <div id="view-mechanics" class="info-page" style="display:none">
+            <section class="info-content">
+                <h2>Battle Mechanics Fact Sheet</h2>
+                <p class="info-lead">
+                    Reference for the simulation rules. Sources: community research, theriagames.com, in-game observation.
+                </p>
+
+                <!-- Troop Types -->
+                <h3>Troop Types</h3>
+                <p>Four troop types, each with tiers T1 through T14:</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Type</th><th>Role</th><th>Key Trait</th><th>Speed</th><th>Range</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="color-ground">Ground</td><td>Tank</td><td>Highest DEF &amp; HP, slow</td><td>350</td><td>50</td></tr>
+                        <tr><td class="color-ranged">Ranged</td><td>Balanced</td><td>ATK &asymp; DEF, moderate HP</td><td>100</td><td>500</td></tr>
+                        <tr><td class="color-mounted">Mounted</td><td>Striker</td><td>Highest ATK, fastest</td><td>600</td><td>50</td></tr>
+                        <tr><td class="color-siege">Siege</td><td>Glass</td><td>Lowest stats, extreme range</td><td>75</td><td>1400&ndash;2178</td></tr>
+                    </tbody>
+                </table>
+
+                <!-- Phase Order -->
+                <h3>Phase Order (Attack Sequence)</h3>
+                <p>Troops attack sequentially by range (longest range fires first):</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Phase</th><th>Type</th><th>Range</th><th>Rationale</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td class="color-siege">Siege</td><td>1400&ndash;2178</td><td>Longest range</td></tr>
+                        <tr><td>2</td><td class="color-ranged">Ranged</td><td>500</td><td>Second longest</td></tr>
+                        <tr><td>3</td><td class="color-mounted">Mounted</td><td>50</td><td>Speed 600 (tiebreak)</td></tr>
+                        <tr><td>4</td><td class="color-ground">Ground</td><td>50</td><td>Speed 350 (tiebreak)</td></tr>
+                    </tbody>
+                </table>
+                <p class="info-note">Within each phase: attacker strikes first, then defender's surviving troops counter. Higher tiers attack before lower tiers.</p>
+
+                <!-- Battlefield & Movement -->
+                <h3>Battlefield &amp; Movement</h3>
+                <p>Linear battlefield, <strong>5,200 units</strong> long. Attacker starts at position 0, defender at 5,200.</p>
+                <div class="info-diagram">
+                    Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 5,200 units &mdash;&mdash;&mdash;&mdash;&mdash; Defender (5200)
+                </div>
+                <p>Each round, before attacking, each troop type evaluates movement:</p>
+                <ul class="info-list">
+                    <li><strong>Check:</strong> Is any enemy in range from current position?</li>
+                    <li><strong>Yes &rarr; Hold.</strong> Stay and fire at highest-priority target in range.</li>
+                    <li><strong>No &rarr; Advance.</strong> Move forward by <em>speed</em> units. Fire if now in range.</li>
+                </ul>
+                <p class="info-note">Speed = distance per round. Troops never reverse. When two opposing troops would overlap, they stop at melee range (50 units apart).</p>
+
+                <!-- Targeting Priority -->
+                <h3>Targeting Priority</h3>
+                <p>Each troop type has a full priority chain (1 = first choice):</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Attacker &#x2193; / Target &rarr;</th><th class="color-siege">Siege</th><th class="color-ranged">Ranged</th><th class="color-mounted">Mounted</th><th class="color-ground">Ground</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="color-siege"><strong>Siege</strong></td><td>1</td><td>2</td><td>4</td><td>3</td></tr>
+                        <tr><td class="color-ranged"><strong>Ranged</strong></td><td>4</td><td>2</td><td>1</td><td>3</td></tr>
+                        <tr><td class="color-mounted"><strong>Mounted</strong></td><td>2</td><td>4</td><td>3</td><td>1</td></tr>
+                        <tr><td class="color-ground"><strong>Ground</strong></td><td>2</td><td>1</td><td>4</td><td>3</td></tr>
+                    </tbody>
+                </table>
+                <div class="info-chains">
+                    <span class="color-siege">Siege</span> &rarr; Siege, Ranged, Ground, Mounted<br>
+                    <span class="color-ranged">Ranged</span> &rarr; Mounted, Ranged, Ground, Siege<br>
+                    <span class="color-mounted">Mounted</span> &rarr; Ground, Siege, Mounted, Ranged<br>
+                    <span class="color-ground">Ground</span> &rarr; Ranged, Siege, Ground, Mounted
+                </div>
+
+                <!-- Damage Formula -->
+                <h3>Damage Formula</h3>
+                <div class="info-formula">
+                    damage = troopCount &times; ATK &times; modifier &times; ATK / (ATK + DEF)<br>
+                    kills &nbsp;= floor(damage / target_HP)
+                </div>
+                <ul class="info-list">
+                    <li><strong>troopCount</strong> &mdash; surviving count of the attacking layer</li>
+                    <li><strong>ATK</strong> &mdash; per-troop attack stat of the attacker</li>
+                    <li><strong>DEF</strong> &mdash; per-troop defense stat of the target</li>
+                    <li><strong>modifier</strong> &mdash; type matchup multiplier (see below)</li>
+                    <li><strong>target_HP</strong> &mdash; per-troop HP of the target</li>
+                </ul>
+                <p class="info-note">The ATK/(ATK+DEF) ratio ensures damage is always &gt; 0 and high DEF reduces damage proportionally.</p>
+
+                <!-- Damage Multipliers -->
+                <h3>Damage Multipliers</h3>
+                <p>Bonus damage when attacking your counter target:</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Matchup</th><th>Multiplier</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><span class="color-ranged">Ranged</span> &rarr; <span class="color-mounted">Mounted</span></td><td>1.2&times;</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span> &rarr; <span class="color-ground">Ground</span></td><td>1.2&times;</td></tr>
+                        <tr><td><span class="color-ground">Ground</span> &rarr; <span class="color-ranged">Ranged</span></td><td>1.2&times;</td></tr>
+                        <tr><td><span class="color-siege">Siege</span> &rarr; <span class="color-siege">Siege</span></td><td>1.5&times;</td></tr>
+                        <tr><td>All other matchups</td><td>1.0&times;</td></tr>
+                    </tbody>
+                </table>
+                <div class="info-diagram">
+                    Ranged &mdash;1.2&times;&rarr; Mounted &mdash;1.2&times;&rarr; Ground &mdash;1.2&times;&rarr; Ranged<br>
+                    Siege &mdash;1.5&times;&rarr; Siege
+                </div>
+                <p class="info-note">No penalty for being on the wrong side &mdash; only bonuses apply.</p>
+            </section>
+        </div><!-- /view-mechanics -->
     </main>
 
+    <script src="js/info-pages.js"></script>
     <script src="js/troop-data.js"></script>
     <script src="js/battle-engine.js"></script>
     <script src="js/army-config.js"></script>

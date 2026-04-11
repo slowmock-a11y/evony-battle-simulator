@@ -12,6 +12,68 @@ header { text-align: center; padding: 1rem 0 0.5rem; }
 header h1 { font-size: 1.6rem; color: #e94560; }
 header .subtitle { font-size: 0.85rem; color: #888; }
 
+/* === View Tabs === */
+.view-tabs {
+    display: flex; justify-content: center; gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+.view-tab {
+    background: #16213e; border: 1px solid #334; color: #999;
+    padding: 0.3rem 1rem; border-radius: 4px; cursor: pointer;
+    font-size: 0.82rem; transition: background 0.15s, color 0.15s;
+}
+.view-tab:hover { background: #1a2a4a; color: #ddd; }
+.view-tab.active { background: #e94560; border-color: #e94560; color: #fff; font-weight: 600; }
+
+/* === Info Pages === */
+.info-page { padding: 0 0.5rem; }
+.info-content {
+    max-width: 800px; margin: 0 auto;
+    background: #16213e; border-radius: 6px; padding: 1.5rem 2rem;
+    border: 1px solid #223; line-height: 1.6;
+}
+.info-content h2 { font-size: 1.3rem; color: #e94560; margin-bottom: 0.75rem; }
+.info-content h3 {
+    font-size: 1rem; color: #ccc; margin-top: 1.5rem; margin-bottom: 0.5rem;
+    padding-bottom: 0.3rem; border-bottom: 1px solid #334;
+}
+.info-lead { color: #bbb; margin-bottom: 1rem; font-size: 0.9rem; }
+.info-list { margin: 0.5rem 0 0.75rem 1.5rem; font-size: 0.85rem; color: #ccc; }
+.info-list li { margin-bottom: 0.35rem; }
+.info-list-muted { color: #999; }
+.info-note { font-size: 0.8rem; color: #888; margin-top: 0.4rem; font-style: italic; }
+
+.info-table {
+    width: 100%; border-collapse: collapse; margin: 0.5rem 0 0.75rem;
+    font-size: 0.82rem;
+}
+.info-table th {
+    background: #1a2540; color: #999; font-weight: 600;
+    padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid #334;
+}
+.info-table td {
+    padding: 0.35rem 0.6rem; border-bottom: 1px solid #1a1a2e; color: #ccc;
+}
+.info-table tbody tr:hover { background: #1a2540; }
+
+.info-diagram {
+    background: #0f1629; border: 1px solid #334; border-radius: 4px;
+    padding: 0.75rem 1rem; margin: 0.5rem 0 0.75rem;
+    font-family: 'Consolas', 'Courier New', monospace; font-size: 0.82rem;
+    color: #bbb; text-align: center; line-height: 1.8;
+}
+.info-chains {
+    background: #0f1629; border: 1px solid #334; border-radius: 4px;
+    padding: 0.5rem 1rem; margin: 0.5rem 0 0.75rem;
+    font-size: 0.82rem; color: #ccc; line-height: 1.8;
+}
+.info-formula {
+    background: #0f1629; border: 1px solid #445; border-radius: 4px;
+    padding: 0.75rem 1rem; margin: 0.5rem 0 0.75rem;
+    font-family: 'Consolas', 'Courier New', monospace; font-size: 0.88rem;
+    color: #e94560; text-align: center; line-height: 2;
+}
+
 /* === Buttons === */
 .btn {
     background: #16213e; border: 1px solid #334; color: #ddd;
@@ -19,7 +81,6 @@ header .subtitle { font-size: 0.85rem; color: #888; }
     font-size: 0.82rem; transition: background 0.15s;
 }
 .btn:hover { background: #1a2a4a; }
-.btn-sm { padding: 0.2rem 0.5rem; font-size: 0.75rem; }
 .btn-primary { background: #e94560; border-color: #e94560; color: #fff; font-weight: 600; }
 .btn-primary:hover { background: #c93550; }
 .btn-danger { border-color: #a33; color: #f88; }
@@ -29,7 +90,7 @@ header .subtitle { font-size: 0.85rem; color: #888; }
 /* === Inputs === */
 input[type="number"], select {
     background: #0f1629; border: 1px solid #334; color: #ddd;
-    padding: 0.25rem 0.4rem; border-radius: 3px; font-size: 0.8rem;
+    padding: 0.3rem 0.5rem; border-radius: 3px; font-size: 0.8rem;
     width: 70px; text-align: right;
 }
 input[type="number"]:focus, select:focus { border-color: #e94560; outline: none; }
@@ -54,14 +115,28 @@ select { width: auto; text-align: left; }
     display: flex; gap: 0.5rem; align-items: center;
     flex-wrap: wrap; margin-bottom: 0.5rem;
 }
-.bulk-actions { display: flex; gap: 0.3rem; align-items: center; }
-.bulk-custom-val { width: 55px; }
+
+/* === Section Headers === */
+.section-header {
+    font-size: 0.78rem; font-weight: 600; color: #999;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 0.4rem; padding-bottom: 0.2rem;
+    border-bottom: 1px solid #334;
+}
+
+/* === Default Count === */
+.default-count-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.default-count-label { font-size: 0.78rem; font-weight: 600; color: #999; }
+.default-count-input { width: 90px; }
 
 /* === Buff Section === */
-.buff-section { margin-bottom: 0.5rem; }
+.buff-section { margin-bottom: 0.75rem; }
 .buff-row {
     display: flex; align-items: center; gap: 0.4rem;
-    margin-bottom: 0.25rem; font-size: 0.78rem;
+    margin-bottom: 0.4rem; font-size: 0.78rem;
 }
 .buff-label { width: 65px; font-weight: 600; }
 .buff-stat-label { color: #999; font-size: 0.72rem; }
@@ -121,6 +196,15 @@ select { width: auto; text-align: left; }
 .playback-buttons { display: flex; gap: 0.4rem; }
 .speed-control { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #999; }
 #speed-slider { width: 100px; }
+
+/* Hide playback controls on setup page, show only in battle view */
+#btn-step, #btn-round, #btn-full, #btn-reset { display: none; }
+.speed-control { display: none; }
+.battle-view-active #btn-step,
+.battle-view-active #btn-round,
+.battle-view-active #btn-full,
+.battle-view-active #btn-reset { display: inline-block; }
+.battle-view-active .speed-control { display: flex; }
 
 /* === Phase Indicator === */
 .phase-indicator {
