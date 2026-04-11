@@ -46,7 +46,6 @@ var ArmyConfig = (function () {
         buildPresets(presetSelect, panelId);
         buildBuffInputs(buffSection, panelId);
         buildTroopGrid(gridSection, panelId);
-        setupBulkActions(panel, panelId);
     }
 
     // --- Presets ---
@@ -72,6 +71,11 @@ var ArmyConfig = (function () {
     // --- Buff Inputs ---
 
     function buildBuffInputs(container, panelId) {
+        var header = document.createElement('div');
+        header.className = 'section-header';
+        header.textContent = 'Buffs';
+        container.appendChild(header);
+
         TYPE_KEYS.forEach(function (type) {
             var info = TroopData.TYPES[type];
             var row = document.createElement('div');
@@ -91,6 +95,19 @@ var ArmyConfig = (function () {
     // --- Troop Grid ---
 
     function buildTroopGrid(container, panelId) {
+        var defaultRow = document.createElement('div');
+        defaultRow.className = 'default-count-row';
+        defaultRow.innerHTML =
+            '<label class="default-count-label">Default count</label>' +
+            '<input type="number" class="default-count-input" min="0" value="1000" data-panel="' + panelId + '" />';
+        container.appendChild(defaultRow);
+
+        var defaultInput = defaultRow.querySelector('.default-count-input');
+        defaultInput.addEventListener('input', function () {
+            var val = parseInt(defaultInput.value) || 0;
+            setAllCountsUniform(panelId, val);
+        });
+
         TIER_GROUPS.forEach(function (group, gi) {
             var header = document.createElement('div');
             header.className = 'tier-group-header';
@@ -151,21 +168,6 @@ var ArmyConfig = (function () {
 
                 body.appendChild(row);
             });
-        });
-    }
-
-    // --- Bulk Actions ---
-
-    function setupBulkActions(panel, panelId) {
-        panel.querySelector('.bulk-zero').addEventListener('click', function () {
-            setAllCountsUniform(panelId, 0);
-        });
-        panel.querySelector('.bulk-default').addEventListener('click', function () {
-            setAllCountsUniform(panelId, 1000);
-        });
-        panel.querySelector('.bulk-custom').addEventListener('click', function () {
-            var val = parseInt(panel.querySelector('.bulk-custom-val').value) || 0;
-            setAllCountsUniform(panelId, val);
         });
     }
 
