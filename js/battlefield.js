@@ -313,10 +313,27 @@ var Battlefield = (function () {
             var srcRect = sourceMarker.querySelector('.unit-icon').getBoundingClientRect();
             var tgtRect = targetMarker.querySelector('.unit-icon').getBoundingClientRect();
 
-            var x1 = (srcRect.left + srcRect.right) / 2 - contRect.left;
-            var y1 = (srcRect.top + srcRect.bottom) / 2 - contRect.top;
-            var x2 = (tgtRect.left + tgtRect.right) / 2 - contRect.left;
-            var y2 = (tgtRect.top + tgtRect.bottom) / 2 - contRect.top;
+            var cx1 = (srcRect.left + srcRect.right) / 2 - contRect.left;
+            var cy1 = (srcRect.top + srcRect.bottom) / 2 - contRect.top;
+            var cx2 = (tgtRect.left + tgtRect.right) / 2 - contRect.left;
+            var cy2 = (tgtRect.top + tgtRect.bottom) / 2 - contRect.top;
+
+            // Shorten both ends so arrows don't overlap the circles
+            var dx = cx2 - cx1;
+            var dy = cy2 - cy1;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var gap = 38; // circle radius (26) + gap (12)
+            if (dist > gap * 2) {
+                var ux = dx / dist;
+                var uy = dy / dist;
+                var x1 = cx1 + ux * gap;
+                var y1 = cy1 + uy * gap;
+                var x2 = cx2 - ux * gap;
+                var y2 = cy2 - uy * gap;
+            } else {
+                var x1 = cx1; var y1 = cy1;
+                var x2 = cx2; var y2 = cy2;
+            }
 
             svgLine.setAttribute('x1', x1);
             svgLine.setAttribute('y1', y1);
@@ -332,9 +349,9 @@ var Battlefield = (function () {
             svgLine.style.transition = 'stroke-dashoffset 0.25s ease-out';
             svgLine.style.strokeDashoffset = '0';
 
-            // Label with background at midpoint
-            var mx = (x1 + x2) / 2;
-            var my = (y1 + y2) / 2;
+            // Label with background at midpoint (use original centers)
+            var mx = (cx1 + cx2) / 2;
+            var my = (cy1 + cy2) / 2;
             var labelText = formatNum(event.damage) + ' dmg, ' + formatNum(event.kills) + ' killed';
             svgLabel.textContent = labelText;
             svgLabel.setAttribute('x', mx);
@@ -475,7 +492,13 @@ var Battlefield = (function () {
 
     // --- Phase Indicator ---
 
-    function setPhase(phase, positions) {
+    function setPhase(phase, positions, round) {
+        // Update round label
+        if (round != null) {
+            var roundLabel = document.getElementById('round-label');
+            if (roundLabel) roundLabel.textContent = 'Round ' + round;
+        }
+
         // Update phase index
         var idx = TroopData.PHASE_ORDER.indexOf(phase);
         if (idx >= 0) currentPhaseIndex = idx;
@@ -520,6 +543,8 @@ var Battlefield = (function () {
 
     function resetPhase() {
         currentPhaseIndex = -1;
+        var roundLabel = document.getElementById('round-label');
+        if (roundLabel) roundLabel.textContent = 'Round 1';
         document.querySelectorAll('.phase-dot').forEach(function (dot) {
             dot.className = 'phase-dot';
         });

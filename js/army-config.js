@@ -8,74 +8,17 @@ var ArmyConfig = (function () {
         { label: 'Low Tiers (T4–T1)',    tiers: [4, 3, 2, 1] }
     ];
 
-    var PRESETS = {
-        '': null,
-        'Empty March': function () { return makeUniform(0); },
-        'T14 Only': function () {
-            var c = makeUniform(0);
-            TYPE_KEYS.forEach(function (t) { c[t][14] = 1000; });
-            return c;
-        },
-        'T12-T14 Mix': function () {
-            var c = makeUniform(0);
-            TYPE_KEYS.forEach(function (t) { c[t][14] = 1000; c[t][13] = 500; c[t][12] = 500; });
-            return c;
-        },
-        'Full Layers': function () {
-            var c = makeUniform(0);
-            TYPE_KEYS.forEach(function (t) { c[t][14] = 1000; c[t][1] = 200; });
-            return c;
-        }
-    };
-
-    function makeUniform(val) {
-        var c = {};
-        TYPE_KEYS.forEach(function (t) {
-            c[t] = {};
-            TroopData.TIERS.forEach(function (tier) { c[t][tier] = val; });
-        });
-        return c;
-    }
-
     function init(panelId) {
-        var panel = document.getElementById(panelId);
-        var buffSection = panel.querySelector('.buff-section');
-        var gridSection = panel.querySelector('.troop-grid');
-        var presetSelect = panel.querySelector('.preset-select');
+        var buffSection = document.querySelector('.buff-section[data-for="' + panelId + '"]');
+        var gridSection = document.querySelector('.troop-grid[data-for="' + panelId + '"]');
 
-        buildPresets(presetSelect, panelId);
         buildBuffInputs(buffSection, panelId);
         buildTroopGrid(gridSection, panelId);
-    }
-
-    // --- Presets ---
-
-    function buildPresets(select, panelId) {
-        Object.keys(PRESETS).forEach(function (name) {
-            if (name === '') return; // skip empty
-            var opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            select.appendChild(opt);
-        });
-        select.addEventListener('change', function () {
-            var fn = PRESETS[select.value];
-            if (fn) {
-                var counts = fn();
-                setAllCounts(panelId, counts);
-            }
-            select.value = '';
-        });
     }
 
     // --- Buff Inputs ---
 
     function buildBuffInputs(container, panelId) {
-        var header = document.createElement('div');
-        header.className = 'section-header';
-        header.textContent = 'Buffs';
-        container.appendChild(header);
-
         TYPE_KEYS.forEach(function (type) {
             var info = TroopData.TYPES[type];
             var row = document.createElement('div');
@@ -95,42 +38,63 @@ var ArmyConfig = (function () {
     // --- Troop Grid ---
 
     function buildTroopGrid(container, panelId) {
-        var defaultRow = document.createElement('div');
-        defaultRow.className = 'default-count-row';
-        defaultRow.innerHTML =
-            '<label class="default-count-label">Default count</label>' +
-            '<input type="number" class="default-count-input" min="0" value="1000" data-panel="' + panelId + '" />';
-        container.appendChild(defaultRow);
+        var controlsRow = document.createElement('div');
+        controlsRow.className = 'grid-controls';
 
-        var defaultInput = defaultRow.querySelector('.default-count-input');
-        defaultInput.addEventListener('input', function () {
+        var label = document.createElement('label');
+        label.className = 'grid-controls-label';
+        label.textContent = 'Count';
+        controlsRow.appendChild(label);
+
+        var defaultInput = document.createElement('input');
+        defaultInput.type = 'number';
+        defaultInput.className = 'default-count-input';
+        defaultInput.min = '0';
+        defaultInput.value = '1000';
+        defaultInput.dataset.panel = panelId;
+        controlsRow.appendChild(defaultInput);
+
+        var setBtn = document.createElement('button');
+        setBtn.className = 'btn btn-sm';
+        setBtn.textContent = 'Set Default';
+        setBtn.addEventListener('click', function () {
             var val = parseInt(defaultInput.value) || 0;
             setAllCountsUniform(panelId, val);
         });
+        controlsRow.appendChild(setBtn);
+
+        var clearBtn = document.createElement('button');
+        clearBtn.className = 'btn btn-sm';
+        clearBtn.textContent = 'Clear All';
+        clearBtn.addEventListener('click', function () {
+            setAllCountsUniform(panelId, 0);
+        });
+        controlsRow.appendChild(clearBtn);
+
+        container.appendChild(controlsRow);
+
+        var gh = document.createElement('div');
+        gh.className = 'grid-header';
+        gh.innerHTML = '<span></span>';
+        TYPE_KEYS.forEach(function (type) {
+            var info = TroopData.TYPES[type];
+            var span = document.createElement('span');
+            span.className = info.colorClass;
+            span.textContent = info.name.charAt(0); // G, R, M, S
+            span.title = 'Click to set all ' + info.name;
+            span.addEventListener('click', function () {
+                var val = prompt('Set all ' + info.name + ' tiers to:', '0');
+                if (val !== null) setColumnValue(panelId, type, parseInt(val) || 0);
+            });
+            gh.appendChild(span);
+        });
+        container.appendChild(gh);
 
         TIER_GROUPS.forEach(function (group, gi) {
             var body = document.createElement('div');
             body.className = 'tier-group-body';
             if (gi > 0) body.style.marginTop = '0.5rem';
             container.appendChild(body);
-
-            // Column headers (only for first group or when expanded)
-            var gh = document.createElement('div');
-            gh.className = 'grid-header';
-            gh.innerHTML = '<span></span>';
-            TYPE_KEYS.forEach(function (type) {
-                var info = TroopData.TYPES[type];
-                var span = document.createElement('span');
-                span.className = info.colorClass;
-                span.textContent = info.name.charAt(0); // G, R, M, S
-                span.title = 'Click to set all ' + info.name;
-                span.addEventListener('click', function () {
-                    var val = prompt('Set all ' + info.name + ' tiers to:', '0');
-                    if (val !== null) setColumnValue(panelId, type, parseInt(val) || 0);
-                });
-                gh.appendChild(span);
-            });
-            body.appendChild(gh);
 
             group.tiers.forEach(function (tier) {
                 var row = document.createElement('div');
@@ -165,15 +129,6 @@ var ArmyConfig = (function () {
     function setAllCountsUniform(panelId, val) {
         var inputs = document.querySelectorAll('input[data-panel="' + panelId + '"][data-type]');
         inputs.forEach(function (inp) { inp.value = val; });
-    }
-
-    function setAllCounts(panelId, counts) {
-        var inputs = document.querySelectorAll('input[data-panel="' + panelId + '"][data-type]');
-        inputs.forEach(function (inp) {
-            var type = inp.dataset.type;
-            var tier = parseInt(inp.dataset.tier);
-            inp.value = (counts[type] && counts[type][tier] != null) ? counts[type][tier] : 0;
-        });
     }
 
     function setColumnValue(panelId, type, val) {
@@ -211,31 +166,9 @@ var ArmyConfig = (function () {
         return buffs;
     }
 
-    // --- Mirror ---
-
-    function mirror(fromPanelId, toPanelId) {
-        // Copy troop counts
-        var fromInputs = document.querySelectorAll('input[data-panel="' + fromPanelId + '"][data-type]');
-        fromInputs.forEach(function (inp) {
-            var target = document.querySelector(
-                'input[data-panel="' + toPanelId + '"][data-type="' + inp.dataset.type + '"][data-tier="' + inp.dataset.tier + '"]'
-            );
-            if (target) target.value = inp.value;
-        });
-        // Copy buffs
-        var fromBuffs = document.querySelectorAll('input[data-panel="' + fromPanelId + '"][data-buff-type]');
-        fromBuffs.forEach(function (inp) {
-            var target = document.querySelector(
-                'input[data-panel="' + toPanelId + '"][data-buff-type="' + inp.dataset.buffType + '"][data-buff-stat="' + inp.dataset.buffStat + '"]'
-            );
-            if (target) target.value = inp.value;
-        });
-    }
-
     return {
         init: init,
         getTroopCounts: getTroopCounts,
-        getBuffs: getBuffs,
-        mirror: mirror
+        getBuffs: getBuffs
     };
 })();

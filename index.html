@@ -8,38 +8,43 @@
 </head>
 <body>
     <header>
-        <h1>Evony Battle Simulator</h1>
-        <p class="subtitle">March vs March PvP</p>
-        <nav class="view-tabs">
-            <button class="view-tab" data-view="about">About</button>
-            <button class="view-tab" data-view="mechanics">Battle Mechanics</button>
-        </nav>
+        <div class="header-left">
+            <h1>Evony Battle Simulator</h1>
+            <p class="subtitle">March vs March PvP</p>
+        </div>
     </header>
 
     <main>
         <div id="view-simulator">
-        <section class="army-panels">
-            <div id="attacker-panel" class="army-panel">
-                <h2>Attacker</h2>
-                <div class="panel-controls">
-                    <select class="preset-select"><option value="">Preset...</option></select>
-                </div>
-                <div class="buff-section"></div>
-                <div class="troop-grid"></div>
+        <section class="army-setup">
+            <div class="army-row battle-view-btn-row">
+                <button id="btn-battle-view" class="btn btn-primary">&#9876; Battle View</button>
+                <nav class="view-tabs">
+                    <button class="view-tab" data-view="mechanics">Battle Mechanics</button>
+                    <button class="view-tab" data-view="about">About</button>
+                </nav>
             </div>
 
-            <div class="mirror-col">
-                <button id="mirror-btn" class="btn btn-mirror" title="Copy Attacker to Defender">&lt;&gt;</button>
-                <button id="btn-battle-view" class="btn btn-mirror">&#9876; Battle View</button>
+            <h3 class="section-divider">Buffs</h3>
+            <div class="army-row">
+                <div class="army-col army-panel">
+                    <h2>Attacker</h2>
+                    <div class="buff-section" data-for="attacker-panel"></div>
+                </div>
+                <div class="army-col army-panel">
+                    <h2>Defender</h2>
+                    <div class="buff-section" data-for="defender-panel"></div>
+                </div>
             </div>
 
-            <div id="defender-panel" class="army-panel">
-                <h2>Defender</h2>
-                <div class="panel-controls">
-                    <select class="preset-select"><option value="">Preset...</option></select>
+            <h3 class="section-divider">Troops</h3>
+            <div class="army-row">
+                <div class="army-col army-panel">
+                    <div class="troop-grid" data-for="attacker-panel"></div>
                 </div>
-                <div class="buff-section"></div>
-                <div class="troop-grid"></div>
+                <div class="army-col army-panel">
+                    <div class="troop-grid" data-for="defender-panel"></div>
+                </div>
             </div>
         </section>
 
@@ -58,6 +63,7 @@
         </section>
 
         <section class="phase-indicator" id="phase-indicator">
+            <span class="round-label" id="round-label">Round 1</span>
             <span class="phase-dot" data-phase="SIEGE">Siege</span>
             <span class="phase-dot" data-phase="RANGED">Ranged</span>
             <span class="phase-dot" data-phase="MOUNTED">Mounted</span>
@@ -104,7 +110,7 @@
                 <h3>Key Features</h3>
                 <ul class="info-list">
                     <li><strong>Army Configuration</strong> &mdash; Set troop counts per type and tier (T1&ndash;T14) for attacker and defender, with ATK/DEF/HP buff percentages.</li>
-                    <li><strong>Presets &amp; Mirroring</strong> &mdash; Save army configurations as presets; mirror attacker to defender for quick symmetric setups.</li>
+                    <li><strong>Army Configuration</strong> &mdash; Set buff percentages per troop type for attacker and defender.</li>
                     <li><strong>Step / Round / Full Playback</strong> &mdash; Advance the battle one attack at a time, one full round, or run to completion, with adjustable speed.</li>
                     <li><strong>Spatial Battlefield</strong> &mdash; A 5,200-unit linear field with troop movement, range indicators, and attack arrows.</li>
                     <li><strong>Battle Log &amp; Summary</strong> &mdash; Filterable log of every attack event, plus a side-by-side loss comparison panel.</li>
@@ -130,57 +136,90 @@
             <section class="info-content">
                 <h2>Battle Mechanics Fact Sheet</h2>
                 <p class="info-lead">
-                    Reference for the simulation rules. Sources: community research, theriagames.com, in-game observation.
+                    Reference for the simulation rules. Sources: community research, in-game observation,
+                    and community sites listed below.
                 </p>
 
                 <!-- Troop Types -->
                 <h3>Troop Types</h3>
-                <p>Four troop types, each with tiers T1 through T14:</p>
+                <p>Four troop types, each with tiers T1 through T14. Each type fills a distinct battlefield role:</p>
                 <table class="info-table">
                     <thead>
                         <tr><th>Type</th><th>Role</th><th>Key Trait</th><th>Speed</th><th>Range</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td class="color-ground">Ground</td><td>Tank</td><td>Highest DEF &amp; HP, slow</td><td>350</td><td>50</td></tr>
-                        <tr><td class="color-ranged">Ranged</td><td>Balanced</td><td>ATK &asymp; DEF, moderate HP</td><td>100</td><td>500</td></tr>
-                        <tr><td class="color-mounted">Mounted</td><td>Striker</td><td>Highest ATK, fastest</td><td>600</td><td>50</td></tr>
-                        <tr><td class="color-siege">Siege</td><td>Glass</td><td>Lowest stats, extreme range</td><td>75</td><td>1400&ndash;2178</td></tr>
+                        <tr><td class="color-ground">Ground</td><td>Tank</td><td>Highest DEF (~3&times; ATK), highest HP (~6&times; ATK)</td><td>350</td><td>50</td></tr>
+                        <tr><td class="color-ranged">Ranged</td><td>Balanced</td><td>ATK &asymp; DEF, moderate HP (~2&times; ATK)</td><td>100</td><td>500</td></tr>
+                        <tr><td class="color-mounted">Mounted</td><td>Striker</td><td>Highest ATK, fastest unit in the game</td><td>600</td><td>50</td></tr>
+                        <tr><td class="color-siege">Siege</td><td>Glass Cannon</td><td>Lowest stats overall, extreme range</td><td>75</td><td>1400&ndash;2178</td></tr>
                     </tbody>
                 </table>
+                <p>Speed and range are constant across all tiers for a given type. Only ATK, DEF, and HP scale with tier. Siege is the exception &mdash; its range increases in tier brackets (T1&ndash;T4: 1400, T5&ndash;T8: 1556, T9&ndash;T10: 1711, T11&ndash;T12: 1867, T13&ndash;T14: 2178).</p>
+                <p class="info-note">Notable: Siege ATK = Siege HP at every tier. Ground HP is roughly 6&times; its ATK at every tier.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://theriagames.com/guide/troop-base-stats/" target="_blank" rel="noopener">Theria Games &mdash; Troop Base Stats</a> &bull;
+                    <a href="https://evonyguidewiki.com/en/troop-type-en/" target="_blank" rel="noopener">Evony Guide Wiki &mdash; Troop Types</a>
+                </p>
 
                 <!-- Phase Order -->
                 <h3>Phase Order (Attack Sequence)</h3>
-                <p>Troops attack sequentially by range (longest range fires first):</p>
+                <p>Each round is divided into four phases. Troops attack sequentially by range (longest range fires first). When two types share the same range, the faster unit goes first:</p>
                 <table class="info-table">
                     <thead>
                         <tr><th>Phase</th><th>Type</th><th>Range</th><th>Rationale</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>1</td><td class="color-siege">Siege</td><td>1400&ndash;2178</td><td>Longest range</td></tr>
-                        <tr><td>2</td><td class="color-ranged">Ranged</td><td>500</td><td>Second longest</td></tr>
-                        <tr><td>3</td><td class="color-mounted">Mounted</td><td>50</td><td>Speed 600 (tiebreak)</td></tr>
-                        <tr><td>4</td><td class="color-ground">Ground</td><td>50</td><td>Speed 350 (tiebreak)</td></tr>
+                        <tr><td>1</td><td class="color-siege">Siege</td><td>1400&ndash;2178</td><td>Longest range fires first</td></tr>
+                        <tr><td>2</td><td class="color-ranged">Ranged</td><td>500</td><td>Second longest range</td></tr>
+                        <tr><td>3</td><td class="color-mounted">Mounted</td><td>50</td><td>Melee tiebreak: speed 600 &gt; 350</td></tr>
+                        <tr><td>4</td><td class="color-ground">Ground</td><td>50</td><td>Melee tiebreak: slowest melee</td></tr>
                     </tbody>
                 </table>
-                <p class="info-note">Within each phase: attacker strikes first, then defender's surviving troops counter. Higher tiers attack before lower tiers.</p>
+                <p><strong>Within each phase:</strong> The attacker strikes first, then the defender's <em>surviving</em> troops counter-attack. This gives the attacker a slight edge &mdash; they reduce the defender's count before the counterstrike.</p>
+                <p><strong>Within a side (same type, multiple tiers):</strong> Higher tiers attack before lower tiers, dealing damage with better stats first.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://www.evonytips.com/index/strategy/how-the-battles-work-battle-mechanics" target="_blank" rel="noopener">EvonyTips &mdash; How Battles Work</a> &bull;
+                    <a href="https://www.server806.com/post/battle-mechanics" target="_blank" rel="noopener">Server 806 &mdash; Battle Mechanics</a>
+                </p>
 
                 <!-- Battlefield & Movement -->
                 <h3>Battlefield &amp; Movement</h3>
-                <p>Linear battlefield, <strong>5,200 units</strong> long. Attacker starts at position 0, defender at 5,200.</p>
+                <p>Linear battlefield, <strong>5,200 units</strong> long. Attacker starts at position 0, defender at 5,200. Each troop type has its own independent position (8 positions total: 4 per side).</p>
                 <div class="info-diagram">
                     Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 5,200 units &mdash;&mdash;&mdash;&mdash;&mdash; Defender (5200)
                 </div>
-                <p>Each round, before attacking, each troop type evaluates movement:</p>
+                <p>Each round, <strong>before</strong> attacking, each troop type evaluates movement:</p>
                 <ul class="info-list">
-                    <li><strong>Check:</strong> Is any enemy in range from current position?</li>
-                    <li><strong>Yes &rarr; Hold.</strong> Stay and fire at highest-priority target in range.</li>
-                    <li><strong>No &rarr; Advance.</strong> Move forward by <em>speed</em> units. Fire if now in range.</li>
+                    <li><strong>Check:</strong> Is any enemy unit within range from current position?</li>
+                    <li><strong>Yes &rarr; Hold.</strong> Stay at current position and fire at the highest-priority target in range.</li>
+                    <li><strong>No &rarr; Advance.</strong> Move forward by <em>speed</em> units toward the enemy. Fire if a target is now in range.</li>
                 </ul>
-                <p class="info-note">Speed = distance per round. Troops never reverse. When two opposing troops would overlap, they stop at melee range (50 units apart).</p>
+                <p><strong>Key rules:</strong></p>
+                <ul class="info-list">
+                    <li><strong>Speed = distance per round.</strong> Mounted moves 600 units/round, Ground 350, Ranged 100, Siege 75.</li>
+                    <li><strong>Direction is always forward.</strong> Troops never reverse or retreat.</li>
+                    <li><strong>Hold triggers on any enemy in range</strong>, not just the priority target.</li>
+                    <li><strong>Melee collision:</strong> When opposing troops would pass through each other, they stop at melee range (50 units apart).</li>
+                </ul>
+                <p><strong>Typical engagement timeline (both sides identical):</strong></p>
+                <ul class="info-list info-list-muted">
+                    <li>Round ~4: Siege finds approaching Mounted in range (2178). Holds, fires.</li>
+                    <li>Round ~5: Mounted pairs lock in melee near midfield.</li>
+                    <li>Round ~8: Ground pairs lock in melee.</li>
+                    <li>Round ~17: Ranged finally reach engagement range (slow speed 100).</li>
+                </ul>
+                <p class="info-note">Ranged troops are late to the fight despite having the second-longest range &mdash; their low speed (100) dominates. Siege engages early due to massive range offsetting slow speed.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://www.evonytips.com/index/strategy/how-the-battles-work-battle-mechanics" target="_blank" rel="noopener">EvonyTips &mdash; How Battles Work</a> &bull;
+                    <a href="https://theriagames.com/guide/layers/" target="_blank" rel="noopener">Theria Games &mdash; Layers Guide</a>
+                </p>
 
                 <!-- Targeting Priority -->
                 <h3>Targeting Priority</h3>
-                <p>Each troop type has a full priority chain (1 = first choice):</p>
+                <p>Each troop type has a fixed priority chain determining <strong>who</strong> it attacks. If the #1 target is dead or out of range, it falls through to #2, then #3, etc.</p>
                 <table class="info-table">
                     <thead>
                         <tr><th>Attacker &#x2193; / Target &rarr;</th><th class="color-siege">Siege</th><th class="color-ranged">Ranged</th><th class="color-mounted">Mounted</th><th class="color-ground">Ground</th></tr>
@@ -198,6 +237,14 @@
                     <span class="color-mounted">Mounted</span> &rarr; Ground, Siege, Mounted, Ranged<br>
                     <span class="color-ground">Ground</span> &rarr; Ranged, Siege, Ground, Mounted
                 </div>
+                <p><strong>Within a priority level</strong> (e.g. multiple tiers of the same type): the highest tier is targeted first, then the largest troop count.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://www.evonyanswers.com/forum/evony-battle-mechanics/in-battle-mechanics-for-ground-troops" target="_blank" rel="noopener">Evony Answers &mdash; Ground</a> &bull;
+                    <a href="https://www.evonyanswers.com/forum/evony-battle-mechanics/in-battle-mechanics-for-ranged-troops" target="_blank" rel="noopener">Ranged</a> &bull;
+                    <a href="https://www.evonyanswers.com/forum/evony-battle-mechanics/in-battle-mechanics-for-mounted-troops" target="_blank" rel="noopener">Mounted</a> &bull;
+                    <a href="https://www.evonyanswers.com/forum/evony-battle-mechanics/in-battle-mechanics-for-siege-troops" target="_blank" rel="noopener">Siege</a>
+                </p>
 
                 <!-- Damage Formula -->
                 <h3>Damage Formula</h3>
@@ -207,33 +254,81 @@
                 </div>
                 <ul class="info-list">
                     <li><strong>troopCount</strong> &mdash; surviving count of the attacking layer</li>
-                    <li><strong>ATK</strong> &mdash; per-troop attack stat of the attacker</li>
-                    <li><strong>DEF</strong> &mdash; per-troop defense stat of the target</li>
+                    <li><strong>ATK</strong> &mdash; per-troop attack stat of the attacker (base &times; (1 + buff%))</li>
+                    <li><strong>DEF</strong> &mdash; per-troop defense stat of the target (base &times; (1 + buff%))</li>
                     <li><strong>modifier</strong> &mdash; type matchup multiplier (see below)</li>
-                    <li><strong>target_HP</strong> &mdash; per-troop HP of the target</li>
+                    <li><strong>target_HP</strong> &mdash; per-troop HP of the target (base &times; (1 + buff%))</li>
                 </ul>
-                <p class="info-note">The ATK/(ATK+DEF) ratio ensures damage is always &gt; 0 and high DEF reduces damage proportionally.</p>
+                <p>The <code>ATK/(ATK+DEF)</code> ratio ensures damage is always &gt; 0 (no zero-damage edge cases), and high DEF reduces damage proportionally rather than by flat subtraction. The ratio is always between 0 and 1.</p>
+                <p class="info-note">Buff percentages are additive: a 50% ATK buff on a T14 Mounted (base 6670 ATK) yields 6670 &times; 1.50 = 10,005 effective ATK.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://evonyguidewiki.com/en/monster-battle-mechanics-en/" target="_blank" rel="noopener">Evony Guide Wiki &mdash; Battle Mechanics</a> &bull;
+                    <a href="https://evonyguidewiki.com/en/buff_debuff_basic_guide-en/" target="_blank" rel="noopener">Evony Guide Wiki &mdash; Buff/Debuff Guide</a>
+                </p>
 
                 <!-- Damage Multipliers -->
-                <h3>Damage Multipliers</h3>
-                <p>Bonus damage when attacking your counter target:</p>
+                <h3>Damage Multipliers (Counter Triangle)</h3>
+                <p>Bonus damage when attacking your counter target. No penalty for being on the wrong side &mdash; only bonuses apply:</p>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Matchup</th><th>Multiplier</th></tr>
+                        <tr><th>Matchup</th><th>Multiplier</th><th>Explanation</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="color-ranged">Ranged</span> &rarr; <span class="color-mounted">Mounted</span></td><td>1.2&times;</td></tr>
-                        <tr><td><span class="color-mounted">Mounted</span> &rarr; <span class="color-ground">Ground</span></td><td>1.2&times;</td></tr>
-                        <tr><td><span class="color-ground">Ground</span> &rarr; <span class="color-ranged">Ranged</span></td><td>1.2&times;</td></tr>
-                        <tr><td><span class="color-siege">Siege</span> &rarr; <span class="color-siege">Siege</span></td><td>1.5&times;</td></tr>
-                        <tr><td>All other matchups</td><td>1.0&times;</td></tr>
+                        <tr><td><span class="color-ranged">Ranged</span> &rarr; <span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>Ranged picks off fast-moving Mounted at distance</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span> &rarr; <span class="color-ground">Ground</span></td><td>1.2&times;</td><td>Mounted charges overwhelm slow Ground</td></tr>
+                        <tr><td><span class="color-ground">Ground</span> &rarr; <span class="color-ranged">Ranged</span></td><td>1.2&times;</td><td>Ground tanks through Ranged fire and crushes them in melee</td></tr>
+                        <tr><td><span class="color-siege">Siege</span> &rarr; <span class="color-siege">Siege</span></td><td>1.5&times;</td><td>Siege vs Siege is an artillery duel with bonus damage</td></tr>
+                        <tr><td>All other matchups</td><td>1.0&times;</td><td>Neutral &mdash; no bonus or penalty</td></tr>
                     </tbody>
                 </table>
                 <div class="info-diagram">
                     Ranged &mdash;1.2&times;&rarr; Mounted &mdash;1.2&times;&rarr; Ground &mdash;1.2&times;&rarr; Ranged<br>
                     Siege &mdash;1.5&times;&rarr; Siege
                 </div>
-                <p class="info-note">No penalty for being on the wrong side &mdash; only bonuses apply.</p>
+                <p class="info-section-refs">
+                    Sources:
+                    <a href="https://www.server806.com/post/battle-mechanics" target="_blank" rel="noopener">Server 806 &mdash; Battle Mechanics</a> &bull;
+                    <a href="https://topgamesinc.zendesk.com/hc/en-us/articles/360047535191-About-Evony-Battle-Mechanics" target="_blank" rel="noopener">Top Games (Official) &mdash; Battle Mechanics</a>
+                </p>
+
+                <!-- Battle End -->
+                <h3>Battle End Condition</h3>
+                <p>The battle ends when one side has <strong>zero troops remaining</strong>. The surviving side is declared the winner.</p>
+                <p class="info-note">Whether field march-vs-march battles have a fixed round cap (community often cites 4 rounds for certain battle types) is unconfirmed for open-field PvP. This simulator runs until one side is eliminated.</p>
+
+                <!-- Not Yet Modeled -->
+                <h3>Not Yet Modeled</h3>
+                <p>These real-game mechanics are excluded from the current simulator:</p>
+                <ul class="info-list info-list-muted">
+                    <li>Generals (base stats, ascending stars, skills, specialties)</li>
+                    <li>Equipment on generals</li>
+                    <li>Research / Technology buffs</li>
+                    <li>Civilization &amp; Alliance buffs</li>
+                    <li>Monarch Gear &amp; Sub-city buffs</li>
+                    <li>Wounded / Killed ratio (all losses are treated as kills)</li>
+                    <li>Wall / Trap mechanics (city attacks only)</li>
+                    <li>Rally mechanics (multi-march)</li>
+                </ul>
+
+                <!-- References -->
+                <h3>References &amp; Resources</h3>
+                <ul class="info-refs">
+                    <li><a href="https://theriagames.com/evony-guides/" target="_blank" rel="noopener">Theria Games &mdash; Evony Guides Collection</a> (troop stats, layers, buffs, calculators)</li>
+                    <li><a href="https://theriagames.com/guide/troop-base-stats/" target="_blank" rel="noopener">Theria Games &mdash; Troop Base Stats</a> (complete T1&ndash;T14 stat tables)</li>
+                    <li><a href="https://evonyguidewiki.com/en/index-en/" target="_blank" rel="noopener">Evony Guide Wiki</a> (generals, troops, PvP tips, boss mechanics, calculators)</li>
+                    <li><a href="https://www.evonytips.com/index/strategy/how-the-battles-work-battle-mechanics" target="_blank" rel="noopener">EvonyTips &mdash; How Battles Work</a> (round structure, movement, attack sequence)</li>
+                    <li><a href="https://www.evonyanswers.com/forum/evony-battle-mechanics/" target="_blank" rel="noopener">Evony Answers &mdash; Battle Mechanics Forum</a> (per-troop-type targeting &amp; damage coefficients)</li>
+                    <li><a href="https://www.server806.com/post/battle-mechanics" target="_blank" rel="noopener">Server 806 &mdash; Battle Mechanics</a> (battlefield length, counter triangle, range/speed)</li>
+                    <li><a href="https://topgamesinc.zendesk.com/hc/en-us/articles/360047535191-About-Evony-Battle-Mechanics" target="_blank" rel="noopener">Top Games (Official) &mdash; About Battle Mechanics</a> (developer statement on counters)</li>
+                    <li><a href="https://www.evonytkrguide.com/guides/evony-tkr-guide-troop-layers-for-attack-defense" target="_blank" rel="noopener">Evony TKR Guide &mdash; Troop Layers</a> (practical layering for offense &amp; defense)</li>
+                    <li><a href="https://evonyguidewiki.com/en/buff_debuff_basic_guide-en/" target="_blank" rel="noopener">Evony Guide Wiki &mdash; Buff/Debuff Guide</a> (how buffs modify the damage formula)</li>
+                </ul>
+                <p class="info-note">YouTube: Search for <strong>DerrickD</strong> (damage formula reverse-engineering), <strong>TheRiaGames</strong> (stat tables &amp; layering), and <strong>Gamer Momment</strong> (PvP battle reports) for video explanations of these mechanics.</p>
+                <p class="info-section-refs" style="margin-top: 1rem;">
+                    This simulator is open source:
+                    <a href="https://github.com/slowmock-a11y/evony-battle-simulator" target="_blank" rel="noopener">github.com/slowmock-a11y/evony-battle-simulator</a>
+                </p>
             </section>
         </div><!-- /view-mechanics -->
     </main>

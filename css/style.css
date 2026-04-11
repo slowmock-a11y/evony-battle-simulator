@@ -8,14 +8,17 @@ body {
     padding: 0 1rem 2rem;
 }
 h1, h2, h3 { font-weight: 600; }
-header { text-align: center; padding: 1rem 0 0.5rem; }
-header h1 { font-size: 1.6rem; color: #e94560; }
-header .subtitle { font-size: 0.85rem; color: #888; }
+header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.5rem 0;
+}
+.header-left { display: flex; align-items: baseline; gap: 0.6rem; }
+header h1 { font-size: 1.2rem; color: #e94560; }
+header .subtitle { font-size: 0.78rem; color: #888; }
 
 /* === View Tabs === */
 .view-tabs {
-    display: flex; justify-content: center; gap: 0.4rem;
-    margin-top: 0.5rem;
+    display: flex; gap: 0.4rem;
 }
 .view-tab {
     background: #16213e; border: 1px solid #334; color: #999;
@@ -42,6 +45,16 @@ header .subtitle { font-size: 0.85rem; color: #888; }
 .info-list li { margin-bottom: 0.35rem; }
 .info-list-muted { color: #999; }
 .info-note { font-size: 0.8rem; color: #888; margin-top: 0.4rem; font-style: italic; }
+.info-refs {
+    margin: 0.3rem 0 0.5rem 1.5rem; font-size: 0.78rem; list-style: none; padding: 0;
+}
+.info-refs li { margin-bottom: 0.2rem; }
+.info-refs li::before { content: '\2192 '; color: #666; }
+.info-refs a { color: #5b9bd5; text-decoration: none; }
+.info-refs a:hover { text-decoration: underline; color: #7bb8e8; }
+.info-section-refs { font-size: 0.75rem; color: #777; margin-top: 0.3rem; }
+.info-section-refs a { color: #5b9bd5; text-decoration: none; }
+.info-section-refs a:hover { text-decoration: underline; }
 
 .info-table {
     width: 100%; border-collapse: collapse; margin: 0.5rem 0 0.75rem;
@@ -85,59 +98,60 @@ header .subtitle { font-size: 0.85rem; color: #888; }
 .btn-primary:hover { background: #c93550; }
 .btn-danger { border-color: #a33; color: #f88; }
 .btn-danger:hover { background: #2a1010; }
-.btn-mirror { font-size: 1.2rem; padding: 0.4rem 0.6rem; }
 
 /* === Inputs === */
 input[type="number"], select {
     background: #0f1629; border: 1px solid #334; color: #ddd;
-    padding: 0.3rem 0.5rem; border-radius: 3px; font-size: 0.8rem;
+    padding: 0.4rem 0.6rem; border-radius: 3px; font-size: 0.8rem;
     width: 70px; text-align: right;
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 input[type="number"]:focus, select:focus { border-color: #e94560; outline: none; }
 select { width: auto; text-align: left; }
 
-/* === Army Panels === */
-.army-panels {
-    display: flex; gap: 0.5rem; align-items: flex-start;
-    margin-bottom: 1rem;
+/* === Army Setup === */
+.army-setup { margin-bottom: 1rem; }
+.army-row {
+    display: flex; gap: 0.75rem; align-items: flex-start;
 }
+.army-col { flex: 1; }
 .army-panel {
-    flex: 1; background: #16213e; border-radius: 6px; padding: 0.75rem;
+    background: #16213e; border-radius: 6px; padding: 0.75rem;
     border: 1px solid #223;
 }
 .army-panel h2 { font-size: 1rem; margin-bottom: 0.5rem; color: #ccc; }
-.mirror-col {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 0.5rem; padding-top: 2rem;
-}
+.battle-view-btn-row { justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 
-/* Panel controls */
-.panel-controls {
-    display: flex; gap: 0.5rem; align-items: center;
-    flex-wrap: wrap; margin-bottom: 0.5rem;
-}
-
-/* === Section Headers === */
-.section-header {
-    font-size: 0.78rem; font-weight: 600; color: #999;
-    text-transform: uppercase; letter-spacing: 0.05em;
-    margin-bottom: 0.4rem; padding-bottom: 0.2rem;
+/* === Section Dividers === */
+.section-divider {
+    font-size: 0.82rem; font-weight: 600; color: #999;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0.75rem 0 0.5rem;
+    padding-bottom: 0.25rem;
     border-bottom: 1px solid #334;
 }
 
-/* === Default Count === */
-.default-count-row {
+/* === Grid Controls === */
+.grid-controls {
     display: flex; align-items: center; gap: 0.5rem;
     margin-bottom: 0.5rem;
 }
-.default-count-label { font-size: 0.78rem; font-weight: 600; color: #999; }
-.default-count-input { width: 90px; }
+.grid-controls-label { font-size: 0.78rem; font-weight: 600; color: #999; }
+.default-count-input { width: 80px; }
+.btn-sm { font-size: 0.72rem; padding: 0.2rem 0.5rem; }
 
 /* === Buff Section === */
-.buff-section { margin-bottom: 0.75rem; }
+.buff-section {
+    margin-bottom: 0;
+}
 .buff-row {
-    display: flex; align-items: center; gap: 0.4rem;
-    margin-bottom: 0.4rem; font-size: 0.78rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 0.6rem; font-size: 0.78rem;
 }
 .buff-label { width: 65px; font-weight: 600; }
 .buff-stat-label { color: #999; font-size: 0.72rem; }
@@ -191,24 +205,29 @@ select { width: auto; text-align: left; }
 
 /* === Phase Indicator === */
 .phase-indicator {
-    display: flex; justify-content: center; gap: 1.5rem;
+    display: none; justify-content: center; gap: 1.5rem;
     margin-bottom: 0.75rem; font-size: 0.82rem;
 }
+.battle-view-active .phase-indicator { display: flex; }
 .phase-dot {
     padding: 0.25rem 0.75rem; border-radius: 12px;
     background: #16213e; color: #666; border: 1px solid #334;
     transition: all 0.2s;
 }
+.round-label {
+    font-weight: 600; color: #ccc; margin-right: 0.5rem;
+}
 .phase-dot.active { background: #e94560; color: #fff; border-color: #e94560; }
 .phase-dot.done { background: #223; color: #888; border-color: #555; }
 
 /* === Battlefield === */
-.battlefield-area { margin-bottom: 0.75rem; }
+.battlefield-area { margin-bottom: 0.75rem; display: none; }
+.battle-view-active .battlefield-area { display: block; }
 .battlefield {
     background: linear-gradient(180deg, #0d1a0d 0%, #1a2612 40%, #1a2612 60%, #0d1a0d 100%);
     border-radius: 6px; padding: 0;
     height: 420px; border: 1px solid #2a3a1a;
-    position: relative; overflow: hidden;
+    position: relative; overflow: visible;
 }
 
 /* Center line */
@@ -366,7 +385,8 @@ select { width: auto; text-align: left; }
 }
 
 /* === Bottom Panels === */
-.bottom-panels { display: flex; gap: 0.75rem; }
+.bottom-panels { display: none; gap: 0.75rem; }
+.battle-view-active .bottom-panels { display: flex; }
 .battle-log-panel {
     flex: 2; background: #16213e; border-radius: 6px;
     padding: 0.75rem; border: 1px solid #223;
@@ -410,7 +430,7 @@ select { width: auto; text-align: left; }
 .tooltip .tt-buff { color: #4caf6e; }
 
 /* === Battle View Mode === */
-.battle-view-active .army-panels { display: none; }
+.battle-view-active .army-setup { display: none; }
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 6px; }

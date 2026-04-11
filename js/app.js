@@ -16,10 +16,6 @@ var App = (function () {
         Battlefield.init();
         BattleLog.init();
 
-        document.getElementById('mirror-btn').addEventListener('click', function () {
-            ArmyConfig.mirror('attacker-panel', 'defender-panel');
-        });
-
         var slider = document.getElementById('speed-slider');
         var label = document.getElementById('speed-label');
         slider.addEventListener('input', function () {
@@ -56,7 +52,7 @@ var App = (function () {
     function exitBattleView() {
         isBattleView = false;
         var btn = document.getElementById('btn-battle-view');
-        document.querySelector('.mirror-col').appendChild(btn);
+        document.querySelector('.battle-view-btn-row').appendChild(btn);
         document.body.classList.remove('battle-view-active');
         btn.innerHTML = '&#9876; Battle View';
     }
@@ -118,7 +114,7 @@ var App = (function () {
         } else {
             Battlefield.clearHighlights();
         }
-        Battlefield.setPhase(evt.phase, evt.positions);
+        Battlefield.setPhase(evt.phase, evt.positions, evt.round);
         Battlefield.updateSummary(displayAtt, displayDef);
         BattleLog.addEntry(evt, index, total);
     }
