@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evony Battle Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Evony Battle Simulator</h1>
+        <p class="subtitle">March vs March PvP</p>
+    </header>
+
+    <main>
+        <section class="army-panels">
+            <div id="attacker-panel" class="army-panel">
+                <h2>Attacker</h2>
+                <div class="panel-controls">
+                    <select class="preset-select"><option value="">Preset...</option></select>
+                    <div class="bulk-actions">
+                        <button class="btn btn-sm bulk-zero">All: 0</button>
+                        <button class="btn btn-sm bulk-default">All: 1000</button>
+                        <input type="number" class="bulk-custom-val" min="0" value="5000" />
+                        <button class="btn btn-sm bulk-custom">Apply</button>
+                    </div>
+                </div>
+                <div class="buff-section"></div>
+                <div class="troop-grid"></div>
+            </div>
+
+            <div class="mirror-col">
+                <button id="mirror-btn" class="btn btn-mirror" title="Copy Attacker to Defender">&lt;&gt;</button>
+            </div>
+
+            <div id="defender-panel" class="army-panel">
+                <h2>Defender</h2>
+                <div class="panel-controls">
+                    <select class="preset-select"><option value="">Preset...</option></select>
+                    <div class="bulk-actions">
+                        <button class="btn btn-sm bulk-zero">All: 0</button>
+                        <button class="btn btn-sm bulk-default">All: 1000</button>
+                        <input type="number" class="bulk-custom-val" min="0" value="5000" />
+                        <button class="btn btn-sm bulk-custom">Apply</button>
+                    </div>
+                </div>
+                <div class="buff-section"></div>
+                <div class="troop-grid"></div>
+            </div>
+        </section>
+
+        <section class="controls-bar">
+            <div class="playback-buttons">
+                <button id="btn-step" class="btn">&#9654; Step</button>
+                <button id="btn-round" class="btn">&#9654;&#9654; Round</button>
+                <button id="btn-full" class="btn btn-primary">&#9654;&#9654;&#9654; Full Battle</button>
+                <button id="btn-reset" class="btn btn-danger">&#8634; Reset</button>
+            </div>
+            <div class="speed-control">
+                <label>Speed:</label>
+                <input type="range" id="speed-slider" min="50" max="1000" value="200" step="50" />
+                <span id="speed-label">200ms</span>
+            </div>
+        </section>
+
+        <section class="phase-indicator" id="phase-indicator">
+            <span class="phase-dot" data-phase="SIEGE">Siege</span>
+            <span class="phase-dot" data-phase="RANGED">Ranged</span>
+            <span class="phase-dot" data-phase="MOUNTED">Mounted</span>
+            <span class="phase-dot" data-phase="GROUND">Ground</span>
+        </section>
+
+        <section class="battlefield-area">
+            <div id="battlefield" class="battlefield"></div>
+        </section>
+
+        <section class="summary-bar" id="summary-bar"></section>
+
+        <section class="bottom-panels">
+            <div class="battle-log-panel">
+                <div class="log-header">
+                    <h3>Battle Log</h3>
+                    <div class="log-filters">
+                        <select id="log-filter-type">
+                            <option value="">All Types</option>
+                            <option value="SIEGE">Siege</option>
+                            <option value="RANGED">Ranged</option>
+                            <option value="MOUNTED">Mounted</option>
+                            <option value="GROUND">Ground</option>
+                        </select>
+                        <select id="log-filter-round"><option value="">All Rounds</option></select>
+                        <label><input type="checkbox" id="log-filter-att" checked /> ATT</label>
+                        <label><input type="checkbox" id="log-filter-def" checked /> DEF</label>
+                    </div>
+                </div>
+                <div id="battle-log" class="battle-log"></div>
+            </div>
+            <div class="comparison-panel" id="comparison-panel"></div>
+        </section>
+    </main>
+
+    <script src="js/troop-data.js"></script>
+    <script src="js/battle-engine.js"></script>
+    <script src="js/army-config.js"></script>
+    <script src="js/battlefield.js"></script>
+    <script src="js/playback.js"></script>
+    <script src="js/battle-log.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
