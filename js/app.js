@@ -4,6 +4,7 @@ var App = (function () {
     var battleResult;
     var previousResult = null;
     var isSimulated = false;
+    var isBattleView = false;
 
     // Display armies — separate copies that get events applied incrementally
     var displayAtt, displayDef;
@@ -29,6 +30,35 @@ var App = (function () {
         document.getElementById('btn-round').addEventListener('click', onRound);
         document.getElementById('btn-full').addEventListener('click', onFull);
         document.getElementById('btn-reset').addEventListener('click', onReset);
+        document.getElementById('btn-battle-view').addEventListener('click', toggleBattleView);
+    }
+
+    // --- Battle View Toggle ---
+
+    function toggleBattleView() {
+        if (!isBattleView) {
+            // Entering battle view — need a simulation first
+            if (!ensureSimulated()) return;
+            enterBattleView();
+        } else {
+            exitBattleView();
+        }
+    }
+
+    function enterBattleView() {
+        isBattleView = true;
+        document.querySelector('.army-panels').style.display = 'none';
+        document.body.classList.add('battle-view-active');
+        var btn = document.getElementById('btn-battle-view');
+        btn.textContent = '\u2190 Setup';
+    }
+
+    function exitBattleView() {
+        isBattleView = false;
+        document.querySelector('.army-panels').style.display = '';
+        document.body.classList.remove('battle-view-active');
+        var btn = document.getElementById('btn-battle-view');
+        btn.innerHTML = '&#9876; Battle View';
     }
 
     function ensureSimulated() {
@@ -132,6 +162,8 @@ var App = (function () {
         battleResult = null;
         displayAtt = null;
         displayDef = null;
+
+        if (isBattleView) exitBattleView();
     }
 
     // --- Result Comparison ---

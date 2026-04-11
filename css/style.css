@@ -138,48 +138,101 @@ select { width: auto; text-align: left; }
 /* === Battlefield === */
 .battlefield-area { margin-bottom: 0.75rem; }
 .battlefield {
-    display: flex; justify-content: space-between;
-    background: #111827; border-radius: 6px; padding: 1rem;
-    min-height: 200px; border: 1px solid #223;
-    position: relative;
-}
-.bf-side { display: flex; flex-direction: column; gap: 0.6rem; width: 45%; }
-.bf-side.defender { align-items: flex-end; }
-
-.troop-block {
-    background: #16213e; border-radius: 5px; padding: 0.5rem 0.6rem;
-    border-left: 3px solid #444; min-width: 160px; position: relative;
-    transition: all 0.2s;
-}
-.troop-block.highlighted {
-    box-shadow: 0 0 12px rgba(233, 69, 96, 0.5);
-    border-left-color: #e94560 !important;
-}
-.troop-block.eliminated { opacity: 0.3; border-style: dashed; }
-.troop-block .block-type { font-weight: 700; font-size: 0.82rem; margin-bottom: 0.2rem; }
-.troop-block .block-layer {
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.75rem; gap: 0.4rem; margin-bottom: 0.1rem;
-}
-.troop-block .block-layer .fill-bar {
-    flex: 1; height: 4px; background: #333; border-radius: 2px; overflow: hidden;
-}
-.troop-block .block-layer .fill-bar .fill {
-    height: 100%; border-radius: 2px; transition: width 0.3s;
-}
-.troop-block .block-total {
-    border-top: 1px solid #334; margin-top: 0.2rem; padding-top: 0.2rem;
-    font-size: 0.75rem; font-weight: 600; color: #ccc;
+    background: linear-gradient(180deg, #0d1a0d 0%, #1a2612 40%, #1a2612 60%, #0d1a0d 100%);
+    border-radius: 6px; padding: 0;
+    height: 420px; border: 1px solid #2a3a1a;
+    position: relative; overflow: hidden;
 }
 
-/* Attack arrow */
-.attack-arrow {
-    position: absolute; pointer-events: none;
-    font-size: 0.75rem; color: #e94560; font-weight: 600;
-    background: rgba(233, 69, 96, 0.15); padding: 0.2rem 0.5rem;
-    border-radius: 4px; white-space: nowrap;
-    left: 50%; transform: translateX(-50%);
-    z-index: 10;
+/* Center line */
+.bf-center-line {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 1px; background: rgba(255,255,255,0.08);
+    z-index: 1;
+}
+
+/* Unit markers — positioned absolutely on the map */
+.unit-marker {
+    position: absolute; cursor: pointer; z-index: 3;
+    display: flex; flex-direction: column; align-items: center;
+    transition: left 0.4s ease-out, top 0.4s ease-out, opacity 0.3s;
+    user-select: none;
+}
+.unit-marker:hover { z-index: 4; }
+.unit-marker:hover .unit-icon { transform: scale(1.12); }
+
+.unit-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; color: #fff;
+    border: 2px solid rgba(255,255,255,0.25);
+    transition: transform 0.15s, box-shadow 0.2s;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.unit-icon.icon-ground  { background: radial-gradient(circle, #d4a843, #8B6914); }
+.unit-icon.icon-ranged  { background: radial-gradient(circle, #4caf6e, #2d8a4e); }
+.unit-icon.icon-mounted { background: radial-gradient(circle, #5b9bd5, #4a7fb5); }
+.unit-icon.icon-siege   { background: radial-gradient(circle, #e07040, #c44e2e); }
+
+.unit-count {
+    font-size: 0.72rem; font-weight: 700; color: #ddd;
+    margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    white-space: nowrap;
+}
+.unit-label {
+    font-size: 0.62rem; color: #999;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+.unit-marker.eliminated { opacity: 0.15; pointer-events: none; }
+.unit-marker.eliminated .unit-icon { border-style: dashed; }
+.unit-marker.highlighted .unit-icon {
+    box-shadow: 0 0 16px rgba(233, 69, 96, 0.7);
+    border-color: #e94560;
+}
+.unit-marker.damaged .unit-icon { animation: damage-flash-icon 0.35s ease-out; }
+
+/* SVG attack arrow overlay */
+.bf-svg-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 5;
+}
+.attack-line {
+    stroke: #e94560; stroke-width: 2; fill: none;
+}
+.attack-label-bg {
+    fill: rgba(17, 24, 39, 0.85); rx: 3; ry: 3;
+}
+.attack-label {
+    fill: #e94560; font-size: 11px; font-weight: 600;
+    text-anchor: middle; dominant-baseline: central;
+}
+
+/* Detail panel (click on unit) */
+.detail-panel {
+    position: absolute; background: #1a1a2e; border: 1px solid #445;
+    border-radius: 6px; padding: 0.6rem; font-size: 0.78rem;
+    z-index: 20; min-width: 180px; max-width: 250px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    display: none;
+}
+.detail-panel .detail-title { font-weight: 700; margin-bottom: 0.3rem; }
+.detail-panel .detail-tiers { margin-bottom: 0.3rem; }
+.detail-panel .detail-tier-row {
+    display: flex; justify-content: space-between; font-size: 0.75rem;
+    padding: 0.05rem 0; color: #bbb; gap: 1rem;
+}
+.detail-panel .detail-tier-row .tier-lost { color: #e94560; font-size: 0.7rem; }
+.detail-panel .detail-total {
+    border-top: 1px solid #334; padding-top: 0.25rem; font-weight: 600; color: #ccc;
+}
+.detail-panel .detail-targets {
+    margin-top: 0.25rem; color: #888; font-size: 0.72rem;
+}
+
+@keyframes damage-flash-icon {
+    0% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.8); border-color: #e94560; }
+    100% { box-shadow: none; border-color: rgba(255,255,255,0.25); }
 }
 
 /* === Summary Bar === */
@@ -259,6 +312,9 @@ select { width: auto; text-align: left; }
 .tooltip .tt-title { font-weight: 700; margin-bottom: 0.2rem; }
 .tooltip .tt-row { color: #bbb; }
 .tooltip .tt-buff { color: #4caf6e; }
+
+/* === Battle View Mode === */
+.battle-view-active .army-panels { display: none; }
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 6px; }
