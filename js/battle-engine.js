@@ -212,9 +212,21 @@ var BattleEngine = (function () {
 
     // --- Target Selection ---
 
-    function selectTarget(attackerLayer, enemyArmy, sourcePos, enemyPositions) {
+    function resolveLockedTargetType(phase, actingArmy, enemyArmy, sourcePos, enemyPositions) {
+        var maxRange = getMaxRange(actingArmy, phase);
+        var chain = TroopData.TARGET_PRIORITY[phase];
+        for (var i = 0; i < chain.length; i++) {
+            var targetType = chain[i];
+            var distance = Math.abs(enemyPositions[targetType] - sourcePos);
+            if (distance > maxRange) continue;
+            if (hasAliveLayers(enemyArmy, targetType)) return targetType;
+        }
+        return null;
+    }
+
+    function selectTarget(attackerLayer, enemyArmy, sourcePos, enemyPositions, lockedType) {
         var layerRange = attackerLayer.range;
-        var chain = TroopData.TARGET_PRIORITY[attackerLayer.type];
+        var chain = lockedType ? [lockedType] : TroopData.TARGET_PRIORITY[attackerLayer.type];
         for (var i = 0; i < chain.length; i++) {
             var targetType = chain[i];
             // Range check: is this target type within firing range?
@@ -303,11 +315,14 @@ var BattleEngine = (function () {
         var sourcePos = positions[sourceKey][phase];
         var enemyPositions = positions[enemyKey];
 
+        // Lock target type once for all tiers in this phase
+        var lockedType = resolveLockedTargetType(phase, actingArmy, enemyArmy, sourcePos, enemyPositions);
+
         for (var j = 0; j < layers.length; j++) {
             var attacker = layers[j];
             if (attacker.count <= 0) continue;
 
-            var target = selectTarget(attacker, enemyArmy, sourcePos, enemyPositions);
+            var target = selectTarget(attacker, enemyArmy, sourcePos, enemyPositions, lockedType);
             if (!target) continue;
 
             var countBefore = target.count;
