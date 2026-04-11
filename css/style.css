@@ -192,6 +192,20 @@ select { width: auto; text-align: left; }
 }
 .unit-marker.damaged .unit-icon { animation: damage-flash-icon 0.35s ease-out; }
 
+/* Range & speed indicators (shown on hover) */
+.bf-range-indicator {
+    position: absolute; height: 4px;
+    opacity: 0.22; pointer-events: none;
+    z-index: 2; transform: translateY(-50%);
+    border-radius: 2px;
+}
+.bf-speed-projection {
+    position: absolute; width: 20px; height: 20px;
+    border-radius: 50%; opacity: 0.3;
+    border: 2px dashed; pointer-events: none;
+    z-index: 2; transform: translate(-50%, -50%);
+}
+
 /* SVG attack arrow overlay */
 .bf-svg-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;

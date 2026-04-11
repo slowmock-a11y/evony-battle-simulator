@@ -118,7 +118,8 @@ var Battlefield = (function () {
         // Hide detail panel on re-render
         detailPanelEl.style.display = 'none';
 
-        // Remove old unit markers
+        // Remove old unit markers and indicators
+        clearIndicators();
         var oldMarkers = container.querySelectorAll('.unit-marker');
         oldMarkers.forEach(function (m) { m.remove(); });
 
@@ -127,6 +128,11 @@ var Battlefield = (function () {
             placeUnit(attArmy, type, startAttacker, attBuffs, 'ATT');
             placeUnit(defArmy, type, startDefender, defBuffs, 'DEF');
         });
+
+        // Re-show indicators if user is still hovering
+        if (hoveredUnit) {
+            showIndicators(hoveredUnit.type, hoveredUnit.side);
+        }
     }
 
     function placeUnit(army, type, startSnap, buffs, side) {
@@ -177,10 +183,18 @@ var Battlefield = (function () {
             showDetailPanel(marker, layers, startLayers, type, buffs, side);
         });
 
-        // Hover tooltip
-        marker.addEventListener('mouseenter', function (e) { showTooltip(e, type, buffs, side); });
+        // Hover tooltip + indicators
+        marker.addEventListener('mouseenter', function (e) {
+            showTooltip(e, type, buffs, side);
+            hoveredUnit = { type: type, side: side };
+            showIndicators(type, side);
+        });
         marker.addEventListener('mousemove', function (e) { moveTooltip(e); });
-        marker.addEventListener('mouseleave', hideTooltip);
+        marker.addEventListener('mouseleave', function () {
+            hideTooltip();
+            hoveredUnit = null;
+            clearIndicators();
+        });
 
         container.appendChild(marker);
     }
@@ -498,6 +512,98 @@ var Battlefield = (function () {
         document.querySelectorAll('.phase-dot').forEach(function (dot) {
             dot.className = 'phase-dot';
         });
+    }
+
+    // --- Range & Speed Indicators ---
+
+    var hoveredUnit = null; // { type, side } — tracks current hover for re-show on render
+
+    function getMaxRangeForType(army, type) {
+        var maxRange = 0;
+        army.layers.forEach(function (l) {
+            if (l.type === type && l.count > 0) {
+                var stats = TroopData.getStats(l.type, l.tier);
+                if (stats.range > maxRange) maxRange = stats.range;
+            }
+        });
+        return maxRange;
+    }
+
+    function getSpeed(type) {
+        return TroopData.getStats(type, 1).speed;
+    }
+
+    function clearIndicators() {
+        container.querySelectorAll('.bf-range-indicator, .bf-speed-projection').forEach(function (el) {
+            el.remove();
+        });
+    }
+
+    function showRangeIndicator(type, side) {
+        var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+        if (!army) return;
+        var maxRange = getMaxRangeForType(army, type);
+        if (maxRange <= 50) return; // skip melee-range types
+
+        var pos = currentPositions || defaultPositions();
+        var enginePos = pos[side][type];
+        var extentPos;
+        if (side === 'ATT') {
+            extentPos = Math.min(enginePos + maxRange, BATTLEFIELD_LENGTH);
+        } else {
+            extentPos = Math.max(enginePos - maxRange, 0);
+        }
+
+        var screenStart = mapToScreen(Math.min(enginePos, extentPos));
+        var screenEnd = mapToScreen(Math.max(enginePos, extentPos));
+        var color = TroopData.TYPES[type].color;
+
+        var bar = document.createElement('div');
+        bar.className = 'bf-range-indicator';
+        bar.style.left = screenStart + '%';
+        bar.style.width = (screenEnd - screenStart) + '%';
+        bar.style.top = Y_POSITIONS[type] + '%';
+        bar.style.background = color;
+        container.appendChild(bar);
+    }
+
+    function showSpeedProjection(type, side) {
+        var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+        if (!army) return;
+
+        // Skip if eliminated
+        var alive = false;
+        army.layers.forEach(function (l) {
+            if (l.type === type && l.count > 0) alive = true;
+        });
+        if (!alive) return;
+
+        var pos = currentPositions || defaultPositions();
+        var enginePos = pos[side][type];
+        var speed = getSpeed(type);
+        var projectedPos;
+        if (side === 'ATT') {
+            projectedPos = Math.min(enginePos + speed, BATTLEFIELD_LENGTH);
+        } else {
+            projectedPos = Math.max(enginePos - speed, 0);
+        }
+
+        var screenX = mapToScreen(projectedPos);
+        var color = TroopData.TYPES[type].color;
+
+        var ghost = document.createElement('div');
+        ghost.className = 'bf-speed-projection';
+        ghost.style.left = screenX + '%';
+        ghost.style.top = Y_POSITIONS[type] + '%';
+        ghost.style.borderColor = color;
+        ghost.style.background = color;
+        container.appendChild(ghost);
+    }
+
+    function showIndicators(type, side) {
+        clearIndicators();
+        showRangeIndicator(type, side);
+        showSpeedProjection(type, side);
     }
 
     // --- Helpers ---
