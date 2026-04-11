@@ -192,18 +192,33 @@ select { width: auto; text-align: left; }
 }
 .unit-marker.damaged .unit-icon { animation: damage-flash-icon 0.35s ease-out; }
 
-/* Range & speed indicators (shown on hover) */
+/* Range & speed indicators (persistent, brightened on hover) */
 .bf-range-indicator {
     position: absolute; height: 4px;
-    opacity: 0.22; pointer-events: none;
+    opacity: 0.12; pointer-events: none;
     z-index: 2; transform: translateY(-50%);
-    border-radius: 2px;
+    border-radius: 2px; transition: opacity 0.15s;
 }
 .bf-speed-projection {
     position: absolute; width: 20px; height: 20px;
-    border-radius: 50%; opacity: 0.3;
+    border-radius: 50%; opacity: 0.20;
     border: 2px dashed; pointer-events: none;
     z-index: 2; transform: translate(-50%, -50%);
+    transition: opacity 0.15s;
+}
+
+/* X-axis scale */
+.bf-axis-tick {
+    position: absolute; bottom: 12px; width: 1px; height: 8px;
+    background: rgba(255,255,255,0.25); pointer-events: none;
+    z-index: 1; transform: translateX(-50%);
+}
+.bf-axis-label {
+    position: absolute; bottom: 1px;
+    font-size: 10px; color: rgba(255,255,255,0.3);
+    pointer-events: none; z-index: 1;
+    transform: translateX(-50%);
+    font-family: 'Consolas', 'Courier New', monospace;
 }
 
 /* SVG attack arrow overlay */

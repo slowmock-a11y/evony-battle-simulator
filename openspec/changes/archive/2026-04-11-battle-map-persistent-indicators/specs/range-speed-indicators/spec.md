@@ -1,6 +1,6 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
-### Requirement: Range indicator (persistent)
+### Requirement: Range indicator on hover
 Range indicators SHALL be displayed permanently for all alive Ranged and Siege units, not only on hover. Each indicator SHALL be a horizontal bar extending from the unit's current X position toward the enemy side by the unit's maximum range (across alive tiers), rendered in the troop type's color at 0.12 opacity. When the user hovers over a specific unit marker, that unit's range indicator SHALL increase to 0.22 opacity to stand out.
 
 #### Scenario: Persistent range indicators for all ranged/siege units
@@ -19,7 +19,7 @@ Range indicators SHALL be displayed permanently for all alive Ranged and Siege u
 - **WHEN** Ground or Mounted units are alive (range 50)
 - **THEN** no range indicator is displayed for them since the range is too short to be visually meaningful
 
-### Requirement: Speed projection indicator (persistent)
+### Requirement: Speed projection indicator on hover
 Speed projection markers SHALL be displayed permanently for all alive units. Each projection SHALL be a small translucent circle in the troop type's color with a dashed outline at 0.20 opacity, placed at `currentPos + speed` for attackers or `currentPos - speed` for defenders (clamped to battlefield bounds). When the user hovers over a specific unit marker, that unit's speed projection SHALL increase to 0.30 opacity.
 
 #### Scenario: Persistent speed projections for all alive units
@@ -37,6 +37,12 @@ Speed projection markers SHALL be displayed permanently for all alive units. Eac
 #### Scenario: No projection for eliminated units
 - **WHEN** a unit has zero troops remaining
 - **THEN** no speed projection indicator is displayed for that unit
+
+### Requirement: Indicators dismissed on mouse leave
+REMOVED — indicators are now always visible and no longer dismissed on mouse leave.
+
+**Reason**: Indicators are now rendered persistently for all units. The hover interaction only changes opacity, not presence.
+**Migration**: Hover now brightens the hovered unit's indicators instead of showing/hiding them.
 
 ### Requirement: Indicators update with phase progression
 The persistent range and speed indicators SHALL reflect the current phase's positions. When the phase advances, all indicators SHALL update to match the new positions for all alive units.
