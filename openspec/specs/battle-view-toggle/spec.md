@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Battle view toggle button
-A "Battle View" button SHALL be present in the playback controls bar. Clicking it SHALL hide the army configuration panels and enter battle view mode.
+A "Battle View" button SHALL be present in the mirror column between army panels. Clicking it SHALL hide the army configuration panels and enter battle view mode. The button SHALL move to the playback controls bar when in battle view.
+
+#### Scenario: Button visible on setup page
+- **WHEN** the page loads
+- **THEN** the "Battle View" button is visible in the mirror column between the army panels
 
 #### Scenario: Enter battle view
 - **WHEN** the user clicks "Battle View" with a valid simulation ready
-- **THEN** the army configuration panels (attacker and defender) are hidden and the button text changes to "Setup"
+- **THEN** the army configuration panels are hidden, the button moves to the controls bar, and its text changes to "Setup"
 
 #### Scenario: Simulation required
 - **WHEN** the user clicks "Battle View" with no simulation run yet

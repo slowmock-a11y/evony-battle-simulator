@@ -3,9 +3,9 @@ var ArmyConfig = (function () {
 
     var TYPE_KEYS = ['GROUND', 'RANGED', 'MOUNTED', 'SIEGE'];
     var TIER_GROUPS = [
-        { label: 'High Tiers (T14–T10)', tiers: [14, 13, 12, 11, 10], collapsed: false },
-        { label: 'Mid Tiers (T9–T5)',    tiers: [9, 8, 7, 6, 5],     collapsed: true },
-        { label: 'Low Tiers (T4–T1)',    tiers: [4, 3, 2, 1],         collapsed: true }
+        { label: 'High Tiers (T14–T10)', tiers: [14, 13, 12, 11, 10] },
+        { label: 'Mid Tiers (T9–T5)',    tiers: [9, 8, 7, 6, 5] },
+        { label: 'Low Tiers (T4–T1)',    tiers: [4, 3, 2, 1] }
     ];
 
     var PRESETS = {
@@ -109,19 +109,10 @@ var ArmyConfig = (function () {
         });
 
         TIER_GROUPS.forEach(function (group, gi) {
-            var header = document.createElement('div');
-            header.className = 'tier-group-header';
-            header.innerHTML = '<span class="arrow ' + (group.collapsed ? 'collapsed' : '') + '">&#9660;</span> ' + group.label;
-            container.appendChild(header);
-
             var body = document.createElement('div');
-            body.className = 'tier-group-body' + (group.collapsed ? ' collapsed' : '');
+            body.className = 'tier-group-body';
+            if (gi > 0) body.style.marginTop = '0.5rem';
             container.appendChild(body);
-
-            header.addEventListener('click', function () {
-                body.classList.toggle('collapsed');
-                header.querySelector('.arrow').classList.toggle('collapsed');
-            });
 
             // Column headers (only for first group or when expanded)
             var gh = document.createElement('div');

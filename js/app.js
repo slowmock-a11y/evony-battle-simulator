@@ -47,17 +47,17 @@ var App = (function () {
 
     function enterBattleView() {
         isBattleView = true;
-        document.querySelector('.army-panels').style.display = 'none';
-        document.body.classList.add('battle-view-active');
         var btn = document.getElementById('btn-battle-view');
+        document.querySelector('.playback-buttons').appendChild(btn);
+        document.body.classList.add('battle-view-active');
         btn.textContent = '\u2190 Setup';
     }
 
     function exitBattleView() {
         isBattleView = false;
-        document.querySelector('.army-panels').style.display = '';
-        document.body.classList.remove('battle-view-active');
         var btn = document.getElementById('btn-battle-view');
+        document.querySelector('.mirror-col').appendChild(btn);
+        document.body.classList.remove('battle-view-active');
         btn.innerHTML = '&#9876; Battle View';
     }
 

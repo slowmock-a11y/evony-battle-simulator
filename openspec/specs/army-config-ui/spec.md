@@ -18,27 +18,16 @@ Each army panel SHALL display a grid of numeric inputs with rows for each tier (
 - **WHEN** the user sets Ground T14 to 0
 - **THEN** Ground T14 is excluded from the army (no Ground T14 layer in simulation)
 
-### Requirement: Collapsible tier groups
-The troop count grid SHALL group tiers into three collapsible sections: High (T14–T10), Mid (T9–T5), and Low (T4–T1). Within each group, tiers SHALL be ordered highest first (T14 at top). The High group SHALL be expanded by default; Mid and Low SHALL be collapsed.
+### Requirement: Tier groups
+The troop count grid SHALL group tiers into three visual sections: High (T14–T10), Mid (T9–T5), and Low (T4–T1). Within each group, tiers SHALL be ordered highest first (T14 at top). All groups SHALL be always visible (no collapse behavior). Groups SHALL be separated by padding/margin.
 
-#### Scenario: Default collapsed state
+#### Scenario: Default state — all tiers visible
 - **WHEN** the page loads
-- **THEN** High tiers (T14–T10) are visible, Mid and Low tiers are collapsed
+- **THEN** all tiers T14–T1 are visible in the troop grid, grouped as High (T14–T10), Mid (T9–T5), and Low (T4–T1)
 
-#### Scenario: Expand collapsed group
-- **WHEN** the user clicks the "Mid Tiers (T5–T9)" header
-- **THEN** the T9–T5 input rows become visible
-
-### Requirement: Bulk-set buttons
-Each army panel SHALL provide bulk-set buttons: "Set all: 0" (zeros all troop counts), "Set all: 1000" (resets to default), and a custom bulk-set with a numeric input and "Apply" button. Bulk actions SHALL affect all tiers including collapsed ones.
-
-#### Scenario: Set all to zero
-- **WHEN** the user clicks "Set all: 0" on the Attacker panel
-- **THEN** all 56 attacker troop count inputs become 0 (including collapsed tiers)
-
-#### Scenario: Custom bulk set
-- **WHEN** the user types 5000 in the custom bulk input and clicks "Apply"
-- **THEN** all 56 troop count inputs in that panel become 5000
+#### Scenario: Group visual separation
+- **WHEN** the user views the troop grid
+- **THEN** each group has vertical spacing between groups
 
 ### Requirement: Buff inputs per troop type
 Each army panel SHALL display buff inputs: one row per troop type (Ground, Ranged, Mounted, Siege) with three percentage fields each (Attack%, Defense%, HP%). Default value SHALL be 0. Negative values SHALL be allowed.

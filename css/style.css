@@ -107,7 +107,8 @@ select { width: auto; text-align: left; }
 }
 .army-panel h2 { font-size: 1rem; margin-bottom: 0.5rem; color: #ccc; }
 .mirror-col {
-    display: flex; align-items: center; padding-top: 2rem;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 0.5rem; padding-top: 2rem;
 }
 
 /* Panel controls */
@@ -144,17 +145,7 @@ select { width: auto; text-align: left; }
 
 /* === Troop Grid === */
 .troop-grid { font-size: 0.78rem; }
-.tier-group-header {
-    cursor: pointer; padding: 0.3rem 0.5rem;
-    background: #1a2540; border-radius: 3px; margin-bottom: 0.2rem;
-    display: flex; align-items: center; gap: 0.4rem;
-    user-select: none;
-}
-.tier-group-header:hover { background: #1e2d50; }
-.tier-group-header .arrow { transition: transform 0.2s; display: inline-block; font-size: 0.7rem; }
-.tier-group-header .arrow.collapsed { transform: rotate(-90deg); }
 .tier-group-body { overflow: hidden; }
-.tier-group-body.collapsed { display: none; }
 
 .grid-header {
     display: grid; grid-template-columns: 40px repeat(4, 1fr);
@@ -189,22 +180,14 @@ select { width: auto; text-align: left; }
 
 /* === Controls Bar === */
 .controls-bar {
-    display: flex; align-items: center; justify-content: center;
+    display: none; align-items: center; justify-content: center;
     gap: 1.5rem; padding: 0.75rem; background: #16213e;
     border-radius: 6px; margin-bottom: 0.75rem; border: 1px solid #223;
 }
+.battle-view-active .controls-bar { display: flex; }
 .playback-buttons { display: flex; gap: 0.4rem; }
 .speed-control { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #999; }
 #speed-slider { width: 100px; }
-
-/* Hide playback controls on setup page, show only in battle view */
-#btn-step, #btn-round, #btn-full, #btn-reset { display: none; }
-.speed-control { display: none; }
-.battle-view-active #btn-step,
-.battle-view-active #btn-round,
-.battle-view-active #btn-full,
-.battle-view-active #btn-reset { display: inline-block; }
-.battle-view-active .speed-control { display: flex; }
 
 /* === Phase Indicator === */
 .phase-indicator {

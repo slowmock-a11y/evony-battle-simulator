@@ -18,7 +18,12 @@ var InfoPages = (function () {
         var tabs = document.querySelectorAll('.view-tab');
         for (var i = 0; i < tabs.length; i++) {
             tabs[i].addEventListener('click', function () {
-                switchView(this.getAttribute('data-view'));
+                var view = this.getAttribute('data-view');
+                if (this.classList.contains('active')) {
+                    switchView('simulator');
+                } else {
+                    switchView(view);
+                }
             });
         }
     }
