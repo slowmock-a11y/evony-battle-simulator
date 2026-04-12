@@ -443,6 +443,9 @@ select { width: auto; text-align: left; }
 
 /* === Battle View Mode === */
 .battle-view-active .army-setup { display: none; }
+.battle-view-active .top-bar { justify-content: flex-end; }
+.battle-view-active .battle-view-btn-row { display: none; }
+.battle-view-active .top-bar .view-tabs { position: static; }
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 6px; }
