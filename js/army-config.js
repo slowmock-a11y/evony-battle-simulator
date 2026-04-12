@@ -26,11 +26,11 @@ var ArmyConfig = (function () {
             row.innerHTML =
                 '<span class="buff-label ' + info.colorClass + '">' + info.name + '</span>' +
                 '<span class="buff-stat-label">ATK</span>' +
-                '<input type="number" value="0" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="atk" />%' +
+                '<input type="number" value="1500" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="atk" />%' +
                 '<span class="buff-stat-label">DEF</span>' +
-                '<input type="number" value="0" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="def" />%' +
+                '<input type="number" value="1500" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="def" />%' +
                 '<span class="buff-stat-label">HP</span>' +
-                '<input type="number" value="0" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="hp" />%';
+                '<input type="number" value="1500" data-panel="' + panelId + '" data-buff-type="' + type + '" data-buff-stat="hp" />%';
             container.appendChild(row);
         });
     }
