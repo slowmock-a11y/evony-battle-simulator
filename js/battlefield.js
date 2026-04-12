@@ -455,7 +455,11 @@ var Battlefield = (function () {
             // Label with background at midpoint (use original centers)
             var mx = (cx1 + cx2) / 2;
             var my = (cy1 + cy2) / 2;
-            var labelText = formatNum(event.damage) + ' dmg, ' + formatNum(event.kills) + ' killed';
+            var srcName = event.sourceType.charAt(0).toUpperCase() + event.sourceType.slice(1);
+            var tgtName = event.targetType.charAt(0).toUpperCase() + event.targetType.slice(1);
+            var labelText = srcName + ' T' + event.sourceTier + ' (' + formatNum(event.sourceCount) + ')'
+                + ' \u2192 ' + tgtName + ' T' + event.targetTier + ' (' + formatNum(event.targetCountBefore) + ')'
+                + '  |  ' + formatNum(event.damage) + ' dmg, ' + formatNum(event.kills) + ' killed';
             svgLabel.textContent = labelText;
             svgLabel.setAttribute('x', mx);
             svgLabel.setAttribute('y', my);
