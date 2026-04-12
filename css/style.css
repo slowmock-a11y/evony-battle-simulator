@@ -10,6 +10,7 @@ body {
 h1, h2, h3 { font-weight: 600; }
 header {
     display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.4rem;
     padding: 0.5rem 0;
 }
 .header-left { display: flex; align-items: baseline; gap: 0.6rem; }
@@ -129,12 +130,7 @@ select { width: auto; text-align: left; }
     border: 1px solid #223;
 }
 .army-panel h2 { font-size: 1rem; margin-bottom: 0.5rem; color: #ccc; }
-.top-bar {
-    display: flex; align-items: center; justify-content: center;
-    position: relative; margin-bottom: 0.5rem;
-}
-.battle-view-btn-row { display: flex; justify-content: center; }
-.top-bar .view-tabs { position: absolute; right: 0; }
+.battle-view-btn-row { display: flex; justify-content: center; margin-bottom: 0.5rem; }
 
 /* === Section Dividers === */
 .section-divider {
@@ -443,9 +439,6 @@ select { width: auto; text-align: left; }
 
 /* === Battle View Mode === */
 .battle-view-active .army-setup { display: none; }
-.battle-view-active .top-bar { justify-content: flex-end; }
-.battle-view-active .battle-view-btn-row { display: none; }
-.battle-view-active .top-bar .view-tabs { position: static; }
 
 /* === Scrollbar === */
 ::-webkit-scrollbar { width: 6px; }
@@ -466,9 +459,8 @@ main { max-width: 100%; overflow-x: hidden; }
     .army-row { flex-direction: column; }
     .army-col { flex: none; width: 100%; }
 
-    /* Top bar: stack on narrow screens */
-    .top-bar { flex-wrap: wrap; gap: 0.4rem; }
-    .top-bar .view-tabs { position: static; }
+    /* View tabs in header */
+    .view-tabs { flex-wrap: wrap; }
 
     /* Controls bar: wrap children, touch-friendly */
     .controls-bar {
