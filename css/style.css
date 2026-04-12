@@ -15,6 +15,8 @@ header {
 .header-left { display: flex; align-items: baseline; gap: 0.6rem; }
 header h1 { font-size: 1.2rem; color: #e94560; }
 header .subtitle { font-size: 0.78rem; color: #888; }
+.github-link { color: #888; transition: color 0.2s; display: flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.85rem; }
+.github-link:hover { color: #fff; }
 
 /* === View Tabs === */
 .view-tabs {
@@ -35,6 +37,8 @@ header .subtitle { font-size: 0.78rem; color: #888; }
     background: #16213e; border-radius: 6px; padding: 1.5rem 2rem;
     border: 1px solid #223; line-height: 1.6;
 }
+.back-link { color: #888; text-decoration: none; font-size: 0.85rem; display: inline-block; margin-bottom: 0.75rem; transition: color 0.2s; }
+.back-link:hover { color: #e94560; }
 .info-content h2 { font-size: 1.3rem; color: #e94560; margin-bottom: 0.75rem; }
 .info-content h3 {
     font-size: 1rem; color: #ccc; margin-top: 1.5rem; margin-bottom: 0.5rem;
@@ -195,9 +199,11 @@ select { width: auto; text-align: left; }
 /* === Controls Bar === */
 .controls-bar {
     display: none; align-items: center; justify-content: center;
-    gap: 1.5rem; padding: 0.75rem; background: #16213e;
+    gap: 1rem; padding: 0.75rem; background: #16213e;
     border-radius: 6px; margin-bottom: 0.75rem; border: 1px solid #223;
+    position: relative;
 }
+.controls-bar > #btn-battle-view { position: absolute; left: 0.75rem; }
 .battle-view-active .controls-bar { display: flex; }
 .playback-buttons { display: flex; gap: 0.4rem; }
 .speed-control { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #999; }

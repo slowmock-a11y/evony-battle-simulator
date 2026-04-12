@@ -26,6 +26,13 @@ var InfoPages = (function () {
                 }
             });
         }
+        var backLinks = document.querySelectorAll('.back-link[data-view]');
+        for (var i = 0; i < backLinks.length; i++) {
+            backLinks[i].addEventListener('click', function (e) {
+                e.preventDefault();
+                switchView(this.getAttribute('data-view'));
+            });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', init);

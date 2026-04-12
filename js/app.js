@@ -44,7 +44,8 @@ var App = (function () {
     function enterBattleView() {
         isBattleView = true;
         var btn = document.getElementById('btn-battle-view');
-        document.querySelector('.playback-buttons').appendChild(btn);
+        var bar = document.querySelector('.controls-bar');
+        bar.insertBefore(btn, bar.firstChild);
         document.body.classList.add('battle-view-active');
         btn.textContent = '\u2190 Setup';
     }
@@ -162,8 +163,6 @@ var App = (function () {
         battleResult = null;
         displayAtt = null;
         displayDef = null;
-
-        if (isBattleView) exitBattleView();
     }
 
     // --- Result Comparison ---
