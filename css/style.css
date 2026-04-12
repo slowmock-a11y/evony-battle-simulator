@@ -205,7 +205,6 @@ select { width: auto; text-align: left; }
     border-radius: 6px; margin-bottom: 0.75rem; border: 1px solid #223;
     position: relative;
 }
-.controls-bar > #btn-battle-view { position: absolute; left: 0.75rem; }
 .battle-view-active .controls-bar { display: flex; }
 .playback-buttons { display: flex; gap: 0.4rem; }
 .speed-control { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: #999; }
