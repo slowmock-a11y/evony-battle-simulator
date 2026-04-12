@@ -247,10 +247,11 @@ var BattleEngine = (function () {
 
     // --- Battle Simulation ---
 
-    function simulate(attackerArmy, defenderArmy) {
+    function simulate(attackerArmy, defenderArmy, options) {
+        var opts = options || {};
         var events = [];
         var round = 0;
-        var maxRounds = 100; // safety cap
+        var maxRounds = opts.maxRounds || 100;
         var positions = initPositions(attackerArmy, defenderArmy);
 
         while (armyAlive(attackerArmy) && armyAlive(defenderArmy) && round < maxRounds) {

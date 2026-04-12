@@ -28,3 +28,28 @@ Each troop type SHALL have associated metadata: display name, color code for UI 
 #### Scenario: Mounted type metadata
 - **WHEN** the system looks up Mounted metadata
 - **THEN** it returns name="Mounted", color="#4a7fb5", targetPriority=[Ground, Siege, Mounted, Range]
+
+### Requirement: Complete damage multiplier matrix
+The `DAMAGE_MULTIPLIERS` object SHALL contain entries for all 16 attacker×defender type combinations (Ground, Ranged, Mounted, Siege). The `getMultiplier(attackerType, defenderType)` function SHALL return the exact coefficient from the matrix. Values below 1.0 represent penalties; values above 1.0 represent bonuses.
+
+The matrix values SHALL be:
+- Ground→Ground: 1.0, Ground→Ranged: 1.0, Ground→Mounted: 0.7, Ground→Siege: 1.1
+- Ranged→Ground: 0.67, Ranged→Ranged: 1.0, Ranged→Mounted: 1.2, Ranged→Siege: 1.1
+- Mounted→Ground: 1.0, Mounted→Ranged: 1.0, Mounted→Mounted: 1.0, Mounted→Siege: 1.0
+- Siege→Ground: 0.35, Siege→Ranged: 0.4, Siege→Mounted: 0.3, Siege→Siege: 0.5
+
+#### Scenario: Counter bonus lookup
+- **WHEN** `getMultiplier('RANGED', 'MOUNTED')` is called
+- **THEN** it returns 1.2
+
+#### Scenario: Penalty lookup
+- **WHEN** `getMultiplier('GROUND', 'MOUNTED')` is called
+- **THEN** it returns 0.7
+
+#### Scenario: Siege weakness lookup
+- **WHEN** `getMultiplier('SIEGE', 'GROUND')` is called
+- **THEN** it returns 0.35
+
+#### Scenario: Neutral lookup
+- **WHEN** `getMultiplier('MOUNTED', 'RANGED')` is called
+- **THEN** it returns 1.0

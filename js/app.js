@@ -81,7 +81,8 @@ var App = (function () {
             return;
         }
 
-        battleResult = BattleEngine.simulate(simAtt, simDef);
+        var maxRounds = parseInt(document.getElementById('max-rounds').value, 10) || 100;
+        battleResult = BattleEngine.simulate(simAtt, simDef, { maxRounds: maxRounds });
 
         // Create fresh display armies (not mutated by simulation)
         displayAtt = BattleEngine.createArmy(attCounts, attBuffs);

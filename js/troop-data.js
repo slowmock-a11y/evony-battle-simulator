@@ -19,12 +19,14 @@ var TroopData = (function () {
         GROUND:  ['RANGED', 'SIEGE', 'GROUND', 'MOUNTED']
     };
 
-    // Damage multipliers: ATTACKER_TYPE -> DEFENDER_TYPE -> multiplier
+    // Damage multipliers: ATTACKER_TYPE -> DEFENDER_TYPE -> coefficient
+    // Source: community research by @DerrickDefies
+    // https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s
     var DAMAGE_MULTIPLIERS = {
-        RANGED:  { MOUNTED: 1.2 },
-        MOUNTED: { GROUND: 1.2 },
-        GROUND:  { RANGED: 1.2 },
-        SIEGE:   { SIEGE: 1.5 }
+        GROUND:  { GROUND: 1.0,  RANGED: 1.0, MOUNTED: 0.7,  SIEGE: 1.1 },
+        RANGED:  { GROUND: 0.67, RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
+        MOUNTED: { GROUND: 1.0,  RANGED: 1.0, MOUNTED: 1.0,  SIEGE: 1.0 },
+        SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.5 }
     };
 
     function getMultiplier(attackerType, defenderType) {

@@ -229,23 +229,22 @@ Source: common Evony community formula
 
 ## Damage Multipliers
 
-Bonus damage when attacking your counter target:
+Full 4×4 troop type coefficient matrix. Values below 1.0 are penalties; above 1.0 are bonuses.
 
-| Matchup           | Multiplier |
-|--------------------|-----------|
-| Range → Mounted    | 1.2×      |
-| Mounted → Ground   | 1.2×      |
-| Ground → Range     | 1.2×      |
-| Siege → Siege      | 1.5×      |
-| All other matchups | 1.0×      |
+| Attacker \ Target | Ground | Ranged | Mounted | Siege |
+|--------------------|--------|--------|---------|-------|
+| Ground             | 1.0    | 1.0    | 0.7     | 1.1   |
+| Ranged             | 0.67   | 1.0    | 1.2     | 1.1   |
+| Mounted            | 1.0    | 1.0    | 1.0     | 1.0   |
+| Siege              | 0.35   | 0.4    | 0.3     | 0.5   |
 
-**No penalty** for being on the wrong side — only bonuses.
+Key interactions:
+- Ranged counter Mounted (1.2×) but are weak against Ground (0.67×)
+- Ground are penalised against Mounted (0.7×) but strong against Siege (1.1×)
+- Mounted are neutral across the board (1.0× everywhere)
+- Siege are offensively weak against all types (0.3×–0.5×)
 
-The counter triangle:
-```
-Range ──1.2×──▶ Mounted ──1.2×──▶ Ground ──1.2×──▶ Range
-Siege ──1.5×──▶ Siege
-```
+Source: community research by [@DerrickDefies](https://www.youtube.com/@DerrickDefies) — [Battle Mechanics video](https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s)
 
 ---
 
