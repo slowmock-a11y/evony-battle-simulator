@@ -1,6 +1,8 @@
-# Evony Battle Simulator
+# Evony Battle Simulator &nbsp; [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/slowmock-a11y/evony-battle-simulator)
 
-A browser-based march-vs-march PvP battle simulator for **Evony: The King's Return**, built to help players understand and experiment with the game's combat mechanics.
+**[Try it live](https://slowmock-a11y.github.io/evony-battle-simulator/)** | A browser-based march-vs-march PvP battle simulator for **Evony: The King's Return**, built to help players understand and experiment with the game's combat mechanics.
+
+![Evony Battle Simulator — battlefield mid-battle](screenshot.png)
 
 ## Motivation
 
