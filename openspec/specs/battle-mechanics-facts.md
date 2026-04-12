@@ -120,11 +120,11 @@ Troops attack sequentially by **range** (longest range fires first):
 
 **Within each phase:**
 1. Attacker's troops strike defender's target layer (full damage formula)
-2. Surviving target counter-strikes attacker's layer (reduced formula: targetATK / attackerHP, flat)
+2. Surviving target counter-strikes attacker's layer **if attacker is within target's range** (reduced formula: targetATK / attackerHP, flat)
 3. Defender's troops strike attacker's target layer (full damage formula)
-4. Surviving target counter-strikes defender's layer (reduced formula)
+4. Surviving target counter-strikes defender's layer **if defender is within target's range** (reduced formula)
 
-The attacker has a slight edge — they reduce the defender's count before the defender's main attack. Counter-strikes deal incidental return damage using a simplified formula with no type modifier or defense ratio.
+The attacker has a slight edge — they reduce the defender's count before the defender's main attack. Counter-strikes deal incidental return damage using a simplified formula with no type modifier or defense ratio. Counter-strikes are range-gated: e.g., Ground and Mounted (both range 50) cannot counter-strike Ranged or Siege attacking from beyond 50 units.
 
 **Within a side (same type, multiple tiers):**
 Higher tier attacks before lower tier.

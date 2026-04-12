@@ -62,7 +62,7 @@ The engine SHALL calculate kills as `kills = damage / target_HP_per_troop` (deci
 - **THEN** kills = 2000 (capped)
 
 ### Requirement: Counter-strike
-After each attack action, if the target layer has surviving troops, the target SHALL counter-strike the attacker using a simplified formula: `counter_kills = targetEffATK / attackerEffHP` (flat, not scaled by troop count). No type modifier or ATK/(ATK+DEF) defense ratio is applied. Counter kills are capped at the attacker layer's current troop count.
+After each attack action, if the target layer has surviving troops **and the attacker is within the target's range**, the target SHALL counter-strike the attacker using a simplified formula: `counter_kills = targetEffATK / attackerEffHP` (flat, not scaled by troop count). No type modifier or ATK/(ATK+DEF) defense ratio is applied. Counter kills are capped at the attacker layer's current troop count. If the attacker is outside the target's range, no counter-strike occurs.
 
 #### Scenario: Counter-strike after attack
 - **WHEN** ATT Siege T13 (1 troop, effHP=58380) attacks DEF Siege T8 (effATK=17850) and the target survives

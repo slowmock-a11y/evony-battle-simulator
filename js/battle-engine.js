@@ -346,8 +346,10 @@ var BattleEngine = (function () {
                 positions: snapshotPositions(positions)
             });
 
-            // Counter-strike: surviving target strikes back with reduced formula
-            if (target.count > 0 && attacker.count > 0) {
+            // Counter-strike: surviving target strikes back if within range
+            var targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
+            var distance = Math.abs(targetPos - layerPos);
+            if (target.count > 0 && attacker.count > 0 && distance <= target.range) {
                 var attackerCountBefore = attacker.count;
                 var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs);
                 attacker.count -= counterKills;
