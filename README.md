@@ -86,7 +86,7 @@ Community sources used for the simulation rules:
 - [Server 806 -- Battle Mechanics](https://www.server806.com/post/battle-mechanics)
 - [Top Games (Official) -- About Battle Mechanics](https://topgamesinc.zendesk.com/hc/en-us/articles/360047535191-About-Evony-Battle-Mechanics)
 
-YouTube channels with battle mechanics deep-dives: **DerrickD**, **TheRiaGames**, **Gamer Momment**
+- [DerrickDefies -- YouTube](https://www.youtube.com/@DerrickDefies) -- Battle mechanics deep-dives
 
 ## License
 
