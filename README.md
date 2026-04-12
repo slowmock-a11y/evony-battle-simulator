@@ -90,4 +90,4 @@ YouTube channels with battle mechanics deep-dives: **DerrickD**, **TheRiaGames**
 
 ## License
 
-This project is provided as-is for educational and community use.
+[MIT](LICENSE)
