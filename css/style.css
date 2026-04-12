@@ -232,7 +232,8 @@ select { width: auto; text-align: left; }
 .battlefield {
     background: linear-gradient(180deg, #0d1a0d 0%, #1a2612 40%, #1a2612 60%, #0d1a0d 100%);
     border-radius: 6px; padding: 0;
-    height: 420px; border: 1px solid #2a3a1a;
+    width: 100%; aspect-ratio: 16 / 9; max-height: 420px;
+    border: 1px solid #2a3a1a;
     position: relative; overflow: visible;
 }
 
@@ -443,3 +444,97 @@ select { width: auto; text-align: left; }
 ::-webkit-scrollbar-track { background: #111; }
 ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+/* === Overflow Prevention === */
+main { max-width: 100%; overflow-x: hidden; }
+.info-table { display: block; overflow-x: auto; }
+.info-diagram, .info-formula, .info-chains { overflow-x: auto; word-break: break-word; }
+
+/* === Tablet Breakpoint (768px) === */
+@media (max-width: 768px) {
+    body { padding: 0 0.5rem 1.5rem; }
+
+    /* Stack army panels vertically */
+    .army-row { flex-direction: column; }
+    .army-col { flex: none; width: 100%; }
+
+    /* Mirror / Battle View button row */
+    .battle-view-btn-row {
+        flex-direction: row; flex-wrap: wrap; justify-content: center;
+    }
+
+    /* Controls bar: wrap children, touch-friendly */
+    .controls-bar {
+        flex-wrap: wrap; justify-content: center; gap: 0.5rem;
+        padding: 0.5rem;
+    }
+    .controls-bar > #btn-battle-view { position: static; }
+    .playback-buttons { flex-wrap: wrap; justify-content: center; }
+    .speed-control { flex-wrap: wrap; justify-content: center; }
+    #speed-slider { width: 140px; }
+
+    /* Phase indicator: wrap */
+    .phase-indicator { flex-wrap: wrap; gap: 0.5rem; }
+
+    /* Stack bottom panels vertically */
+    .battle-view-active .bottom-panels { flex-direction: column; }
+    .battle-log-panel { flex: none; }
+    .comparison-panel { flex: none; }
+
+    /* Summary bar */
+    .summary-content { flex-direction: column; gap: 0.5rem; }
+
+    /* Touch target minimums */
+    .btn { min-height: 44px; padding: 0.5rem 0.75rem; }
+    .btn-sm { min-height: 36px; }
+    .view-tab { min-height: 44px; padding: 0.4rem 0.75rem; }
+    select { min-height: 44px; }
+
+    /* Info pages */
+    .info-content { padding: 1rem; }
+}
+
+/* === Mobile Breakpoint (480px) === */
+@media (max-width: 480px) {
+    body { padding: 0 0.35rem 1rem; font-size: 0.85rem; }
+
+    /* Header */
+    header { flex-wrap: wrap; gap: 0.3rem; }
+    .header-left { flex-wrap: wrap; gap: 0.3rem; }
+    header h1 { font-size: 1rem; }
+    header .subtitle { font-size: 0.7rem; }
+
+    /* Smaller army panels */
+    .army-panel { padding: 0.5rem; }
+    .army-panel h2 { font-size: 0.88rem; }
+
+    /* Tighter troop grid */
+    .grid-header { grid-template-columns: 30px repeat(4, 1fr); gap: 0.1rem; font-size: 0.68rem; }
+    .grid-row { grid-template-columns: 30px repeat(4, 1fr); gap: 0.1rem; }
+    .grid-row .tier-label { font-size: 0.68rem; }
+    input[type="number"] { width: 100%; font-size: 0.72rem; padding: 0.3rem 0.2rem; }
+
+    /* Tighter buff inputs */
+    .buff-row { gap: 0.35rem; font-size: 0.72rem; }
+    .buff-label { width: 50px; font-size: 0.68rem; }
+    .buff-row input[type="number"] { width: 45px; font-size: 0.68rem; }
+
+    /* Smaller buttons and controls */
+    .btn { font-size: 0.75rem; padding: 0.4rem 0.5rem; }
+    .view-tab { font-size: 0.72rem; padding: 0.35rem 0.5rem; }
+    .section-divider { font-size: 0.72rem; }
+
+    /* Phase indicator tighter */
+    .phase-indicator { gap: 0.3rem; font-size: 0.72rem; }
+    .phase-dot { padding: 0.2rem 0.5rem; font-size: 0.72rem; }
+    .round-label { font-size: 0.72rem; }
+
+    /* Battle log */
+    .battle-log { font-size: 0.65rem; max-height: 200px; }
+    .log-filters { flex-wrap: wrap; gap: 0.3rem; }
+
+    /* Info pages */
+    .info-content { padding: 0.75rem; }
+    .info-content h2 { font-size: 1.1rem; }
+    .info-list { margin-left: 1rem; font-size: 0.78rem; }
+}

@@ -1,11 +1,19 @@
 ## ADDED Requirements
 
 ### Requirement: Two-panel army configuration
-The UI SHALL display two side-by-side input panels, one for the Attacker and one for the Defender. Each panel SHALL contain identical controls for troop counts and buffs.
+The UI SHALL display two input panels, one for the Attacker and one for the Defender. Each panel SHALL contain identical controls for troop counts and buffs. On viewports wider than 768px, the panels SHALL be displayed side by side. On viewports at or below 768px, the panels SHALL stack vertically with the Attacker panel above the Defender panel.
 
-#### Scenario: Page load
-- **WHEN** the user opens the simulator page
+#### Scenario: Page load on desktop
+- **WHEN** the user opens the simulator page on a viewport wider than 768px
 - **THEN** two army panels are displayed side by side, labeled "Attacker" and "Defender"
+
+#### Scenario: Page load on tablet or mobile
+- **WHEN** the user opens the simulator page on a viewport at or below 768px
+- **THEN** the Attacker panel is displayed above the Defender panel in a single-column stack, each at full width
+
+#### Scenario: Viewport resize from desktop to tablet
+- **WHEN** the user resizes the browser window from above 768px to at or below 768px
+- **THEN** the panels transition from side-by-side to stacked layout without page reload
 
 ### Requirement: Troop count grid
 Each army panel SHALL display a grid of numeric inputs with rows for each tier (T1–T14) and columns for each troop type (Ground, Ranged, Mounted, Siege). Default value for all inputs SHALL be 1000. Minimum value SHALL be 0 with no maximum.
