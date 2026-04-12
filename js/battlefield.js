@@ -849,7 +849,7 @@ var Battlefield = (function () {
     }
 
     function formatNum(n) {
-        return n.toLocaleString();
+        return Math.round(n).toLocaleString();
     }
 
     return {

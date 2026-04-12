@@ -50,7 +50,7 @@ The Battle Mechanics view SHALL present the core simulation rules as a readable 
 
 #### Scenario: Damage multipliers displayed
 - **WHEN** the Battle Mechanics view is visible
-- **THEN** it SHALL display the counter-triangle multipliers (Range→Mounted 1.2×, Mounted→Ground 1.2×, Ground→Range 1.2×, Siege→Siege 1.5×)
+- **THEN** it SHALL display the full 4×4 damage multiplier matrix showing all attacker→target coefficients
 
 ### Requirement: Views do not interfere with simulator state
 Switching views SHALL NOT reset, modify, or interfere with the simulator's state (army configuration, battle progress, playback position).

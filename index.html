@@ -304,23 +304,35 @@
                 </p>
 
                 <!-- Damage Multipliers -->
-                <h3>Damage Multipliers (Counter Triangle)</h3>
-                <p>Bonus damage when attacking your counter target. No penalty for being on the wrong side &mdash; only bonuses apply:</p>
+                <h3>Damage Multipliers</h3>
+                <p>Tier-dependent 4&times;4 coefficient matrices. The counter triangle gives bonuses <em>and</em> reverse penalties. Siege is offensively weak against everything. Two cells change at T11+.</p>
+                <h4>T1&ndash;T10</h4>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Matchup</th><th>Multiplier</th><th>Explanation</th></tr>
+                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="color-ranged">Ranged</span> &rarr; <span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>Ranged picks off fast-moving Mounted at distance</td></tr>
-                        <tr><td><span class="color-mounted">Mounted</span> &rarr; <span class="color-ground">Ground</span></td><td>1.2&times;</td><td>Mounted charges overwhelm slow Ground</td></tr>
-                        <tr><td><span class="color-ground">Ground</span> &rarr; <span class="color-ranged">Ranged</span></td><td>1.2&times;</td><td>Ground tanks through Ranged fire and crushes them in melee</td></tr>
-                        <tr><td><span class="color-siege">Siege</span> &rarr; <span class="color-siege">Siege</span></td><td>1.5&times;</td><td>Siege vs Siege is an artillery duel with bonus damage</td></tr>
-                        <tr><td>All other matchups</td><td>1.0&times;</td><td>Neutral &mdash; no bonus or penalty</td></tr>
+                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td></tr>
+                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td>0.9&times;</td></tr>
+                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td>0.5&times;</td></tr>
+                    </tbody>
+                </table>
+                <h4>T11&ndash;T15</h4>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td></tr>
+                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td><strong>1.1&times;</strong></td></tr>
+                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td><strong>0.6&times;</strong></td></tr>
                     </tbody>
                 </table>
                 <div class="info-diagram">
                     Ranged &mdash;1.2&times;&rarr; Mounted &mdash;1.2&times;&rarr; Ground &mdash;1.2&times;&rarr; Ranged<br>
-                    Siege &mdash;1.5&times;&rarr; Siege
+                    (reverse: 0.8&times; / 0.7&times; / 0.8&times;)
                 </div>
                 <p class="info-section-refs">
                     Sources:

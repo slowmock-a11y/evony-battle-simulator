@@ -208,11 +208,19 @@ var BattleEngine = (function () {
     function calculateDamage(attackerLayer, targetLayer, attackerBuffs, defenderBuffs) {
         var atkVal = effectiveAtk(attackerLayer, attackerBuffs);
         var defVal = effectiveDef(targetLayer, defenderBuffs);
-        var modifier = TroopData.getMultiplier(attackerLayer.type, targetLayer.type);
+        var modifier = TroopData.getMultiplier(attackerLayer.type, targetLayer.type, attackerLayer.tier);
         var damage = attackerLayer.count * atkVal * modifier * (atkVal / (atkVal + defVal));
         var targetHp = effectiveHp(targetLayer, defenderBuffs);
-        var kills = Math.min(Math.floor(damage / targetHp), targetLayer.count);
+        var kills = Math.min(damage / targetHp, targetLayer.count);
         return { damage: damage, kills: kills, modifier: modifier };
+    }
+
+    // Counter-strike: simplified flat formula — target's ATK / attacker's HP, no modifier, no DEF ratio
+    // Not scaled by troop count — represents incidental return damage per engagement
+    function calculateCounterKills(attackerLayer, targetLayer, attackerBuffs, defenderBuffs) {
+        var targetAtk = effectiveAtk(targetLayer, defenderBuffs);
+        var sourceHp = effectiveHp(attackerLayer, attackerBuffs);
+        return Math.min(targetAtk / sourceHp, attackerLayer.count);
     }
 
     // --- Target Selection ---
@@ -337,6 +345,29 @@ var BattleEngine = (function () {
                 modifier: result.modifier,
                 positions: snapshotPositions(positions)
             });
+
+            // Counter-strike: surviving target strikes back with reduced formula
+            if (target.count > 0 && attacker.count > 0) {
+                var attackerCountBefore = attacker.count;
+                var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs);
+                attacker.count -= counterKills;
+
+                events.push({
+                    eventType: 'counter',
+                    round: round,
+                    phase: phase,
+                    side: side,
+                    sourceType: target.type,
+                    sourceTier: target.tier,
+                    sourceCount: target.count,
+                    targetType: attacker.type,
+                    targetTier: attacker.tier,
+                    targetCountBefore: attackerCountBefore,
+                    kills: counterKills,
+                    remaining: attacker.count,
+                    positions: snapshotPositions(positions)
+                });
+            }
         }
     }
 

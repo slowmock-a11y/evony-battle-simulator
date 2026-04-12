@@ -97,6 +97,18 @@ var App = (function () {
     }
 
     function applyEvent(evt) {
+        if (evt.eventType === 'counter') {
+            // Counter hits the ACTING side's army (the attacker who triggered it)
+            var counterArmy = evt.side === 'ATTACKER' ? displayAtt : displayDef;
+            for (var i = 0; i < counterArmy.layers.length; i++) {
+                var l = counterArmy.layers[i];
+                if (l.type === evt.targetType && l.tier === evt.targetTier) {
+                    l.count = Math.max(0, l.count - evt.kills);
+                    break;
+                }
+            }
+            return;
+        }
         // Determine which army was hit (the TARGET army, opposite of the acting side)
         var targetArmy = evt.side === 'ATTACKER' ? displayDef : displayAtt;
         for (var i = 0; i < targetArmy.layers.length; i++) {
@@ -109,10 +121,12 @@ var App = (function () {
     }
 
     function onEvent(evt, index, total) {
-        if (evt.eventType === 'attack') {
+        if (evt.eventType === 'attack' || evt.eventType === 'counter') {
             applyEvent(evt);
             Battlefield.render(displayAtt, displayDef, attBuffs, defBuffs);
-            Battlefield.highlightAttack(evt);
+            if (evt.eventType === 'attack') {
+                Battlefield.highlightAttack(evt);
+            }
         } else {
             Battlefield.clearHighlights();
         }
@@ -204,7 +218,7 @@ var App = (function () {
     }
 
     function formatNum(n) {
-        return n.toLocaleString();
+        return Math.round(n).toLocaleString();
     }
 
     document.addEventListener('DOMContentLoaded', init);

@@ -20,21 +20,29 @@ var TroopData = (function () {
     };
 
     // Damage multipliers: ATTACKER_TYPE -> DEFENDER_TYPE -> coefficient
+    // Tier-dependent: T1-T10 and T11+ have different matrices
     // Source: community research by @DerrickDefies
     // https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s
-    var DAMAGE_MULTIPLIERS = {
-        GROUND:  { GROUND: 1.0,  RANGED: 1.0, MOUNTED: 0.7,  SIEGE: 1.1 },
-        RANGED:  { GROUND: 0.67, RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
-        MOUNTED: { GROUND: 1.0,  RANGED: 1.0, MOUNTED: 1.0,  SIEGE: 1.0 },
+    var DAMAGE_MULTIPLIERS_LOW = {
+        GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
+        RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
+        MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 0.9 },
         SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.5 }
     };
+    var DAMAGE_MULTIPLIERS_HIGH = {
+        GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
+        RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
+        MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 1.1 },
+        SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.6 }
+    };
 
-    function getMultiplier(attackerType, defenderType) {
-        var m = DAMAGE_MULTIPLIERS[attackerType];
+    function getMultiplier(attackerType, defenderType, attackerTier) {
+        var table = attackerTier >= 11 ? DAMAGE_MULTIPLIERS_HIGH : DAMAGE_MULTIPLIERS_LOW;
+        var m = table[attackerType];
         return (m && m[defenderType]) || 1.0;
     }
 
-    var TIERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    var TIERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
     // Base stats: [ATK, DEF, HP, Speed, Range]
     var STATS = {
@@ -52,7 +60,8 @@ var TroopData = (function () {
             11: [1940, 5600,  11080,   350, 50],
             12: [2425, 7000,  13850,   350, 50],
             13: [2910, 8400,  16620,   350, 50],
-            14: [3570, 10330, 20440,   350, 50]
+            14: [3570, 10330, 20440,   350, 50],
+            15: [4230, 11760, 24260,   350, 50]
         },
         RANGED: {
             1:  [130,   100,   250,   100, 500],
@@ -68,7 +77,8 @@ var TroopData = (function () {
             11: [2400, 1940,  4720,   100, 500],
             12: [3000, 2425,  5900,   100, 500],
             13: [3450, 2780,  6780,   100, 500],
-            14: [4070, 3280,  8000,   100, 500]
+            14: [4070, 3280,  8000,   100, 500],
+            15: [4690, 3780,  9220,   100, 500]
         },
         MOUNTED: {
             1:  [220,   150,   400,   600, 50],
@@ -84,7 +94,8 @@ var TroopData = (function () {
             11: [4150, 2740,  7490,   600, 50],
             12: [5187, 3425,  9362,   600, 50],
             13: [5800, 3830, 10480,   600, 50],
-            14: [6670, 4400, 12050,   600, 50]
+            14: [6670, 4400, 12050,   600, 50],
+            15: [7540, 4970, 13620,   600, 50]
         },
         SIEGE: {
             1:  [100,   50,   100,   75, 1400],
@@ -100,7 +111,8 @@ var TroopData = (function () {
             11: [1940, 930,  1940,   75, 1867],
             12: [2425, 1162, 2425,   75, 1867],
             13: [2780, 1330, 2780,   75, 2178],
-            14: [3280, 1560, 3280,   75, 2178]
+            14: [3280, 1560, 3280,   75, 2178],
+            15: [3780, 1790, 3780,   75, 2178]
         }
     };
 

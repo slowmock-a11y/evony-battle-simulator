@@ -51,30 +51,37 @@ The engine SHALL calculate damage using the formula: `damage = troopCount × ATK
 - **THEN** effective ATK = 13340, effective DEF = 15495, damage = 10000 × 13340 × 1.2 × (13340 / (13340 + 15495))
 
 ### Requirement: Kill calculation
-The engine SHALL calculate kills as `kills = floor(damage / target_HP_per_troop)` where target_HP_per_troop is the effective HP (base × buff). Kills SHALL be capped at the target layer's current troop count.
+The engine SHALL calculate kills as `kills = damage / target_HP_per_troop` (decimal, no floor) where target_HP_per_troop is the effective HP (base × buff). Kills SHALL be capped at the target layer's current troop count. Fractional kills accumulate over rounds.
 
 #### Scenario: Kills from damage
 - **WHEN** effective damage is 31,396,235 against Ground T14 (HP=20440)
-- **THEN** kills = floor(31396235 / 20440) = 1536
+- **THEN** kills = 31396235 / 20440 = 1536.17
 
 #### Scenario: Kills capped at troop count
 - **WHEN** effective damage would produce 5000 kills but the target layer has only 2000 troops
 - **THEN** kills = 2000 (capped)
 
+### Requirement: Counter-strike
+After each attack action, if the target layer has surviving troops, the target SHALL counter-strike the attacker using a simplified formula: `counter_kills = targetEffATK / attackerEffHP` (flat, not scaled by troop count). No type modifier or ATK/(ATK+DEF) defense ratio is applied. Counter kills are capped at the attacker layer's current troop count.
+
+#### Scenario: Counter-strike after attack
+- **WHEN** ATT Siege T13 (1 troop, effHP=58380) attacks DEF Siege T8 (effATK=17850) and the target survives
+- **THEN** counter_kills = 17850 / 58380 = 0.306, applied to the attacking layer
+
 ### Requirement: Damage multipliers
-The engine SHALL apply the following type matchup multipliers: Range→Mounted 1.2, Mounted→Ground 1.2, Ground→Range 1.2, Siege→Siege 1.5. All other matchups SHALL use multiplier 1.0.
+The engine SHALL apply a full 4×4 type matchup multiplier matrix. Counter-triangle bonuses: Range→Mounted 1.2, Mounted→Ground 1.2, Ground→Range 1.2. Reverse penalties: Mounted→Range 0.8, Ground→Mounted 0.7, Range→Ground 0.8. Mounted→Siege 0.9. Siege offensive penalties: Siege→Ground 0.35, Siege→Range 0.4, Siege→Mounted 0.3, Siege→Siege 0.5. Non-siege same-type and Range→Range, Ground→Ground: 1.0. Ground→Siege 1.1, Range→Siege 1.1.
 
 #### Scenario: Counter bonus applies
 - **WHEN** a Mounted layer attacks a Ground layer
 - **THEN** damage multiplier is 1.2
 
-#### Scenario: No counter bonus
+#### Scenario: Reverse penalty applies
 - **WHEN** a Mounted layer attacks a Ranged layer
-- **THEN** damage multiplier is 1.0
+- **THEN** damage multiplier is 0.8
 
-#### Scenario: Siege vs Siege bonus
+#### Scenario: Siege offensive penalty
 - **WHEN** a Siege layer attacks a Siege layer
-- **THEN** damage multiplier is 1.5
+- **THEN** damage multiplier is 0.5
 
 ### Requirement: Buff application
 The engine SHALL apply buff percentages to base stats using the formula: `effectiveStat = baseStat × (1 + buffPercent / 100)`. Buffs are per troop type and apply equally to all tiers of that type. Negative buff values (debuffs) SHALL be supported.

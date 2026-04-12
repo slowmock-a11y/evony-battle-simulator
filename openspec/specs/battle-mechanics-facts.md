@@ -119,10 +119,12 @@ Troops attack sequentially by **range** (longest range fires first):
 | 4     | Ground  | 50        | Speed 350 (tiebreak) |
 
 **Within each phase:**
-1. Attacker's troops strike defender's target layer
-2. Defender's **surviving** troops counter back on attacker's layer
+1. Attacker's troops strike defender's target layer (full damage formula)
+2. Surviving target counter-strikes attacker's layer (reduced formula: targetATK / attackerHP, flat)
+3. Defender's troops strike attacker's target layer (full damage formula)
+4. Surviving target counter-strikes defender's layer (reduced formula)
 
-This means the attacker has a slight edge — they reduce the defender's count before the counterstrike.
+The attacker has a slight edge — they reduce the defender's count before the defender's main attack. Counter-strikes deal incidental return damage using a simplified formula with no type modifier or defense ratio.
 
 **Within a side (same type, multiple tiers):**
 Higher tier attacks before lower tier.
@@ -208,7 +210,9 @@ Source: theriagames.com "Game Evony: Battle Mechanics - describe attack order"
 
 ```
 damage = troopCount × ATK × modifier × ATK / (ATK + DEF)
-kills  = floor(damage / target_HP_per_troop)
+kills  = damage / target_HP_per_troop   (decimal, no floor — fractions accumulate)
+
+counter_kills = targetATK / attackerHP   (flat, no modifier, no DEF ratio)
 ```
 
 Where:
@@ -229,20 +233,31 @@ Source: common Evony community formula
 
 ## Damage Multipliers
 
-Full 4×4 troop type coefficient matrix. Values below 1.0 are penalties; above 1.0 are bonuses.
+Tier-dependent 4×4 coefficient matrices. Values below 1.0 are penalties; above 1.0 are bonuses. Two cells change at T11+.
+
+### T1–T10
 
 | Attacker \ Target | Ground | Ranged | Mounted | Siege |
 |--------------------|--------|--------|---------|-------|
-| Ground             | 1.0    | 1.0    | 0.7     | 1.1   |
-| Ranged             | 0.67   | 1.0    | 1.2     | 1.1   |
-| Mounted            | 1.0    | 1.0    | 1.0     | 1.0   |
+| Ground             | 1.0    | 1.2    | 0.7     | 1.1   |
+| Ranged             | 0.8    | 1.0    | 1.2     | 1.1   |
+| Mounted            | 1.2    | 0.8    | 1.0     | 0.9   |
 | Siege              | 0.35   | 0.4    | 0.3     | 0.5   |
 
+### T11–T15
+
+| Attacker \ Target | Ground | Ranged | Mounted | Siege   |
+|--------------------|--------|--------|---------|---------|
+| Ground             | 1.0    | 1.2    | 0.7     | 1.1     |
+| Ranged             | 0.8    | 1.0    | 1.2     | 1.1     |
+| Mounted            | 1.2    | 0.8    | 1.0     | **1.1** |
+| Siege              | 0.35   | 0.4    | 0.3     | **0.6** |
+
 Key interactions:
-- Ranged counter Mounted (1.2×) but are weak against Ground (0.67×)
-- Ground are penalised against Mounted (0.7×) but strong against Siege (1.1×)
-- Mounted are neutral across the board (1.0× everywhere)
-- Siege are offensively weak against all types (0.3×–0.5×)
+- Counter triangle with bonuses AND penalties: Range→Mounted 1.2× / Mounted→Range 0.8×, Mounted→Ground 1.2× / Ground→Mounted 0.7×, Ground→Range 1.2× / Range→Ground 0.8×
+- Mounted penalised against Siege at T1–T10 (0.9×), becomes bonus at T11+ (1.1×)
+- Siege vs Siege slightly less punishing at T11+ (0.5× → 0.6×)
+- Siege are offensively weak against all types (0.3×–0.6×)
 
 Source: community research by [@DerrickDefies](https://www.youtube.com/@DerrickDefies) — [Battle Mechanics video](https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s)
 

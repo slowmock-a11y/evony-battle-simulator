@@ -15,6 +15,10 @@ var BattleLog = (function () {
         document.getElementById('log-filter-def').addEventListener('change', applyFilters);
     }
 
+    function fmtCount(n) {
+        return Math.round(n).toLocaleString();
+    }
+
     function addEntry(event, index, total) {
         var info = TroopData.TYPES[event.phase];
         var el = document.createElement('div');
@@ -39,8 +43,25 @@ var BattleLog = (function () {
             }
             moveHtml += parts.join(', ');
             el.innerHTML = moveHtml;
+        } else if (event.eventType === 'counter') {
+            // Counter-strike entry
+            var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
+            var sourceName = TroopData.TYPES[event.sourceType].name;
+            var targetName = TroopData.TYPES[event.targetType].name;
+
+            el.className = 'log-entry log-counter';
+            el.innerHTML =
+                '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
+                '<span class="log-counter-label">\u21A9</span> ' +
+                '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
+                sourceName + ' T' + event.sourceTier + '</span>' +
+                ' counters ' +
+                '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
+                sideLabel + ' ' + targetName + ' T' + event.targetTier + '</span>: ' +
+                '<span class="log-kills">' + fmtCount(event.kills) + ' killed</span>' +
+                ' (' + fmtCount(event.remaining) + ' left)';
         } else {
-            // Attack entry (existing format)
+            // Attack entry
             var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
             var sourceName = TroopData.TYPES[event.sourceType].name;
             var targetName = TroopData.TYPES[event.targetType].name;
@@ -48,13 +69,13 @@ var BattleLog = (function () {
             el.innerHTML =
                 '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
                 '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
-                sideLabel + ' ' + sourceName + ' T' + event.sourceTier + ' (' + event.sourceCount.toLocaleString() + ')</span>' +
+                sideLabel + ' ' + sourceName + ' T' + event.sourceTier + ' (' + fmtCount(event.sourceCount) + ')</span>' +
                 ' \u2192 ' +
                 '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
                 targetName + ' T' + event.targetTier + '</span>: ' +
-                '<span class="log-damage">' + event.damage.toLocaleString() + ' dmg</span>, ' +
-                '<span class="log-kills">' + event.kills.toLocaleString() + ' killed</span>' +
-                ' (' + event.remaining.toLocaleString() + ' left)';
+                '<span class="log-damage">' + fmtCount(event.damage) + ' dmg</span>, ' +
+                '<span class="log-kills">' + fmtCount(event.kills) + ' killed</span>' +
+                ' (' + fmtCount(event.remaining) + ' left)';
         }
 
         entries.push(el);
