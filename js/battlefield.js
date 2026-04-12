@@ -31,10 +31,77 @@ var Battlefield = (function () {
         return 5 + (engineX / BATTLEFIELD_LENGTH) * 90;
     }
 
+    function getTypePosition(pos, side, type) {
+        // Legacy per-type format
+        if (pos[side][type] !== undefined) return pos[side][type];
+        // Per-layer format: find frontmost alive layer of this type
+        var best = null;
+        for (var key in pos[side]) {
+            if (key.indexOf(type + '_') === 0) {
+                var val = pos[side][key];
+                if (best === null) best = val;
+                else if (side === 'ATT') best = Math.max(best, val);
+                else best = Math.min(best, val);
+            }
+        }
+        return best !== null ? best : (side === 'ATT' ? 0 : BATTLEFIELD_LENGTH);
+    }
+
     function calcPosition(type, side) {
         var pos = currentPositions || defaultPositions();
         var sideKey = side === 'ATT' ? 'ATT' : 'DEF';
-        return { x: mapToScreen(pos[sideKey][type]), y: Y_POSITIONS[type] };
+        return { x: mapToScreen(getTypePosition(pos, sideKey, type)), y: Y_POSITIONS[type] };
+    }
+
+    function computeVerticalOffsets(layers) {
+        var offsets = {};
+        if (!layers) return offsets;
+
+        // Group layers by (type, range) — same range = same visual circle
+        var byTypeRange = {};
+        layers.forEach(function (l) {
+            var stats = TroopData.getStats(l.type, l.tier);
+            var key = l.type + '_R' + stats.range;
+            if (!byTypeRange[key]) byTypeRange[key] = { type: l.type, range: stats.range, tiers: [] };
+            byTypeRange[key].tiers.push(l.tier);
+        });
+
+        // Group range-groups by type
+        var groupsByType = {};
+        for (var key in byTypeRange) {
+            var g = byTypeRange[key];
+            if (!groupsByType[g.type]) groupsByType[g.type] = [];
+            groupsByType[g.type].push(g);
+        }
+
+        var SPREAD = 3; // vertical spread in % between staggered groups
+
+        for (var type in groupsByType) {
+            var typeGroups = groupsByType[type];
+            if (typeGroups.length <= 1) continue;
+
+            typeGroups.sort(function (a, b) { return a.range - b.range; });
+            var mid = (typeGroups.length - 1) / 2;
+
+            typeGroups.forEach(function (g, i) {
+                var yOff = (i - mid) * SPREAD;
+                g.tiers.forEach(function (tier) {
+                    offsets[type + '_' + tier] = yOff;
+                });
+            });
+        }
+
+        return offsets;
+    }
+
+    function calcLayerPosition(type, tier, side) {
+        var pos = currentPositions || defaultPositions();
+        var sideKey = side === 'ATT' ? 'ATT' : 'DEF';
+        var key = type + '_' + tier;
+        if (pos[sideKey][key] !== undefined) {
+            return { x: mapToScreen(pos[sideKey][key]), y: Y_POSITIONS[type] };
+        }
+        return { x: mapToScreen(getTypePosition(pos, sideKey, type)), y: Y_POSITIONS[type] };
     }
 
     function init() {
@@ -122,11 +189,9 @@ var Battlefield = (function () {
         clearIndicators();
         container.querySelectorAll('.unit-marker, .bf-axis-tick, .bf-axis-label').forEach(function (m) { m.remove(); });
 
-        // Place unit markers
-        TroopData.PHASE_ORDER.forEach(function (type) {
-            placeUnit(attArmy, type, startAttacker, attBuffs, 'ATT');
-            placeUnit(defArmy, type, startDefender, defBuffs, 'DEF');
-        });
+        // Place per-layer unit markers
+        placeLayerMarkers(attArmy, startAttacker, attBuffs, 'ATT');
+        placeLayerMarkers(defArmy, startDefender, defBuffs, 'DEF');
 
         // Render axis and persistent indicators
         renderAxis();
@@ -137,68 +202,106 @@ var Battlefield = (function () {
         }
     }
 
-    function placeUnit(army, type, startSnap, buffs, side) {
-        var layers = army.layers.filter(function (l) { return l.type === type; });
-        var startLayers = startSnap.filter(function (l) { return l.type === type; });
-        if (startLayers.length === 0) return;
+    function formatTierRange(tiers) {
+        if (tiers.length === 1) return 'T' + tiers[0];
+        return 'T' + tiers[0] + '-' + tiers[tiers.length - 1];
+    }
 
-        var info = TroopData.TYPES[type];
-        var total = 0, totalStart = 0;
-        layers.forEach(function (l) { total += l.count; });
-        startLayers.forEach(function (l) { totalStart += l.startCount; });
-
-        var eliminated = total === 0;
-        var pos = calcPosition(type, side);
-
-        var marker = document.createElement('div');
-        marker.className = 'unit-marker';
-        marker.dataset.type = type;
-        marker.dataset.side = side;
-        if (eliminated) marker.classList.add('eliminated');
-
-        // Position centered on the point
-        marker.style.left = pos.x + '%';
-        marker.style.top = pos.y + '%';
-        marker.style.transform = 'translate(-50%, -50%)';
-
-        // Icon circle
-        var icon = document.createElement('div');
-        icon.className = 'unit-icon icon-' + type.toLowerCase();
-        icon.textContent = TYPE_LETTERS[type];
-        marker.appendChild(icon);
-
-        // Count
-        var count = document.createElement('div');
-        count.className = 'unit-count';
-        count.textContent = formatNum(total);
-        marker.appendChild(count);
-
-        // Label
-        var label = document.createElement('div');
-        label.className = 'unit-label';
-        label.textContent = info.name;
-        marker.appendChild(label);
-
-        // Click handler for detail panel
-        marker.addEventListener('click', function (e) {
-            e.stopPropagation();
-            showDetailPanel(marker, layers, startLayers, type, buffs, side);
+    function placeLayerMarkers(army, startSnap, buffs, side) {
+        // Group layers by (type, range) — same range = same position always
+        var groups = {};
+        startSnap.forEach(function (sl) {
+            var stats = TroopData.getStats(sl.type, sl.tier);
+            var groupKey = sl.type + '_R' + stats.range;
+            if (!groups[groupKey]) {
+                groups[groupKey] = { type: sl.type, range: stats.range, tiers: [] };
+            }
+            groups[groupKey].tiers.push(sl.tier);
         });
 
-        // Hover tooltip + indicators
-        marker.addEventListener('mouseenter', function (e) {
-            showTooltip(e, type, buffs, side);
-            hoveredUnit = { type: type, side: side };
-            highlightHoveredIndicators(type, side);
-        });
-        marker.addEventListener('mousemove', function (e) { moveTooltip(e); });
-        marker.addEventListener('mouseleave', function () {
-            hideTooltip();
-            resetHoveredIndicators(type, side);
-            hoveredUnit = null;
-        });
+        // Count groups per type to decide label style
+        var groupCountsByType = {};
+        for (var key in groups) {
+            var g = groups[key];
+            groupCountsByType[g.type] = (groupCountsByType[g.type] || 0) + 1;
+        }
 
-        container.appendChild(marker);
+        var vOffsets = computeVerticalOffsets(startSnap);
+
+        for (var key in groups) {
+            var group = groups[key];
+            var type = group.type;
+            group.tiers.sort(function (a, b) { return a - b; });
+            var repTier = group.tiers[group.tiers.length - 1]; // highest tier as representative
+
+            // Aggregate current count across all tiers in this group
+            var currentCount = 0;
+            var allEliminated = true;
+            for (var i = 0; i < army.layers.length; i++) {
+                var l = army.layers[i];
+                if (l.type === type && group.tiers.indexOf(l.tier) >= 0) {
+                    currentCount += l.count;
+                    if (l.count > 0) allEliminated = false;
+                }
+            }
+
+            var pos = calcLayerPosition(type, repTier, side);
+            var yOffset = vOffsets[type + '_' + repTier] || 0;
+            pos.y += yOffset;
+
+            var marker = document.createElement('div');
+            marker.className = 'unit-marker';
+            marker.dataset.type = type;
+            marker.dataset.tier = repTier;
+            marker.dataset.tiers = group.tiers.join(',');
+            marker.dataset.side = side;
+            if (allEliminated) marker.classList.add('eliminated');
+
+            marker.style.left = pos.x + '%';
+            marker.style.top = pos.y + '%';
+            marker.style.transform = 'translate(-50%, -50%)';
+
+            // Icon circle
+            var icon = document.createElement('div');
+            icon.className = 'unit-icon icon-' + type.toLowerCase();
+            icon.textContent = TYPE_LETTERS[type];
+            marker.appendChild(icon);
+
+            // Count
+            var countEl = document.createElement('div');
+            countEl.className = 'unit-count';
+            countEl.textContent = formatNum(currentCount);
+            marker.appendChild(countEl);
+
+            // Label: show tier range when multiple groups exist, otherwise type name
+            var label = document.createElement('div');
+            label.className = 'unit-label';
+            label.textContent = groupCountsByType[type] > 1 ? formatTierRange(group.tiers) : TroopData.TYPES[type].name;
+            marker.appendChild(label);
+
+            // Click handler — detail panel shows all tiers of this type
+            var typeLayers = army.layers.filter(function (l) { return l.type === type; });
+            var typeStartLayers = startSnap.filter(function (l) { return l.type === type; });
+            marker.addEventListener('click', function (e) {
+                e.stopPropagation();
+                showDetailPanel(marker, typeLayers, typeStartLayers, type, buffs, side);
+            });
+
+            // Hover tooltip + indicators
+            marker.addEventListener('mouseenter', function (e) {
+                showTooltip(e, type, buffs, side);
+                hoveredUnit = { type: type, side: side };
+                highlightHoveredIndicators(type, side);
+            });
+            marker.addEventListener('mousemove', function (e) { moveTooltip(e); });
+            marker.addEventListener('mouseleave', function () {
+                hideTooltip();
+                resetHoveredIndicators(type, side);
+                hoveredUnit = null;
+            });
+
+            container.appendChild(marker);
+        }
     }
 
     // --- Detail Panel ---
@@ -302,8 +405,8 @@ var Battlefield = (function () {
         var sourceSide = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
         var targetSide = event.side === 'ATTACKER' ? 'DEF' : 'ATT';
 
-        var sourceMarker = findMarker(sourceSide, event.sourceType);
-        var targetMarker = findMarker(targetSide, event.targetType);
+        var sourceMarker = findMarker(sourceSide, event.sourceType, event.sourceTier);
+        var targetMarker = findMarker(targetSide, event.targetType, event.targetTier);
 
         if (sourceMarker) sourceMarker.classList.add('highlighted');
         if (targetMarker) targetMarker.classList.add('damaged');
@@ -383,7 +486,19 @@ var Battlefield = (function () {
         if (svgLabelBg) svgLabelBg.style.display = 'none';
     }
 
-    function findMarker(side, type) {
+    function findMarker(side, type, tier) {
+        if (tier !== undefined) {
+            // Try exact match on representative tier first
+            var exact = container.querySelector('.unit-marker[data-side="' + side + '"][data-type="' + type + '"][data-tier="' + tier + '"]');
+            if (exact) return exact;
+            // Search grouped markers that contain this tier
+            var markers = container.querySelectorAll('.unit-marker[data-side="' + side + '"][data-type="' + type + '"]');
+            for (var i = 0; i < markers.length; i++) {
+                var tiers = markers[i].dataset.tiers;
+                if (tiers && (',' + tiers + ',').indexOf(',' + tier + ',') >= 0) return markers[i];
+            }
+            return null;
+        }
         return container.querySelector('.unit-marker[data-side="' + side + '"][data-type="' + type + '"]');
     }
 
@@ -533,11 +648,18 @@ var Battlefield = (function () {
     }
 
     function repositionMarkers() {
+        var attOffsets = computeVerticalOffsets(startAttacker);
+        var defOffsets = computeVerticalOffsets(startDefender);
         var markers = container.querySelectorAll('.unit-marker');
         markers.forEach(function (m) {
-            var pos = calcPosition(m.dataset.type, m.dataset.side);
+            var tier = m.dataset.tier;
+            var pos = tier
+                ? calcLayerPosition(m.dataset.type, parseInt(tier), m.dataset.side)
+                : calcPosition(m.dataset.type, m.dataset.side);
+            var offsets = m.dataset.side === 'ATT' ? attOffsets : defOffsets;
+            var yOffset = offsets[m.dataset.type + '_' + tier] || 0;
             m.style.left = pos.x + '%';
-            m.style.top = pos.y + '%';
+            m.style.top = (pos.y + yOffset) + '%';
         });
     }
 
@@ -593,54 +715,85 @@ var Battlefield = (function () {
         });
     }
 
+    function getLayerEnginePos(type, tier, side) {
+        var pos = currentPositions || defaultPositions();
+        var key = type + '_' + tier;
+        if (pos[side][key] !== undefined) return pos[side][key];
+        return getTypePosition(pos, side, type);
+    }
+
     function renderAllRangeIndicators() {
         ['ATT', 'DEF'].forEach(function (side) {
             var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            if (!army) return;
-            TroopData.PHASE_ORDER.forEach(function (type) {
-                var maxRange = getMaxRangeForType(army, type);
-                if (maxRange <= 50) return;
+            var snap = side === 'ATT' ? startAttacker : startDefender;
+            if (!army || !snap) return;
+            var vOffsets = computeVerticalOffsets(snap);
 
-                var pos = currentPositions || defaultPositions();
-                var enginePos = pos[side][type];
+            // Group alive layers by (type, range)
+            var groups = {};
+            army.layers.forEach(function (l) {
+                if (l.count <= 0) return;
+                var stats = TroopData.getStats(l.type, l.tier);
+                var key = l.type + '_R' + stats.range;
+                if (!groups[key]) {
+                    groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
+                }
+                if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
+            });
+
+            for (var key in groups) {
+                var g = groups[key];
+                if (g.range <= 50) continue;
+
+                var enginePos = getLayerEnginePos(g.type, g.repTier, side);
                 var extentPos;
                 if (side === 'ATT') {
-                    extentPos = Math.min(enginePos + maxRange, BATTLEFIELD_LENGTH);
+                    extentPos = Math.min(enginePos + g.range, BATTLEFIELD_LENGTH);
                 } else {
-                    extentPos = Math.max(enginePos - maxRange, 0);
+                    extentPos = Math.max(enginePos - g.range, 0);
                 }
 
                 var screenStart = mapToScreen(Math.min(enginePos, extentPos));
                 var screenEnd = mapToScreen(Math.max(enginePos, extentPos));
-                var color = TroopData.TYPES[type].color;
+                var color = TroopData.TYPES[g.type].color;
+                var yOffset = vOffsets[g.type + '_' + g.repTier] || 0;
 
                 var bar = document.createElement('div');
                 bar.className = 'bf-range-indicator';
                 bar.dataset.indSide = side;
-                bar.dataset.indType = type;
+                bar.dataset.indType = g.type;
                 bar.style.left = screenStart + '%';
                 bar.style.width = (screenEnd - screenStart) + '%';
-                bar.style.top = Y_POSITIONS[type] + '%';
+                bar.style.top = (Y_POSITIONS[g.type] + yOffset) + '%';
                 bar.style.background = color;
                 container.appendChild(bar);
-            });
+            }
         });
     }
 
     function renderAllSpeedProjections() {
         ['ATT', 'DEF'].forEach(function (side) {
             var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            if (!army) return;
-            TroopData.PHASE_ORDER.forEach(function (type) {
-                var alive = false;
-                army.layers.forEach(function (l) {
-                    if (l.type === type && l.count > 0) alive = true;
-                });
-                if (!alive) return;
+            var snap = side === 'ATT' ? startAttacker : startDefender;
+            if (!army || !snap) return;
+            var vOffsets = computeVerticalOffsets(snap);
 
-                var pos = currentPositions || defaultPositions();
-                var enginePos = pos[side][type];
-                var speed = getSpeed(type);
+            // Group alive layers by (type, range)
+            var groups = {};
+            army.layers.forEach(function (l) {
+                if (l.count <= 0) return;
+                var stats = TroopData.getStats(l.type, l.tier);
+                var key = l.type + '_R' + stats.range;
+                if (!groups[key]) {
+                    groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
+                }
+                if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
+            });
+
+            for (var key in groups) {
+                var g = groups[key];
+                var enginePos = getLayerEnginePos(g.type, g.repTier, side);
+                var speed = getSpeed(g.type);
                 var projectedPos;
                 if (side === 'ATT') {
                     projectedPos = Math.min(enginePos + speed, BATTLEFIELD_LENGTH);
@@ -649,18 +802,19 @@ var Battlefield = (function () {
                 }
 
                 var screenX = mapToScreen(projectedPos);
-                var color = TroopData.TYPES[type].color;
+                var color = TroopData.TYPES[g.type].color;
+                var yOffset = vOffsets[g.type + '_' + g.repTier] || 0;
 
                 var ghost = document.createElement('div');
                 ghost.className = 'bf-speed-projection';
                 ghost.dataset.indSide = side;
-                ghost.dataset.indType = type;
+                ghost.dataset.indType = g.type;
                 ghost.style.left = screenX + '%';
-                ghost.style.top = Y_POSITIONS[type] + '%';
+                ghost.style.top = (Y_POSITIONS[g.type] + yOffset) + '%';
                 ghost.style.borderColor = color;
                 ghost.style.background = color;
                 container.appendChild(ghost);
-            });
+            }
         });
     }
 
