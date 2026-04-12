@@ -1,0 +1,27 @@
+name: Mechanics Correction
+description: A battle mechanic is wrong or inaccurate
+labels: ["mechanics"]
+body:
+  - type: textarea
+    id: what-is-wrong
+    attributes:
+      label: What is incorrect?
+      description: Which mechanic is wrong and what should it be?
+      placeholder: e.g. "The targeting priority for Mounted is wrong -- it should target Siege before Ground"
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source / Evidence
+      description: How do you know? Link to a guide, video, or describe your in-game testing.
+      placeholder: e.g. link to a YouTube video, community guide, or your own test results
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else that might help (screenshots, battle reports, etc.)
+    validations:
+      required: false

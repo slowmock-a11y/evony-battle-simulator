@@ -4,7 +4,9 @@ A browser-based march-vs-march PvP battle simulator for **Evony: The King's Retu
 
 ## Motivation
 
-Evony's battle system is complex but poorly documented. Troop types, targeting priorities, damage formulas, and movement rules are spread across dozens of community posts and YouTube videos -- and some mechanics are still debated. This simulator brings all of that knowledge into one place where you can **see it in action**.
+Evony's battle system is complex but poorly documented. Troop types, targeting priorities, damage formulas, and movement rules are spread across dozens of community posts and YouTube videos -- and some mechanics are still debated or unconfirmed. This simulator brings all of that knowledge into one place where you can **see it in action**.
+
+**This is a work in progress.** The battle mechanics implemented here are based on the best community research available, but many facts are still unclear, missing, or approximated. If you have better data, corrections, or suggestions, contributions are very welcome -- open an issue or pull request.
 
 The goal is to let players:
 - **Visualize** how battles actually unfold round by round on a spatial battlefield
@@ -67,6 +69,10 @@ The engine is intentionally separated from the UI: `BattleEngine.simulate()` tak
 - Wounded vs Killed ratio
 - Wall / Trap mechanics (city attacks)
 - Rally mechanics (multi-march)
+
+## Contributing
+
+The battle mechanics in this simulator are incomplete. Many details are uncertain or based on community best guesses rather than confirmed data. If you notice something wrong, know a mechanic that's missing, or have better sources -- please open an [issue](https://github.com/slowmock-a11y/evony-battle-simulator/issues) or submit a pull request. All contributions, corrections, and suggestions are welcome.
 
 ## References
 
