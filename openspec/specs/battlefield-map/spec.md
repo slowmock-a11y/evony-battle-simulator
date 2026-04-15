@@ -1,4 +1,9 @@
-## ADDED Requirements
+# battlefield-map Specification
+
+## Purpose
+Spatial 2D map rendering of troop markers arranged by range (vertical) and by speed/phase-derived position (horizontal).
+
+## Requirements
 
 ### Requirement: Unit markers as map-positioned elements
 Each troop type for each side SHALL be rendered as a circular unit marker placed at a spatial position on the battlefield map. The marker SHALL display the type letter (G/R/M/S) inside a colored circle, the current troop count below, and the type name below the count.
@@ -19,7 +24,7 @@ Unit markers SHALL be arranged vertically by range: Siege at the top (back line,
 - **THEN** Siege markers are near the top of the battlefield, Ground markers near the bottom, with Ranged and Mounted in between
 
 ### Requirement: X-axis positioning by speed and phase
-Unit markers SHALL advance horizontally toward the center line as the battle progresses through phases. The X position SHALL be calculated from: `timeFactor × speedFactor`, where `timeFactor` derives from the current phase index and `speedFactor` is proportional to the troop type's speed stat. Faster troops (Mounted, speed 600) SHALL advance further toward the center than slower troops (Siege, speed 75).
+Unit markers SHALL advance horizontally toward the center line as the battle progresses through phases. The X position SHALL be calculated from: `timeFactor × speedFactor`, where `timeFactor` derives from the current phase index and `speedFactor` is proportional to the troop type's speed stat. Faster troops (Ground, speed 350) SHALL advance further toward the center than slower troops (Siege, speed 75).
 
 #### Scenario: Pre-battle positioning
 - **WHEN** the battle has not yet started (no phase active)

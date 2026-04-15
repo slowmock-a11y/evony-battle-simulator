@@ -1,11 +1,16 @@
-## ADDED Requirements
+# battlefield-axis Specification
+
+## Purpose
+X-axis scale bar along the bottom of the battlefield map showing engine-coordinate tick marks.
+
+## Requirements
 
 ### Requirement: X-axis scale bar
-The battlefield SHALL display a horizontal axis along the bottom of the map showing engine-position tick marks at every 500 units from 0 to 5200. Each tick SHALL be a short vertical line with a numeric label below it. The axis SHALL use the same coordinate mapping as unit markers (`mapToScreen()`).
+The battlefield SHALL display a horizontal axis along the bottom of the map showing engine-position tick marks at every 250 units from 0 to 1500. Each tick SHALL be a short vertical line with a numeric label below it. The axis SHALL use the same coordinate mapping as unit markers (`mapToScreen()`).
 
 #### Scenario: Axis rendered on battlefield display
 - **WHEN** the battlefield map is rendered with a battle result
-- **THEN** tick marks appear at positions 0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, and 5200 along the bottom edge, each with its numeric value displayed below
+- **THEN** tick marks appear at positions 0, 250, 500, 750, 1000, 1250, and 1500 along the bottom edge, each with its numeric value displayed below
 
 #### Scenario: Axis updates on window resize
 - **WHEN** the browser window is resized

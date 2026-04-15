@@ -1,4 +1,9 @@
-## ADDED Requirements
+# range-speed-indicators Specification
+
+## Purpose
+Persistent range indicators for Ranged and Siege units, plus speed-projection markers, overlaid on the battlefield map.
+
+## Requirements
 
 ### Requirement: Range indicator (persistent)
 Range indicators SHALL be displayed permanently for all alive Ranged and Siege units, not only on hover. Each indicator SHALL be a horizontal bar extending from the unit's current X position toward the enemy side by the unit's maximum range (across alive tiers), rendered in the troop type's color at 0.12 opacity. When the user hovers over a specific unit marker, that unit's range indicator SHALL increase to 0.22 opacity to stand out.
@@ -12,7 +17,7 @@ Range indicators SHALL be displayed permanently for all alive Ranged and Siege u
 - **THEN** that unit's range indicator increases to 0.22 opacity while all other indicators remain at 0.12
 
 #### Scenario: Range clamped to battlefield bounds
-- **WHEN** the range extent would exceed the battlefield (0 or 5200)
+- **WHEN** the range extent would exceed the battlefield (0 or 1500)
 - **THEN** the indicator is clamped to the battlefield boundary
 
 #### Scenario: No range indicator for melee types
@@ -32,7 +37,7 @@ Speed projection markers SHALL be displayed permanently for all alive units. Eac
 
 #### Scenario: Speed projection clamped to battlefield
 - **WHEN** the projected position would exceed the battlefield boundary
-- **THEN** the projection marker is clamped to the boundary (0 for defenders, 5200 for attackers)
+- **THEN** the projection marker is clamped to the boundary (0 for defenders, 1500 for attackers)
 
 #### Scenario: No projection for eliminated units
 - **WHEN** a unit has zero troops remaining

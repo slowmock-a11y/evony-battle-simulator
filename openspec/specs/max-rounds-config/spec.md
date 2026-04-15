@@ -1,4 +1,9 @@
-## ADDED Requirements
+# max-rounds-config Specification
+
+## Purpose
+Configurable maximum round count for a simulation run, exposed via both engine option and UI input.
+
+## Requirements
 
 ### Requirement: Configurable max rounds in engine
 The `simulate()` function SHALL accept an optional `options` parameter with a `maxRounds` property. When provided, the simulation SHALL stop after that many rounds. When omitted, it SHALL default to 100.

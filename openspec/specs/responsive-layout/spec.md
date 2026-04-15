@@ -1,4 +1,9 @@
-## ADDED Requirements
+# responsive-layout Specification
+
+## Purpose
+Responsive layout behavior — viewport meta, breakpoint handling, and touch-accessible targets.
+
+## Requirements
 
 ### Requirement: Viewport meta tag
 The HTML document SHALL include a viewport meta tag that sets `width=device-width, initial-scale=1` to enable proper mobile rendering.

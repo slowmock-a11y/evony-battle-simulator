@@ -1,4 +1,9 @@
-## ADDED Requirements
+# playback-controls Specification
+
+## Purpose
+Playback controls (Step / Round / Full / Reset), speed slider, battle log, log filtering, and result comparison for the simulator.
+
+## Requirements
 
 ### Requirement: Three playback modes
 The UI SHALL provide three simulation buttons: Step (advances one attack action), Round (advances all phases in the current round), and Full Battle (runs all rounds to completion). A Reset button SHALL restore the battlefield to the pre-simulation state.

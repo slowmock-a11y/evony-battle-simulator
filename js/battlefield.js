@@ -10,14 +10,14 @@ var Battlefield = (function () {
     var attackerBuffs, defenderBuffs;
     var currentPhaseIndex = -1; // -1 = pre-battle
 
-    var BATTLEFIELD_LENGTH = 5200;
+    var BATTLEFIELD_LENGTH = 1500;
 
     // Y positions: top = back line (long range), bottom = front line
     var Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80 };
 
     var TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S' };
 
-    // Engine positions (0–5200), updated from events
+    // Engine positions (0–1500), updated from events
     var currentPositions = null;
 
     function defaultPositions() {
@@ -259,7 +259,13 @@ var Battlefield = (function () {
 
             marker.style.left = pos.x + '%';
             marker.style.top = pos.y + '%';
-            marker.style.transform = 'translate(-50%, -50%)';
+            // Face-side alignment: front edge of icon square at the engine position
+            // Icon is 44px wide; shift by half-icon (22px) so the face edge sits at X
+            if (side === 'ATT') {
+                marker.style.transform = 'translate(calc(-50% - 22px), -50%)';
+            } else {
+                marker.style.transform = 'translate(calc(-50% + 22px), -50%)';
+            }
 
             // Icon circle
             var icon = document.createElement('div');
@@ -421,11 +427,11 @@ var Battlefield = (function () {
             var cx2 = (tgtRect.left + tgtRect.right) / 2 - contRect.left;
             var cy2 = (tgtRect.top + tgtRect.bottom) / 2 - contRect.top;
 
-            // Shorten both ends so arrows don't overlap the circles
+            // Shorten both ends so arrows don't overlap the icons
             var dx = cx2 - cx1;
             var dy = cy2 - cy1;
             var dist = Math.sqrt(dx * dx + dy * dy);
-            var gap = 38; // circle radius (26) + gap (12)
+            var gap = 32; // square half-width (22) + gap (10)
             if (dist > gap * 2) {
                 var ux = dx / dist;
                 var uy = dy / dist;
@@ -657,10 +663,11 @@ var Battlefield = (function () {
         var markers = container.querySelectorAll('.unit-marker');
         markers.forEach(function (m) {
             var tier = m.dataset.tier;
+            var side = m.dataset.side;
             var pos = tier
-                ? calcLayerPosition(m.dataset.type, parseInt(tier), m.dataset.side)
-                : calcPosition(m.dataset.type, m.dataset.side);
-            var offsets = m.dataset.side === 'ATT' ? attOffsets : defOffsets;
+                ? calcLayerPosition(m.dataset.type, parseInt(tier), side)
+                : calcPosition(m.dataset.type, side);
+            var offsets = side === 'ATT' ? attOffsets : defOffsets;
             var yOffset = offsets[m.dataset.type + '_' + tier] || 0;
             m.style.left = pos.x + '%';
             m.style.top = (pos.y + yOffset) + '%';
@@ -702,21 +709,24 @@ var Battlefield = (function () {
     }
 
     function renderAxis() {
-        var ticks = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5200];
-        ticks.forEach(function (val) {
+        // Minor ticks every 50, major ticks every 100
+        for (var val = 0; val <= BATTLEFIELD_LENGTH; val += 50) {
             var screenX = mapToScreen(val);
+            var isMajor = val % 100 === 0;
 
             var tick = document.createElement('div');
-            tick.className = 'bf-axis-tick';
+            tick.className = 'bf-axis-tick ' + (isMajor ? 'major' : 'minor');
             tick.style.left = screenX + '%';
             container.appendChild(tick);
 
-            var label = document.createElement('div');
-            label.className = 'bf-axis-label';
-            label.style.left = screenX + '%';
-            label.textContent = val;
-            container.appendChild(label);
-        });
+            if (isMajor) {
+                var label = document.createElement('div');
+                label.className = 'bf-axis-label';
+                label.style.left = screenX + '%';
+                label.textContent = val;
+                container.appendChild(label);
+            }
+        }
     }
 
     function getLayerEnginePos(type, tier, side) {

@@ -1,15 +1,24 @@
-## MODIFIED Requirements
+# battlefield-visual Specification
+
+## Purpose
+Visual battlefield display showing troop blocks, active-phase highlighting, SVG attack arrows, and click-to-detail tier breakdowns.
+
+## Requirements
 
 ### Requirement: Battlefield layout with troop blocks
-The battlefield visual SHALL display two armies facing each other with unit markers positioned spatially on a map. Markers SHALL be arranged vertically by range (Siege at top, Ground at bottom) and advance horizontally toward the center based on troop speed and current battle phase. Each unit marker SHALL show the troop type letter, current total count, and type name. Tier-by-tier detail SHALL be accessible via click interaction rather than displayed inline. The map container SHALL include space at the bottom for an x-axis scale bar showing engine positions.
+The battlefield visual SHALL display two armies facing each other with unit markers positioned spatially on a map spanning **1500 units** (not 5200). Markers SHALL be arranged vertically by range (Siege at top, Ground at bottom) and advance horizontally toward the center based on troop speed and current battle phase. Each unit marker SHALL show the troop type letter, current total count, and type name. Tier-by-tier detail SHALL be accessible via click interaction rather than displayed inline. The map container SHALL include space at the bottom for an x-axis scale bar showing engine positions from 0 to 1500.
 
 #### Scenario: Initial battlefield display
 - **WHEN** the user clicks a simulate button and results are available
-- **THEN** the battlefield shows attacker unit markers on the left and defender unit markers on the right, positioned at their starting edges, with an x-axis scale bar along the bottom
+- **THEN** the battlefield shows attacker unit markers on the left (position 0) and defender unit markers on the right (position 1500), with an x-axis scale bar from 0 to 1500
 
 #### Scenario: Unit marker content
 - **WHEN** the attacker has Mounted T14 (5000) and Mounted T13 (3000)
 - **THEN** the Mounted marker shows letter "M" in a blue circle, "8,000" below, and "Mounted" below that
+
+#### Scenario: Scale matches engine coordinates
+- **WHEN** a troop marker is at engine position 750 on a 1500-unit field
+- **THEN** the marker renders at the horizontal midpoint of the battlefield visual
 
 ### Requirement: Active phase highlighting
 During step playback, the currently acting unit marker SHALL be visually highlighted with a glow effect. An animated SVG arrow SHALL connect the attacking marker to the target marker, displaying the damage dealt and kills inflicted at the midpoint.
@@ -18,11 +27,12 @@ During step playback, the currently acting unit marker SHALL be visually highlig
 - **WHEN** the current step is ATT Range T14 attacking DEF Mounted T14
 - **THEN** the attacker's Ranged marker glows, an SVG arrow animates from it to the defender's Mounted marker, and damage/kills text is shown at the arrow midpoint
 
-### Requirement: Remaining troop fill bars
-REMOVED — tier-level fill bars are replaced by the click-to-detail panel showing per-tier counts with losses.
+### Requirement: Tier-level detail via click
+Per-tier troop breakdowns SHALL be accessible via click on a unit marker rather than rendered inline as fill bars. Clicking a marker SHALL reveal a detail panel showing per-tier current and starting counts with losses.
 
-**Reason**: Inline fill bars per tier cluttered the spatial map layout. Per-tier detail is now accessible via click.
-**Migration**: Click any unit marker to see tier-by-tier breakdown with current/starting counts and losses.
+#### Scenario: Click reveals tier breakdown
+- **WHEN** the user clicks the attacker's Mounted marker
+- **THEN** a detail panel appears showing each Mounted tier's current count, starting count, and losses
 
 ### Requirement: Hover tooltips on troop blocks
 Hovering over a unit marker SHALL display a tooltip showing the troop type, side, targeting priority chain, and active buff percentages.

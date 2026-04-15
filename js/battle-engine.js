@@ -3,7 +3,7 @@ var BattleEngine = (function () {
 
     // --- Model ---
 
-    var BATTLEFIELD_LENGTH = 5200;
+    var BATTLEFIELD_LENGTH = 1500;
 
     function createLayer(type, tier, count) {
         var stats = TroopData.getStats(type, tier);
@@ -15,7 +15,8 @@ var BattleEngine = (function () {
             atk: stats.atk,
             def: stats.def,
             hp: stats.hp,
-            range: stats.range
+            range: stats.range,
+            engagedTargetType: null  // engagement lock: current target type
         };
     }
 
@@ -104,28 +105,52 @@ var BattleEngine = (function () {
         return false;
     }
 
+    // Find the nearest enemy position of a specific type for minimum-distance calculation
+    function findPriorityTargetDistance(layer, myPos, enemyArmy, enemyPositions, direction) {
+        var chain = TroopData.TARGET_PRIORITY[layer.type];
+        for (var i = 0; i < chain.length; i++) {
+            var targetType = chain[i];
+            for (var j = 0; j < enemyArmy.layers.length; j++) {
+                var el = enemyArmy.layers[j];
+                if (el.count > 0 && el.type === targetType) {
+                    var ePos = enemyPositions[layerKey(el.type, el.tier)];
+                    return direction === 1 ? (ePos - myPos) : (myPos - ePos);
+                }
+            }
+        }
+        return Infinity;
+    }
+
     function evaluateMovement(type, positions, attackerArmy, defenderArmy) {
         var speed = TroopData.getStats(type, 1).speed;
         var moves = [];
 
-        // Collect alive enemy layer positions for range/collision checks
+        // Snapshot pre-move positions so both sides decide from the same state
+        var preMoveDef = {};
+        for (var key in positions.DEF) preMoveDef[key] = positions.DEF[key];
+        var preMoveAtt = {};
+        for (var key in positions.ATT) preMoveAtt[key] = positions.ATT[key];
+
+        // Collect alive positions from pre-move snapshot
         var aliveDefPositions = [];
         for (var i = 0; i < defenderArmy.layers.length; i++) {
             var l = defenderArmy.layers[i];
-            if (l.count > 0) aliveDefPositions.push(positions.DEF[layerKey(l.type, l.tier)]);
+            if (l.count > 0) aliveDefPositions.push(preMoveDef[layerKey(l.type, l.tier)]);
         }
         var aliveAttPositions = [];
         for (var i = 0; i < attackerArmy.layers.length; i++) {
             var l = attackerArmy.layers[i];
-            if (l.count > 0) aliveAttPositions.push(positions.ATT[layerKey(l.type, l.tier)]);
+            if (l.count > 0) aliveAttPositions.push(preMoveAtt[layerKey(l.type, l.tier)]);
         }
 
-        // Attacker layers: each independently holds or advances
+        // Compute attacker movement from pre-move snapshot (don't apply yet)
+        var attMoves = [];
         for (var i = 0; i < attackerArmy.layers.length; i++) {
             var layer = attackerArmy.layers[i];
             if (layer.type !== type || layer.count <= 0) continue;
             var key = layerKey(type, layer.tier);
-            var from = positions.ATT[key];
+            var from = preMoveAtt[key];
+            var effectiveRange = speed + layer.range;
             var held = false;
 
             for (var j = 0; j < aliveDefPositions.length; j++) {
@@ -137,34 +162,33 @@ var BattleEngine = (function () {
 
             var newPos = from;
             if (!held) {
-                newPos = from + speed;
-                // Collision: can't pass any alive enemy layer
+                var distToTarget = findPriorityTargetDistance(layer, from, defenderArmy, preMoveDef, 1);
+                if (distToTarget <= effectiveRange) {
+                    var moveNeeded = distToTarget - layer.range;
+                    newPos = from + Math.max(0, moveNeeded);
+                } else {
+                    newPos = from + speed;
+                }
                 for (var j = 0; j < aliveDefPositions.length; j++) {
                     newPos = Math.min(newPos, aliveDefPositions[j] - 50);
                 }
             }
 
-            positions.ATT[key] = newPos;
-            moves.push({ side: 'ATT', type: type, tier: layer.tier, from: from, to: newPos, held: held });
+            attMoves.push({ key: key, from: from, to: newPos, tier: layer.tier, held: held });
         }
 
-        // Recompute ATT positions after attacker movement for defender checks
-        var updatedAttPositions = [];
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var l = attackerArmy.layers[i];
-            if (l.count > 0) updatedAttPositions.push(positions.ATT[layerKey(l.type, l.tier)]);
-        }
-
-        // Defender layers: each independently holds or advances
+        // Compute defender movement from the same pre-move snapshot
+        var defMoves = [];
         for (var i = 0; i < defenderArmy.layers.length; i++) {
             var layer = defenderArmy.layers[i];
             if (layer.type !== type || layer.count <= 0) continue;
             var key = layerKey(type, layer.tier);
-            var from = positions.DEF[key];
+            var from = preMoveDef[key];
+            var effectiveRange = speed + layer.range;
             var held = false;
 
-            for (var j = 0; j < updatedAttPositions.length; j++) {
-                if (from - updatedAttPositions[j] <= layer.range) {
+            for (var j = 0; j < aliveAttPositions.length; j++) {
+                if (from - aliveAttPositions[j] <= layer.range) {
                     held = true;
                     break;
                 }
@@ -172,15 +196,68 @@ var BattleEngine = (function () {
 
             var newPos = from;
             if (!held) {
-                newPos = from - speed;
-                // Collision: can't pass any alive enemy layer
-                for (var j = 0; j < updatedAttPositions.length; j++) {
-                    newPos = Math.max(newPos, updatedAttPositions[j] + 50);
+                var distToTarget = findPriorityTargetDistance(layer, from, attackerArmy, preMoveAtt, -1);
+                if (distToTarget <= effectiveRange) {
+                    var moveNeeded = distToTarget - layer.range;
+                    newPos = from - Math.max(0, moveNeeded);
+                } else {
+                    newPos = from - speed;
+                }
+                for (var j = 0; j < aliveAttPositions.length; j++) {
+                    newPos = Math.max(newPos, aliveAttPositions[j] + 50);
                 }
             }
 
-            positions.DEF[key] = newPos;
-            moves.push({ side: 'DEF', type: type, tier: layer.tier, from: from, to: newPos, held: held });
+            defMoves.push({ key: key, from: from, to: newPos, tier: layer.tier, held: held });
+        }
+
+        // Apply both sides' moves simultaneously, then resolve collisions
+        for (var i = 0; i < attMoves.length; i++) {
+            positions.ATT[attMoves[i].key] = attMoves[i].to;
+        }
+        for (var i = 0; i < defMoves.length; i++) {
+            positions.DEF[defMoves[i].key] = defMoves[i].to;
+        }
+
+        // Post-move collision resolution: ensure no unit passes through an enemy
+        var postAttPositions = [];
+        for (var i = 0; i < attackerArmy.layers.length; i++) {
+            var l = attackerArmy.layers[i];
+            if (l.count > 0) postAttPositions.push(positions.ATT[layerKey(l.type, l.tier)]);
+        }
+        var postDefPositions = [];
+        for (var i = 0; i < defenderArmy.layers.length; i++) {
+            var l = defenderArmy.layers[i];
+            if (l.count > 0) postDefPositions.push(positions.DEF[layerKey(l.type, l.tier)]);
+        }
+
+        for (var i = 0; i < attMoves.length; i++) {
+            var m = attMoves[i];
+            var clamped = positions.ATT[m.key];
+            for (var j = 0; j < postDefPositions.length; j++) {
+                clamped = Math.min(clamped, postDefPositions[j] - 50);
+            }
+            positions.ATT[m.key] = clamped;
+            m.to = clamped;
+        }
+        for (var i = 0; i < defMoves.length; i++) {
+            var m = defMoves[i];
+            var clamped = positions.DEF[m.key];
+            for (var j = 0; j < postAttPositions.length; j++) {
+                clamped = Math.max(clamped, postAttPositions[j] + 50);
+            }
+            positions.DEF[m.key] = clamped;
+            m.to = clamped;
+        }
+
+        // Build event moves
+        for (var i = 0; i < attMoves.length; i++) {
+            var m = attMoves[i];
+            moves.push({ side: 'ATT', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
+        }
+        for (var i = 0; i < defMoves.length; i++) {
+            var m = defMoves[i];
+            moves.push({ side: 'DEF', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
         }
 
         return moves;
@@ -227,11 +304,61 @@ var BattleEngine = (function () {
 
     function selectTarget(attackerLayer, enemyArmy, sourcePos, enemyPositions) {
         var layerRange = attackerLayer.range;
+        var speed = TroopData.getStats(attackerLayer.type, 1).speed;
+        var effectiveRange = speed + layerRange;
         var chain = TroopData.TARGET_PRIORITY[attackerLayer.type];
+
+        // Engagement lock: if locked on a type, check if we should stay locked
+        if (attackerLayer.engagedTargetType) {
+            var lockedType = attackerLayer.engagedTargetType;
+
+            // Check if locked type still has alive troops in actual range
+            var lockedCandidates = [];
+            for (var j = 0; j < enemyArmy.layers.length; j++) {
+                var l = enemyArmy.layers[j];
+                if (l.count > 0 && l.type === lockedType) {
+                    var distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
+                    if (distance <= layerRange) {
+                        lockedCandidates.push(l);
+                    }
+                }
+            }
+
+            if (lockedCandidates.length > 0) {
+                // Check if a higher-priority type has entered effective range
+                var higherPriorityAvailable = false;
+                for (var i = 0; i < chain.length; i++) {
+                    if (chain[i] === lockedType) break; // reached current lock, nothing higher
+                    for (var j = 0; j < enemyArmy.layers.length; j++) {
+                        var l = enemyArmy.layers[j];
+                        if (l.count > 0 && l.type === chain[i]) {
+                            var distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
+                            if (distance <= effectiveRange) {
+                                higherPriorityAvailable = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (higherPriorityAvailable) break;
+                }
+
+                if (!higherPriorityAvailable) {
+                    // Stay locked — pick best candidate of locked type
+                    lockedCandidates.sort(function (a, b) {
+                        if (b.tier !== a.tier) return b.tier - a.tier;
+                        return b.count - a.count;
+                    });
+                    return lockedCandidates[0];
+                }
+            }
+
+            // Lock broken — target type eliminated or higher priority available
+            attackerLayer.engagedTargetType = null;
+        }
+
+        // Standard priority chain selection (in actual range)
         for (var i = 0; i < chain.length; i++) {
             var targetType = chain[i];
-
-            // Find alive layers of this type that are within firing range
             var candidates = [];
             for (var j = 0; j < enemyArmy.layers.length; j++) {
                 var l = enemyArmy.layers[j];
@@ -244,9 +371,11 @@ var BattleEngine = (function () {
             }
             if (candidates.length > 0) {
                 candidates.sort(function (a, b) {
-                    if (b.tier !== a.tier) return b.tier - a.tier; // highest tier first
-                    return b.count - a.count; // largest count first
+                    if (b.tier !== a.tier) return b.tier - a.tier;
+                    return b.count - a.count;
                 });
+                // Set engagement lock
+                attackerLayer.engagedTargetType = targetType;
                 return candidates[0];
             }
         }
@@ -324,6 +453,11 @@ var BattleEngine = (function () {
             var target = selectTarget(attacker, enemyArmy, layerPos, enemyPositions);
             if (!target) continue;
 
+            // Range guard: verify target is within attacker's actual range
+            var targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
+            var distance = Math.abs(targetPos - layerPos);
+            if (distance > attacker.range) continue;
+
             var countBefore = target.count;
             var result = calculateDamage(attacker, target, actingArmy.buffs, enemyArmy.buffs);
             target.count -= result.kills;
@@ -343,12 +477,9 @@ var BattleEngine = (function () {
                 kills: result.kills,
                 remaining: target.count,
                 modifier: result.modifier,
+                distance: distance,
                 positions: snapshotPositions(positions)
             });
-
-            // Counter-strike: surviving target strikes back if within range
-            var targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
-            var distance = Math.abs(targetPos - layerPos);
             if (target.count > 0 && attacker.count > 0 && distance <= target.range) {
                 var attackerCountBefore = attacker.count;
                 var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs);

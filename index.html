@@ -186,11 +186,11 @@
                     <tbody>
                         <tr><td class="color-ground">Ground</td><td>Tank</td><td>Highest DEF (~3&times; ATK), highest HP (~6&times; ATK)</td><td>350</td><td>50</td></tr>
                         <tr><td class="color-ranged">Ranged</td><td>Balanced</td><td>ATK &asymp; DEF, moderate HP (~2&times; ATK)</td><td>100</td><td>500</td></tr>
-                        <tr><td class="color-mounted">Mounted</td><td>Striker</td><td>Highest ATK, fastest unit in the game</td><td>600</td><td>50</td></tr>
-                        <tr><td class="color-siege">Siege</td><td>Glass Cannon</td><td>Lowest stats overall, extreme range</td><td>75</td><td>1400&ndash;2178</td></tr>
+                        <tr><td class="color-mounted">Mounted</td><td>Striker</td><td>Highest ATK, fastest unit in the game</td><td>300</td><td>50</td></tr>
+                        <tr><td class="color-siege">Siege</td><td>Glass Cannon</td><td>Lowest stats overall, extreme range</td><td>75</td><td>900&ndash;1400</td></tr>
                     </tbody>
                 </table>
-                <p>Speed and range are constant across all tiers for a given type. Only ATK, DEF, and HP scale with tier. Siege is the exception &mdash; its range increases in tier brackets (T1&ndash;T4: 1400, T5&ndash;T8: 1556, T9&ndash;T10: 1711, T11&ndash;T12: 1867, T13&ndash;T15: 2178).</p>
+                <p>Speed and range are constant across all tiers for a given type. Only ATK, DEF, and HP scale with tier. Siege is the exception &mdash; its range increases in tier brackets (T1&ndash;T4: 900, T5&ndash;T8: 1000, T9&ndash;T10: 1100, T11&ndash;T12: 1200, T13&ndash;T15: 1400). Values use actual game-DB data (UI displays inflated numbers).</p>
                 <p class="info-note">Notable: Siege ATK = Siege HP at every tier. Ground HP is roughly 6&times; its ATK at every tier.</p>
                 <p class="info-section-refs">
                     Sources:
@@ -200,16 +200,16 @@
 
                 <!-- Phase Order -->
                 <h3>Phase Order (Attack Sequence)</h3>
-                <p>Each round is divided into four phases. Troops attack sequentially by range (longest range fires first). When two types share the same range, the faster unit goes first:</p>
+                <p>Each round is divided into four phases. Troops attack sequentially by actual speed (fastest first). When speeds tie, the defender acts first:</p>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Phase</th><th>Type</th><th>Range</th><th>Rationale</th></tr>
+                        <tr><th>Phase</th><th>Type</th><th>Speed</th><th>Rationale</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>1</td><td class="color-siege">Siege</td><td>1400&ndash;2178</td><td>Longest range fires first</td></tr>
-                        <tr><td>2</td><td class="color-ranged">Ranged</td><td>500</td><td>Second longest range</td></tr>
-                        <tr><td>3</td><td class="color-mounted">Mounted</td><td>50</td><td>Melee tiebreak: speed 600 &gt; 350</td></tr>
-                        <tr><td>4</td><td class="color-ground">Ground</td><td>50</td><td>Melee tiebreak: slowest melee</td></tr>
+                        <tr><td>1</td><td class="color-ground">Ground</td><td>350</td><td>Fastest actual speed</td></tr>
+                        <tr><td>2</td><td class="color-mounted">Mounted</td><td>300</td><td>Second fastest</td></tr>
+                        <tr><td>3</td><td class="color-ranged">Ranged</td><td>100</td><td>Third</td></tr>
+                        <tr><td>4</td><td class="color-siege">Siege</td><td>75</td><td>Slowest</td></tr>
                     </tbody>
                 </table>
                 <p><strong>Within each phase:</strong> The attacker strikes first, then the defender's <em>surviving</em> troops counter-attack. This gives the attacker a slight edge &mdash; they reduce the defender's count before the counterstrike.</p>
@@ -222,9 +222,9 @@
 
                 <!-- Battlefield & Movement -->
                 <h3>Battlefield &amp; Movement</h3>
-                <p>Linear battlefield, <strong>5,200 units</strong> long. Attacker starts at position 0, defender at 5,200. Each troop type has its own independent position (8 positions total: 4 per side).</p>
+                <p>Linear battlefield, <strong>1,500 units</strong> long. Attacker starts at position 0, defender at 1,500. Each troop type has its own independent position (8 positions total: 4 per side).</p>
                 <div class="info-diagram">
-                    Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 5,200 units &mdash;&mdash;&mdash;&mdash;&mdash; Defender (5200)
+                    Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 1,500 units &mdash;&mdash;&mdash;&mdash;&mdash; Defender (1500)
                 </div>
                 <p>Each round, <strong>before</strong> attacking, each troop type evaluates movement:</p>
                 <ul class="info-list">
@@ -234,19 +234,22 @@
                 </ul>
                 <p><strong>Key rules:</strong></p>
                 <ul class="info-list">
-                    <li><strong>Speed = distance per round.</strong> Mounted moves 600 units/round, Ground 350, Ranged 100, Siege 75.</li>
+                    <li><strong>Speed = distance per round.</strong> Ground moves 350 units/round, Mounted 300, Ranged 100, Siege 75.</li>
                     <li><strong>Direction is always forward.</strong> Troops never reverse or retreat.</li>
+                    <li><strong>Minimum-distance movement:</strong> Troops move only the minimum distance needed to bring the highest-priority target into actual range. They don't blindly advance full speed.</li>
+                    <li><strong>Effective range = speed + range:</strong> Determines detection distance for movement decisions, not firing distance.</li>
                     <li><strong>Hold triggers on any enemy in range</strong>, not just the priority target.</li>
                     <li><strong>Melee collision:</strong> When opposing troops would pass through each other, they stop at melee range (50 units apart).</li>
+                    <li><strong>Engagement lock:</strong> Once attacking a target type, troops stay locked on until that type is eliminated or a higher-priority type enters effective range.</li>
                 </ul>
-                <p><strong>Typical engagement timeline (both sides identical):</strong></p>
+                <p><strong>Typical engagement timeline on 1,500-unit field (both sides identical):</strong></p>
                 <ul class="info-list info-list-muted">
-                    <li>Round ~4: Siege finds approaching Mounted in range (2178). Holds, fires.</li>
-                    <li>Round ~5: Mounted pairs lock in melee near midfield.</li>
-                    <li>Round ~8: Ground pairs lock in melee.</li>
-                    <li>Round ~17: Ranged finally reach engagement range (slow speed 100).</li>
+                    <li>Round 1: Siege detects approaching troops. Ground/Mounted advance.</li>
+                    <li>Round 2: Mounted pairs close to melee near midfield.</li>
+                    <li>Round 3: Ground pairs lock in melee.</li>
+                    <li>Round ~5: Ranged reach engagement range.</li>
                 </ul>
-                <p class="info-note">Ranged troops are late to the fight despite having the second-longest range &mdash; their low speed (100) dominates. Siege engages early due to massive range offsetting slow speed.</p>
+                <p class="info-note">On the shorter 1,500-unit field, engagements happen much faster. All values use actual game-DB data (UI displays inflated numbers for some stats).</p>
                 <p class="info-section-refs">
                     Sources:
                     <a href="https://www.evonytips.com/index/strategy/how-the-battles-work-battle-mechanics" target="_blank" rel="noopener">EvonyTips &mdash; How Battles Work</a> &bull;
