@@ -15,6 +15,7 @@ var BattleEngine = (function () {
             atk: stats.atk,
             def: stats.def,
             hp: stats.hp,
+            speed: stats.speed,
             range: stats.range,
             engagedTargetType: null  // engagement lock: current target type
         };
@@ -122,7 +123,8 @@ var BattleEngine = (function () {
     }
 
     function evaluateMovement(type, positions, attackerArmy, defenderArmy) {
-        var speed = TroopData.getStats(type, 1).speed;
+        // Speed is read per-layer (layer.speed) because Siege T16 has speed 76
+        // while Siege T1–T15 has speed 75. All other types are flat across tiers.
         var moves = [];
 
         // Snapshot pre-move positions so both sides decide from the same state
@@ -150,7 +152,7 @@ var BattleEngine = (function () {
             if (layer.type !== type || layer.count <= 0) continue;
             var key = layerKey(type, layer.tier);
             var from = preMoveAtt[key];
-            var effectiveRange = speed + layer.range;
+            var effectiveRange = layer.speed + layer.range;
             var held = false;
 
             for (var j = 0; j < aliveDefPositions.length; j++) {
@@ -167,7 +169,7 @@ var BattleEngine = (function () {
                     var moveNeeded = distToTarget - layer.range;
                     newPos = from + Math.max(0, moveNeeded);
                 } else {
-                    newPos = from + speed;
+                    newPos = from + layer.speed;
                 }
                 for (var j = 0; j < aliveDefPositions.length; j++) {
                     newPos = Math.min(newPos, aliveDefPositions[j] - 50);
@@ -184,7 +186,7 @@ var BattleEngine = (function () {
             if (layer.type !== type || layer.count <= 0) continue;
             var key = layerKey(type, layer.tier);
             var from = preMoveDef[key];
-            var effectiveRange = speed + layer.range;
+            var effectiveRange = layer.speed + layer.range;
             var held = false;
 
             for (var j = 0; j < aliveAttPositions.length; j++) {
@@ -201,7 +203,7 @@ var BattleEngine = (function () {
                     var moveNeeded = distToTarget - layer.range;
                     newPos = from - Math.max(0, moveNeeded);
                 } else {
-                    newPos = from - speed;
+                    newPos = from - layer.speed;
                 }
                 for (var j = 0; j < aliveAttPositions.length; j++) {
                     newPos = Math.max(newPos, aliveAttPositions[j] + 50);
@@ -304,8 +306,7 @@ var BattleEngine = (function () {
 
     function selectTarget(attackerLayer, enemyArmy, sourcePos, enemyPositions) {
         var layerRange = attackerLayer.range;
-        var speed = TroopData.getStats(attackerLayer.type, 1).speed;
-        var effectiveRange = speed + layerRange;
+        var effectiveRange = attackerLayer.speed + layerRange;
         var chain = TroopData.TARGET_PRIORITY[attackerLayer.type];
 
         // Engagement lock: if locked on a type, check if we should stay locked

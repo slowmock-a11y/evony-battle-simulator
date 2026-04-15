@@ -3,7 +3,7 @@ var ArmyConfig = (function () {
 
     var TYPE_KEYS = ['GROUND', 'RANGED', 'MOUNTED', 'SIEGE'];
     var TIER_GROUPS = [
-        { label: 'High Tiers (T15–T10)', tiers: [15, 14, 13, 12, 11, 10] },
+        { label: 'High Tiers (T16–T10)', tiers: [16, 15, 14, 13, 12, 11, 10] },
         { label: 'Mid Tiers (T9–T5)',    tiers: [9, 8, 7, 6, 5] },
         { label: 'Low Tiers (T4–T1)',    tiers: [4, 3, 2, 1] }
     ];

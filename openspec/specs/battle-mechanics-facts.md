@@ -6,7 +6,7 @@ Reference document for the march-vs-march battle simulator. Sources: community r
 
 ## Troop Types
 
-Four troop types, each with tiers T1 through T15:
+Four troop types, each with tiers T1 through T16 (T16 unlocks at Workshop L45):
 
 | Type    | Role     | Key Trait                        |
 |---------|----------|----------------------------------|
@@ -17,20 +17,22 @@ Four troop types, each with tiers T1 through T15:
 
 ---
 
-## Base Troop Stats (T1–T15)
+## Base Troop Stats (T1–T16)
 
-Speed and Range are constant across tiers per type. **Actual values** from the game database differ from displayed UI values — the UI inflates some stats.
+Speed and Range are constant across tiers per type, **with one exception**: Siege speed steps from 75 to 76 at T16. **Actual values** from the game database differ from displayed UI values — the UI inflates some stats.
 
-| Type    | Displayed Speed | Actual Speed | Range          |
-|---------|----------------|-------------|----------------|
-| Ground  | 350            | 350         | 50             |
-| Ranged  | 100            | 100         | 500            |
-| Mounted | 600            | **300**     | 50             |
-| Siege   | 75             | 75          | varies by tier |
+| Type    | Displayed Speed | Actual Speed          | Range          |
+|---------|-----------------|-----------------------|----------------|
+| Ground  | 350             | 350                   | 50             |
+| Ranged  | 100             | 100                   | 500            |
+| Mounted | 600             | **300**               | 50             |
+| Siege   | 75 / 76         | 75 (T1–T15), 76 (T16) | varies by tier |
 
 **Note:** Mounted displayed speed (600) is double the actual game-DB value (300). Source: database file analysis by [@DerrickDefies](https://www.youtube.com/@DerrickDefies).
 
-**Open questions:** Ground speed, Ranged speed, Ranged range, Ground range, and Mounted range may also differ from displayed values — unconfirmed.
+**Resolved (2026-04-15):** Fresh theriagames data confirms Ground actual speed 350, Ranged actual speed 100, and Ranged actual range 500 match the displayed values. The UI-doubling pattern that affects Mounted speed does **not** extend to Ground or Ranged. The "Siege > Ground > Ranged & Mounted" range ordering claim (from earlier community sources) is disproven.
+
+**Still open:** Ground and Mounted actual ranges (currently 50) — unconfirmed against DB files, but consistent with displayed values.
 
 ### Ground
 
@@ -51,6 +53,7 @@ Speed and Range are constant across tiers per type. **Actual values** from the g
 | T13  | 2,910 | 8,400  | 16,620 |
 | T14  | 3,570 | 10,330 | 20,440 |
 | T15  | 4,230 | 11,760 | 24,260 |
+| T16  | 4,920 | 13,670 | 28,240 |
 
 ### Ranged
 
@@ -69,8 +72,9 @@ Speed and Range are constant across tiers per type. **Actual values** from the g
 | T11  | 2,400 | 1,940 | 4,720 |
 | T12  | 3,000 | 2,425 | 5,900 |
 | T13  | 3,450 | 2,780 | 6,780 |
-| T14  | 4,070 | 3,280 | 8,000 |
-| T15  | 4,690 | 3,780 | 9,220 |
+| T14  | 4,070 | 3,280 | 8,000  |
+| T15  | 4,690 | 3,780 | 9,220  |
+| T16  | 5,460 | 4,390 | 10,730 |
 
 ### Mounted
 
@@ -91,6 +95,7 @@ Speed and Range are constant across tiers per type. **Actual values** from the g
 | T13  | 5,800 | 3,830 | 10,480 |
 | T14  | 6,670 | 4,400 | 12,050 |
 | T15  | 7,540 | 4,970 | 13,620 |
+| T16  | 8,780 | 5,780 | 15,850 |
 
 ### Siege
 
@@ -111,8 +116,11 @@ Speed and Range are constant across tiers per type. **Actual values** from the g
 | T13  | 2,780 | 1,330 | 2,780 | **1,400**   | 2,178           |
 | T14  | 3,280 | 1,560 | 3,280 | **1,400**   | 2,178           |
 | T15  | 3,780 | 1,790 | 3,780 | **1,400**   | 2,178           |
+| T16  | 4,440 | 2,080 | 4,400 | **1,400**   | 2,178           |
 
-**Notable pattern:** Siege ATK = Siege HP at every tier.
+**Notable pattern:** Siege ATK = Siege HP at every tier T1–T15. **Broken at T16**: ATK 4,440, HP 4,400 (40-unit gap). First deviation from this pattern.
+
+**Tier-dependent Siege speed:** T1–T15 actual speed = 75; T16 actual speed = **76**. First non-flat speed in any type. At 76 vs 75, T16 Siege wins the speed-based tiebreak over lower-tier Siege — though the "higher tier acts first within same type" rule already produced the same ordering, so engine behavior is unchanged.
 
 **Siege range source:** Actual range values from game database analysis by [@DerrickDefies](https://www.youtube.com/@DerrickDefies) — [Speed and Range Mechanics video](https://www.youtube.com/watch?v=zaM5ajYqudE). ATK/DEF/HP source: https://theriagames.com/guide/troop-base-stats/
 
@@ -142,8 +150,8 @@ Higher tier attacks before lower tier.
 
 **Confidence levels:**
 - Speed-based ordering: HIGH (confirmed from game database analysis by @DerrickDefies)
-- Defender first on speed tie: MEDIUM (from evonyanswers community research)
-- Attacker strikes first within phase: CONFIRMED by user
+- Defender army first on speed tie: HIGH — when attacker and defender have the same troop type (same speed), the defending army's troops take their turn before the attacking army's troops. (Confirmed from game database analysis by @DerrickDefies — https://youtu.be/zaM5ajYqudE?t=207)
+- Acting troop hits before counter-strike: CONFIRMED by user — within a single turn, the troop taking its turn deals its damage first; the target counter-strikes after. Applies regardless of army side.
 - Higher tier first within type: MEDIUM (widely accepted, not proven)
 
 Source: evonyanswers.com — "Order of Movement and/or Attack for Troop Groups is determined by Actual Speed."
@@ -199,6 +207,7 @@ Mounted:        300 + 50   = 350
 Ranged:         100 + 500  = 600
 Siege T1–T4:    75  + 900  = 975
 Siege T13–T15:  75  + 1400 = 1475
+Siege T16:      76  + 1400 = 1476
 ```
 
 **Engagement cascade on a 1500 field (typical, both sides identical):**
@@ -280,7 +289,7 @@ Tier-dependent 4×4 coefficient matrices. Values below 1.0 are penalties; above 
 | Mounted            | 1.2    | 0.8    | 1.0     | 0.9   |
 | Siege              | 0.35   | 0.4    | 0.3     | 0.5   |
 
-### T11–T15
+### T11–T16
 
 | Attacker \ Target | Ground | Ranged | Mounted | Siege   |
 |--------------------|--------|--------|---------|---------|
@@ -288,6 +297,8 @@ Tier-dependent 4×4 coefficient matrices. Values below 1.0 are penalties; above 
 | Ranged             | 0.8    | 1.0    | 1.2     | 1.1     |
 | Mounted            | 1.2    | 0.8    | 1.0     | **1.1** |
 | Siege              | 0.35   | 0.4    | 0.3     | **0.6** |
+
+T16 uses the same coefficients as T11–T15 — no new tier band is introduced at T16.
 
 Key interactions:
 - Counter triangle with bonuses AND penalties: Range→Mounted 1.2× / Mounted→Range 0.8×, Mounted→Ground 1.2× / Ground→Mounted 0.7×, Ground→Range 1.2× / Range→Ground 0.8×
@@ -309,15 +320,16 @@ Source: community research by [@DerrickDefies](https://www.youtube.com/@DerrickD
 
 ## Open Questions (Unconfirmed Values)
 
-The following values are used as-is from the game UI but have **not been confirmed** against the actual game database files. They may be inflated like Mounted speed and Siege range were:
+The following values are used as-is from the game UI but have **not been confirmed** against the actual game database files:
 
-- **Ground actual speed:** Currently 350 (matches evonyanswers MER=350+50=400). But does the UI doubling apply here too?
-- **Ranged actual speed:** Currently 100. Could be 50 if the UI doubling applies.
-- **Ranged actual range:** Currently 500. The game-file range order is reportedly Siege > Ground > Ranged & Mounted — if true, Ground range > Ranged range, which contradicts displayed values.
-- **Ground actual range:** Currently 50. May be higher in game files (see range order above).
-- **Mounted actual range:** Currently 50. Unconfirmed.
+- **Ground actual range:** Currently 50. Unconfirmed against DB files.
+- **Mounted actual range:** Currently 50. Unconfirmed against DB files.
+- **Siege T16 actual range:** Currently inferred as 1,400 (via the consistent 14/9 displayed/actual ratio from T1–T15). Not yet DB-confirmed.
 - **MER gear bonuses:** The full MER formula includes gear bonuses (15% of actual range + 20 flat). Not modeled yet — base MER only.
 - **Round cap:** Whether march-vs-march battles on a 1500-unit field have a fixed round limit.
+- **T17 and beyond:** Unknown whether further tiers exist or are planned.
+
+**Recently resolved (2026-04-15):** Ground actual speed (350), Ranged actual speed (100), and Ranged actual range (500) are all confirmed — no UI-doubling beyond Mounted. The "Siege > Ground > Ranged & Mounted" range-ordering claim is disproven.
 
 ---
 
