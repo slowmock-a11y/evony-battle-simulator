@@ -1,23 +1,28 @@
 # troop-data Specification
 
 ## Purpose
-Base stats for all four troop types across tiers T1-T15, type metadata (display name, color, target-priority chain), and the tier-dependent damage-multiplier matrix.
+Base stats for all four troop types across tiers T1-T16, type metadata (display name, color, target-priority chain), and the tier-dependent damage-multiplier matrix.
 
 ## Requirements
 
 ### Requirement: Complete troop base stats
-The system SHALL provide base stats (Attack, Defense, HP, Speed, Range) for all four troop types (Ground, Ranged, Mounted, Siege) across tiers T1 through T14. Speed and range values SHALL use actual game-database values, not displayed UI values. Stats SHALL match the values from the reference data in `openspec/specs/battle-mechanics-facts.md`.
+The system SHALL provide base stats (Attack, Defense, HP, Speed, Range) for all four troop types (Ground, Ranged, Mounted, Siege) across tiers T1 through T16. Speed and range values SHALL use actual game-database values, not displayed UI values. Stats SHALL match the values from the reference data in `openspec/specs/battle-mechanics-facts.md`.
 
 Corrected speed/range values:
 - Ground: Speed=350, Range=50 (all tiers)
 - Ranged: Speed=100, Range=500 (all tiers)
-- Mounted: Speed=**300**, Range=50 (all tiers)
-- Siege: Speed=75, Range varies by tier:
+- Mounted: Speed=**300**, Range=50 (all tiers; displayed speed is 600, 2× inflated)
+- Siege: Range varies by tier:
   - T1-T4: **900**
   - T5-T8: **1000**
   - T9-T10: **1100**
   - T11-T12: **1200**
-  - T13-T14: **1400**
+  - T13-T16: **1400**
+- Siege: Speed is tier-dependent:
+  - T1–T15: **75**
+  - T16: **76**
+
+T16 additionally breaks the historical pattern "Siege ATK = Siege HP": T16 Siege has ATK=4440 and HP=4400 (40-unit gap). This is intentional and recorded as-is.
 
 #### Scenario: Ground T14 stats
 - **WHEN** the system looks up Ground T14 base stats
@@ -39,6 +44,27 @@ Corrected speed/range values:
 - **WHEN** the system looks up Siege T8 base stats
 - **THEN** Attack=850, Defense=410, HP=850, Speed=75, Range=**1000**
 
+#### Scenario: Ground T16 stats
+- **WHEN** the system looks up Ground T16 base stats
+- **THEN** Attack=4920, Defense=13670, HP=28240, Speed=350, Range=50
+
+#### Scenario: Ranged T16 stats
+- **WHEN** the system looks up Ranged T16 base stats
+- **THEN** Attack=5460, Defense=4390, HP=10730, Speed=100, Range=500
+
+#### Scenario: Mounted T16 stats
+- **WHEN** the system looks up Mounted T16 base stats
+- **THEN** Attack=8780, Defense=5780, HP=15850, Speed=**300**, Range=50
+
+#### Scenario: Siege T16 stats with tier-specific speed
+- **WHEN** the system looks up Siege T16 base stats
+- **THEN** Attack=4440, Defense=2080, HP=4400, Speed=**76**, Range=**1400**
+- **AND** Attack (4440) is NOT equal to HP (4400), which intentionally breaks the T1–T15 pattern
+
+#### Scenario: Siege T15 speed remains 75
+- **WHEN** the system looks up Siege T15 base stats
+- **THEN** Speed=75 (the tier-dependent speed break is at T16, not T15)
+
 ### Requirement: Troop type metadata
 Each troop type SHALL have associated metadata: display name, color code for UI rendering, and the fixed targeting priority chain.
 
@@ -57,11 +83,13 @@ Tier-dependent matrices:
 - Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: 0.9
 - Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: 0.5
 
-**T11-T14:**
+**T11-T16:**
 - Ground->Ground: 1.0, Ground->Ranged: 1.2, Ground->Mounted: 0.7, Ground->Siege: 1.1
 - Ranged->Ground: 0.8, Ranged->Ranged: 1.0, Ranged->Mounted: 1.2, Ranged->Siege: 1.1
 - Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: **1.1**
 - Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: **0.6**
+
+(T16 uses the same coefficients as T11–T15 — the `attackerTier >= 11` branch in `getMultiplier()` already covers T16 without modification.)
 
 #### Scenario: Counter bonus lookup
 - **WHEN** `getMultiplier('RANGED', 'MOUNTED')` is called
@@ -86,3 +114,11 @@ Tier-dependent matrices:
 #### Scenario: Siege vs Siege T11+
 - **WHEN** `getMultiplier('SIEGE', 'SIEGE')` is called for a T11 attacker
 - **THEN** it returns 0.6
+
+#### Scenario: Mounted vs Siege at T16
+- **WHEN** `getMultiplier('MOUNTED', 'SIEGE')` is called for a T16 attacker
+- **THEN** it returns 1.1 (same as T11+ band)
+
+#### Scenario: Siege vs Siege at T16
+- **WHEN** `getMultiplier('SIEGE', 'SIEGE')` is called for a T16 attacker
+- **THEN** it returns 0.6 (same as T11+ band)
