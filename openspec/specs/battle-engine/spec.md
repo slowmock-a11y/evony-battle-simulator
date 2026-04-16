@@ -48,7 +48,7 @@ Each round, before attacking, the engine SHALL evaluate movement for each alive 
 2. Else if the highest-priority enemy target is within effective range (actual speed + the layer's own range) -> move the MINIMUM distance needed to bring that target into actual range
 3. Else -> advance by full speed toward the enemy side
 
-Attacker and defender moves SHALL be computed from a pre-move position snapshot so both sides decide from the same state. Layers SHALL never reverse direction. Layers SHALL never pass through or closer than 50 units to any alive enemy layer.
+Within each phase, the **defender moves first** (same-speed tie rule: defender acts before attacker when both sides have the same troop type). The defender evaluates movement against the attacker's pre-phase positions. The attacker then evaluates movement against the defender's already-updated positions, which causes the attacker to be "held" naturally when the defender has advanced to within attack range. Layers SHALL never reverse direction. Layers SHALL never pass through or closer than 50 units to any alive enemy layer.
 
 #### Scenario: Hold when enemy in range
 - **WHEN** an attacker Ranged layer (range 500) is at position 800 and a defender troop is at position 1200 (distance 400)
@@ -142,8 +142,8 @@ Each attack event SHALL include a `distance` field recording the distance betwee
 The engine SHALL emit a movement event at the start of each phase, before any attack events for that phase. The event SHALL contain: round number, phase (active troop type), a list of per-layer moves with `{ side, type, tier, from, to, held }`, and a full position snapshot (per-layer keys for both sides).
 
 #### Scenario: Movement event content
-- **WHEN** round 3 Mounted phase begins and attacker Mounted T14 advances from 300 to 600 while defender Mounted T10 holds at 900
-- **THEN** a movement event is emitted with `eventType: 'move'`, `round: 3`, `phase: 'MOUNTED'`, and `moves` containing both layer moves with `held: false` for the attacker and `held: true` for the defender
+- **WHEN** round 3 Mounted phase begins and defender Mounted T10 advances from 900 to 750 while attacker Mounted T14 holds at 700 (defender advanced to within range 50)
+- **THEN** a movement event is emitted with `eventType: 'move'`, `round: 3`, `phase: 'MOUNTED'`, and `moves` containing the DEF move first (`held: false`) followed by the ATT move (`held: true`); DEF appears first in the moves list because the defender moved first
 
 #### Scenario: Phase-scoped moves
 - **WHEN** the Mounted phase movement event is emitted

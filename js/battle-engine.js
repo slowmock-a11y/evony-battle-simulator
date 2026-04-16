@@ -125,67 +125,31 @@ var BattleEngine = (function () {
     function evaluateMovement(type, positions, attackerArmy, defenderArmy) {
         // Speed is read per-layer (layer.speed) because Siege T16 has speed 76
         // while Siege T1–T15 has speed 75. All other types are flat across tiers.
+        //
+        // Defender moves first (defender-first rule on same-speed tie). Within each
+        // phase both sides have the same troop type and therefore the same speed, so
+        // the defender always goes first. ATT then evaluates movement against DEF's
+        // already-updated positions, which causes ATT to be "held" naturally once DEF
+        // has advanced to within attack range — no post-collision logic required.
         var moves = [];
 
-        // Snapshot pre-move positions so both sides decide from the same state
-        var preMoveDef = {};
-        for (var key in positions.DEF) preMoveDef[key] = positions.DEF[key];
+        // Step 1: snapshot ATT positions for DEF's movement reference.
         var preMoveAtt = {};
         for (var key in positions.ATT) preMoveAtt[key] = positions.ATT[key];
 
-        // Collect alive positions from pre-move snapshot
-        var aliveDefPositions = [];
-        for (var i = 0; i < defenderArmy.layers.length; i++) {
-            var l = defenderArmy.layers[i];
-            if (l.count > 0) aliveDefPositions.push(preMoveDef[layerKey(l.type, l.tier)]);
-        }
         var aliveAttPositions = [];
         for (var i = 0; i < attackerArmy.layers.length; i++) {
             var l = attackerArmy.layers[i];
             if (l.count > 0) aliveAttPositions.push(preMoveAtt[layerKey(l.type, l.tier)]);
         }
 
-        // Compute attacker movement from pre-move snapshot (don't apply yet)
-        var attMoves = [];
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var layer = attackerArmy.layers[i];
-            if (layer.type !== type || layer.count <= 0) continue;
-            var key = layerKey(type, layer.tier);
-            var from = preMoveAtt[key];
-            var effectiveRange = layer.speed + layer.range;
-            var held = false;
-
-            for (var j = 0; j < aliveDefPositions.length; j++) {
-                if (aliveDefPositions[j] - from <= layer.range) {
-                    held = true;
-                    break;
-                }
-            }
-
-            var newPos = from;
-            if (!held) {
-                var distToTarget = findPriorityTargetDistance(layer, from, defenderArmy, preMoveDef, 1);
-                if (distToTarget <= effectiveRange) {
-                    var moveNeeded = distToTarget - layer.range;
-                    newPos = from + Math.max(0, moveNeeded);
-                } else {
-                    newPos = from + layer.speed;
-                }
-                for (var j = 0; j < aliveDefPositions.length; j++) {
-                    newPos = Math.min(newPos, aliveDefPositions[j] - 50);
-                }
-            }
-
-            attMoves.push({ key: key, from: from, to: newPos, tier: layer.tier, held: held });
-        }
-
-        // Compute defender movement from the same pre-move snapshot
+        // Step 2: compute and apply DEF moves (uses ATT pre-move snapshot).
         var defMoves = [];
         for (var i = 0; i < defenderArmy.layers.length; i++) {
             var layer = defenderArmy.layers[i];
             if (layer.type !== type || layer.count <= 0) continue;
             var key = layerKey(type, layer.tier);
-            var from = preMoveDef[key];
+            var from = positions.DEF[key];
             var effectiveRange = layer.speed + layer.range;
             var held = false;
 
@@ -211,55 +175,58 @@ var BattleEngine = (function () {
             }
 
             defMoves.push({ key: key, from: from, to: newPos, tier: layer.tier, held: held });
+            positions.DEF[key] = newPos;
         }
 
-        // Apply both sides' moves simultaneously, then resolve collisions
-        for (var i = 0; i < attMoves.length; i++) {
-            positions.ATT[attMoves[i].key] = attMoves[i].to;
-        }
-        for (var i = 0; i < defMoves.length; i++) {
-            positions.DEF[defMoves[i].key] = defMoves[i].to;
-        }
-
-        // Post-move collision resolution: ensure no unit passes through an enemy
-        var postAttPositions = [];
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var l = attackerArmy.layers[i];
-            if (l.count > 0) postAttPositions.push(positions.ATT[layerKey(l.type, l.tier)]);
-        }
-        var postDefPositions = [];
+        // Step 3: compute and apply ATT moves against DEF's updated positions.
+        var aliveDefPositions = [];
         for (var i = 0; i < defenderArmy.layers.length; i++) {
             var l = defenderArmy.layers[i];
-            if (l.count > 0) postDefPositions.push(positions.DEF[layerKey(l.type, l.tier)]);
+            if (l.count > 0) aliveDefPositions.push(positions.DEF[layerKey(l.type, l.tier)]);
         }
 
-        for (var i = 0; i < attMoves.length; i++) {
-            var m = attMoves[i];
-            var clamped = positions.ATT[m.key];
-            for (var j = 0; j < postDefPositions.length; j++) {
-                clamped = Math.min(clamped, postDefPositions[j] - 50);
+        var attMoves = [];
+        for (var i = 0; i < attackerArmy.layers.length; i++) {
+            var layer = attackerArmy.layers[i];
+            if (layer.type !== type || layer.count <= 0) continue;
+            var key = layerKey(type, layer.tier);
+            var from = positions.ATT[key];
+            var effectiveRange = layer.speed + layer.range;
+            var held = false;
+
+            for (var j = 0; j < aliveDefPositions.length; j++) {
+                if (aliveDefPositions[j] - from <= layer.range) {
+                    held = true;
+                    break;
+                }
             }
-            positions.ATT[m.key] = clamped;
-            m.to = clamped;
-        }
-        for (var i = 0; i < defMoves.length; i++) {
-            var m = defMoves[i];
-            var clamped = positions.DEF[m.key];
-            for (var j = 0; j < postAttPositions.length; j++) {
-                clamped = Math.max(clamped, postAttPositions[j] + 50);
+
+            var newPos = from;
+            if (!held) {
+                var distToTarget = findPriorityTargetDistance(layer, from, defenderArmy, positions.DEF, 1);
+                if (distToTarget <= effectiveRange) {
+                    var moveNeeded = distToTarget - layer.range;
+                    newPos = from + Math.max(0, moveNeeded);
+                } else {
+                    newPos = from + layer.speed;
+                }
+                for (var j = 0; j < aliveDefPositions.length; j++) {
+                    newPos = Math.min(newPos, aliveDefPositions[j] - 50);
+                }
             }
-            positions.DEF[m.key] = clamped;
-            m.to = clamped;
+
+            attMoves.push({ key: key, from: from, to: newPos, tier: layer.tier, held: held });
+            positions.ATT[key] = newPos;
         }
 
-        // Build event moves
-        for (var i = 0; i < attMoves.length; i++) {
-            var m = attMoves[i];
-            moves.push({ side: 'ATT', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
-        }
+        // Build event moves: DEF first (it moved first), then ATT.
         for (var i = 0; i < defMoves.length; i++) {
             var m = defMoves[i];
             moves.push({ side: 'DEF', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
+        }
+        for (var i = 0; i < attMoves.length; i++) {
+            var m = attMoves[i];
+            moves.push({ side: 'ATT', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
         }
 
         return moves;
