@@ -126,6 +126,8 @@ var App = (function () {
             Battlefield.render(displayAtt, displayDef, attBuffs, defBuffs);
             if (evt.eventType === 'attack') {
                 Battlefield.highlightAttack(evt);
+            } else if (evt.eventType === 'counter') {
+                Battlefield.highlightCounter(evt);
             }
         } else {
             Battlefield.clearHighlights();

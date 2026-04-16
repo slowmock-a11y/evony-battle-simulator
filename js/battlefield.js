@@ -463,6 +463,11 @@ var Battlefield = (function () {
         }
     }
 
+    function highlightCounter(event) {
+        if (!attackInfoEl) return;
+        attackInfoEl.innerHTML += ' \u00a0\u21a9\u00a0 <span class="ai-counter">' + formatNum(event.kills) + ' counter-kills</span>';
+    }
+
     function clearHighlights() {
         container.querySelectorAll('.highlighted').forEach(function (el) {
             el.classList.remove('highlighted');
@@ -847,6 +852,7 @@ var Battlefield = (function () {
         init: init,
         render: render,
         highlightAttack: highlightAttack,
+        highlightCounter: highlightCounter,
         clearHighlights: clearHighlights,
         showEndState: showEndState,
         updateSummary: updateSummary,

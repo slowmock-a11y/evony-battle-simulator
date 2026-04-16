@@ -315,7 +315,7 @@ select { width: auto; text-align: left; }
 }
 .bf-axis-tick.minor {
     height: 100%;
-    border-left: 1px dotted rgba(255,255,255,0.06);
+    border-left: 1px dashed rgba(255,255,255,0.16);
     background: none;
 }
 .bf-axis-label {
@@ -344,6 +344,7 @@ select { width: auto; text-align: left; }
     line-height: 1.6rem;
 }
 .attack-info-panel .ai-dmg { color: #e94560; font-weight: 700; }
+.attack-info-panel .ai-counter { color: #e9a045; font-weight: 700; }
 
 /* Detail panel (click on unit) */
 .detail-panel {
