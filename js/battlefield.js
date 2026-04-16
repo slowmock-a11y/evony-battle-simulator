@@ -3,7 +3,8 @@ var Battlefield = (function () {
 
     var container;
     var tooltipEl;
-    var svgOverlay, svgLine, svgLabelBg, svgLabel;
+    var svgOverlay, svgLine;
+    var attackInfoEl;
     var detailPanelEl;
     var currentAttackerArmy, currentDefenderArmy;
     var startAttacker, startDefender;
@@ -143,17 +144,10 @@ var Battlefield = (function () {
         svgLine.style.display = 'none';
         svgOverlay.appendChild(svgLine);
 
-        svgLabelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        svgLabelBg.setAttribute('class', 'attack-label-bg');
-        svgLabelBg.style.display = 'none';
-        svgOverlay.appendChild(svgLabelBg);
-
-        svgLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        svgLabel.setAttribute('class', 'attack-label');
-        svgLabel.style.display = 'none';
-        svgOverlay.appendChild(svgLabel);
-
         container.appendChild(svgOverlay);
+
+        // Attack info panel (below battlefield)
+        attackInfoEl = document.getElementById('attack-info');
 
         // Detail panel
         detailPanelEl = document.createElement('div');
@@ -458,26 +452,14 @@ var Battlefield = (function () {
             svgLine.style.transition = 'stroke-dashoffset 0.25s ease-out';
             svgLine.style.strokeDashoffset = '0';
 
-            // Label with background at midpoint (use original centers)
-            var mx = (cx1 + cx2) / 2;
-            var my = (cy1 + cy2) / 2;
+            // Attack info panel
             var srcName = event.sourceType.charAt(0).toUpperCase() + event.sourceType.slice(1);
             var tgtName = event.targetType.charAt(0).toUpperCase() + event.targetType.slice(1);
-            var labelText = srcName + ' T' + event.sourceTier + ' (' + formatNum(event.sourceCount) + ')'
+            attackInfoEl.innerHTML =
+                srcName + ' T' + event.sourceTier + ' (' + formatNum(event.sourceCount) + ')'
                 + ' \u2192 ' + tgtName + ' T' + event.targetTier + ' (' + formatNum(event.targetCountBefore) + ')'
-                + '  |  ' + formatNum(event.damage) + ' dmg, ' + formatNum(event.kills) + ' killed';
-            svgLabel.textContent = labelText;
-            svgLabel.setAttribute('x', mx);
-            svgLabel.setAttribute('y', my);
-            svgLabel.style.display = '';
-
-            // Background rect for readability
-            var textLen = labelText.length * 6;
-            svgLabelBg.setAttribute('x', mx - textLen / 2 - 4);
-            svgLabelBg.setAttribute('y', my - 8);
-            svgLabelBg.setAttribute('width', textLen + 8);
-            svgLabelBg.setAttribute('height', 16);
-            svgLabelBg.style.display = '';
+                + ' \u00a0|\u00a0 <span class="ai-dmg">' + formatNum(event.damage) + ' dmg</span>'
+                + ' \u00b7 ' + formatNum(event.kills) + ' killed';
         }
     }
 
@@ -492,8 +474,7 @@ var Battlefield = (function () {
             svgLine.style.display = 'none';
             svgLine.style.transition = '';
         }
-        if (svgLabel) svgLabel.style.display = 'none';
-        if (svgLabelBg) svgLabelBg.style.display = 'none';
+        if (attackInfoEl) attackInfoEl.innerHTML = '&nbsp;';
     }
 
     function findMarker(side, type, tier) {

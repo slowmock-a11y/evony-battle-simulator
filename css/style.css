@@ -334,13 +334,16 @@ select { width: auto; text-align: left; }
 .attack-line {
     stroke: #e94560; stroke-width: 2; fill: none;
 }
-.attack-label-bg {
-    fill: rgba(17, 24, 39, 0.85); rx: 3; ry: 3;
+.attack-info-panel {
+    min-height: 1.6rem; padding: 0.2rem 0.6rem;
+    font-size: 0.75rem; color: #bbb; text-align: center;
+    background: rgba(13,26,13,0.6);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0 0 6px 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.6rem;
 }
-.attack-label {
-    fill: #e94560; font-size: 11px; font-weight: 600;
-    text-anchor: middle; dominant-baseline: central;
-}
+.attack-info-panel .ai-dmg { color: #e94560; font-weight: 700; }
 
 /* Detail panel (click on unit) */
 .detail-panel {
