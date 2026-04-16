@@ -6,19 +6,19 @@ Pure-function battle simulator — takes attacker and defender armies and produc
 ## Requirements
 
 ### Requirement: Phase-based round execution
-The battle engine SHALL execute each round in four sequential phases ordered by troop speed (fastest first): Ground (speed 350), Mounted (speed 300), Ranged (speed 100), Siege (speed 75). When two troop types have the same speed, the defender's troops of that type SHALL act first. Within each phase, the attacker's troops of that type SHALL strike first, then the defender's surviving troops of that type SHALL counter-attack.
+The battle engine SHALL execute each round in four sequential phases ordered by troop speed (fastest first): Ground (speed 350), Mounted (speed 300), Ranged (speed 100), Siege (speed 75). When two troop types have the same speed, the defender's troops of that type SHALL act first. Within each phase, the defender's troops of that type SHALL strike first (same-speed tie rule), then the attacker's surviving troops of that type SHALL strike.
 
 #### Scenario: Phase order within a round
 - **WHEN** a battle round is executed
 - **THEN** Ground phase executes first (speed 350), then Mounted (speed 300), then Ranged (speed 100), then Siege (speed 75)
 
-#### Scenario: Attacker strikes before defender in each phase
+#### Scenario: Defender strikes before attacker in each phase
 - **WHEN** the Ranged phase executes with both sides having ranged troops
-- **THEN** the attacker's ranged troops deal damage first, reducing the defender's troop counts, before the defender's surviving ranged troops counter-attack
+- **THEN** the defender's ranged troops deal damage first, reducing the attacker's troop counts, before the attacker's surviving ranged troops strike
 
 #### Scenario: Speed tie resolution
 - **WHEN** two troop types have identical actual speed values
-- **THEN** the defender's troops of that type SHALL act before the attacker's troops
+- **THEN** the defender's troops of that type SHALL act before the attacker's troops (for both movement and attacks)
 
 ### Requirement: Battlefield length
 The battlefield SHALL be 1500 units long. The attacker SHALL start at position 0 and the defender SHALL start at position 1500.
@@ -171,12 +171,27 @@ The engine SHALL calculate kills as `kills = damage / target_HP_per_troop` (deci
 - **WHEN** effective damage would produce 5000 kills but the target layer has only 2000 troops
 - **THEN** kills = 2000 (capped)
 
-### Requirement: Counter-strike
-After each attack action, if the target layer has surviving troops **and the attacker is within the target's range**, the target SHALL counter-strike the attacker using a simplified formula: `counter_kills = targetEffATK / attackerEffHP` (flat, not scaled by troop count). No type modifier or ATK/(ATK+DEF) defense ratio is applied. Counter kills are capped at the attacker layer's current troop count. If the attacker is outside the target's range, no counter-strike occurs.
+### Requirement: Counter-strike (casualties-counter)
+After each attack action, if the target layer has surviving troops **and the attacker is within the target's range**, the target SHALL counter-strike using the full damage formula with `kills_dealt` (the kills just inflicted on the target) as the effective troop count:
 
-#### Scenario: Counter-strike after attack
-- **WHEN** ATT Siege T13 (1 troop, effHP=58380) attacks DEF Siege T8 (effATK=17850) and the target survives
-- **THEN** counter_kills = 17850 / 58380 = 0.306, applied to the attacking layer
+```
+counter_damage = kills_dealt × targetEffATK × counter_modifier × targetEffATK / (targetEffATK + sourceEffDEF)
+counter_kills  = counter_damage / sourceEffHP
+```
+
+The `counter_modifier` is the type matchup multiplier from target → attacker, using the target's tier. Counter kills are capped at the attacker layer's current troop count. If the attacker is outside the target's range, or the target was wiped by the main strike (target_count_after == 0), no counter-strike occurs.
+
+#### Scenario: Counter-strike uses casualties as effective troop count
+- **WHEN** DEF Ranged T1 (500 troops, effATK=130) strikes ATT Ranged T1 (1000 troops, effDEF=100, effHP=250) at distance 500, killing 146.96 troops
+- **THEN** counter_damage = 146.96 × 130 × 1.0 × 130 / (130+100) = 10,796.5; counter_kills = 10,796.5 / 250 = 43.19, applied to the defender's layer
+
+#### Scenario: No counter-strike on wipe (overkill cliff)
+- **WHEN** an attacker's strike reduces the target layer's count from 188.28 to 0 (wipe)
+- **THEN** no counter-strike event is emitted and the attacker's layer takes 0 counter damage, even though the main strike dealt 188.28 kills
+
+#### Scenario: Counter-strike respects target range
+- **WHEN** ATT Siege T14 (range 1400) at position 100 strikes DEF Ranged T14 (range 500) at position 1100, distance 1000, and the defender survives
+- **THEN** no counter-strike occurs (distance 1000 > defender range 500)
 
 ### Requirement: Damage multipliers
 The engine SHALL apply a full 4x4 type matchup multiplier matrix. Counter-triangle bonuses: Range->Mounted 1.2, Mounted->Ground 1.2, Ground->Range 1.2. Reverse penalties: Mounted->Range 0.8, Ground->Mounted 0.7, Range->Ground 0.8. Mounted->Siege 0.9. Siege offensive penalties: Siege->Ground 0.35, Siege->Range 0.4, Siege->Mounted 0.3, Siege->Siege 0.5. Non-siege same-type and Range->Range, Ground->Ground: 1.0. Ground->Siege 1.1, Range->Siege 1.1.

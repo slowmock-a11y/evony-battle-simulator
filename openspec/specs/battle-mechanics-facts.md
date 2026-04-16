@@ -137,21 +137,22 @@ Troops attack sequentially by **actual speed** (fastest first). When speed is ti
 | 3     | Ranged  | 100         | Third                    |
 | 4     | Siege   | 75          | Slowest                  |
 
-**Within each phase:**
-1. Attacker's troops strike defender's target layer (full damage formula)
-2. Surviving target counter-strikes attacker's layer **if attacker is within target's range** (reduced formula: targetATK / attackerHP, flat)
-3. Defender's troops strike attacker's target layer (full damage formula)
-4. Surviving target counter-strikes defender's layer **if defender is within target's range** (reduced formula)
+**Within each phase** (same-speed tie → **defender acts first**):
+1. Defender's troops strike attacker's target layer (full damage formula)
+2. Surviving target counter-strikes defender's layer **if defender is within target's range** (casualties-counter formula)
+3. Attacker's troops strike defender's target layer (full damage formula)
+4. Surviving target counter-strikes attacker's layer **if attacker is within target's range** (casualties-counter formula)
 
-The attacker has a slight edge — they reduce the defender's count before the defender's main attack. Counter-strikes deal incidental return damage using a simplified formula with no type modifier or defense ratio. Counter-strikes are range-gated: e.g., Ground and Mounted (both range 50) cannot counter-strike Ranged or Siege attacking from beyond 50 units.
+The defender has a first-strike edge — they fire before the attacker can reduce them, which compounds over rounds in symmetric matchups (see Damage Formula for numeric example). Counter-strikes are dealt by the troops just killed — the casualties fire back one last time using the full damage formula. Counter-strikes are range-gated: e.g., Ground and Mounted (both range 50) cannot counter-strike Ranged or Siege attacking from beyond 50 units.
 
 **Within a side (same type, multiple tiers):**
 Higher tier attacks before lower tier.
 
 **Confidence levels:**
 - Speed-based ordering: HIGH (confirmed from game database analysis by @DerrickDefies)
-- Defender army first on speed tie: HIGH — when attacker and defender have the same troop type (same speed), the defending army's troops take their turn before the attacking army's troops. (Confirmed from game database analysis by @DerrickDefies — https://youtu.be/zaM5ajYqudE?t=207)
+- Defender army first on speed tie: HIGH — when attacker and defender have the same troop type (same speed), the defending army's troops take their turn before the attacking army's troops, for both movement AND attacks. (Confirmed from game database analysis by @DerrickDefies — https://youtu.be/zaM5ajYqudE?t=207)
 - Acting troop hits before counter-strike: CONFIRMED by user — within a single turn, the troop taking its turn deals its damage first; the target counter-strikes after. Applies regardless of army side.
+- Casualties-counter formula: HIGH — confirmed by user from @DerrickDefies video; counter fires only if target survivors > 0 after main strike (overkill cliff).
 - Higher tier first within type: MEDIUM (widely accepted, not proven)
 
 Source: evonyanswers.com — "Order of Movement and/or Attack for Troop Groups is determined by Actual Speed."
@@ -255,24 +256,55 @@ Source: theriagames.com "Game Evony: Battle Mechanics - describe attack order"
 
 ```
 damage = troopCount × ATK × modifier × ATK / (ATK + DEF)
-kills  = damage / target_HP_per_troop   (decimal, no floor — fractions accumulate)
+kills  = damage / target_HP_per_troop          (decimal, no floor — fractions accumulate)
+kills  = min(kills, target_current_count)      (capped at target's surviving count)
 
-counter_kills = targetATK / attackerHP   (flat, no modifier, no DEF ratio)
+counter_damage = kills × targetATK × counter_modifier × targetATK / (targetATK + sourceDEF)
+counter_kills  = counter_damage / source_HP_per_troop
+
+counter_kills fires only if target_count_after_main_strike > 0
 ```
 
 Where:
 - `troopCount` = current surviving count of the attacking layer
-- `ATK` = per-troop attack stat of the attacker
-- `DEF` = per-troop defense stat of the target
-- `modifier` = type matchup multiplier (see below)
+- `ATK` = per-troop attack stat of the attacker, `DEF` = per-troop defense of the target
+- `modifier` = type matchup multiplier (attacker → target, see below)
 - `target_HP_per_troop` = per-troop HP of the target
+- `counter_modifier` = type matchup multiplier (target → attacker, using target's tier)
+- `sourceDEF` / `source_HP_per_troop` = DEF and HP of the attacking layer
 
 The `ATK/(ATK+DEF)` ratio ensures:
 - Damage is always > 0 (no zero-damage edge cases)
 - High DEF reduces damage proportionally, not by flat subtraction
 - The ratio is always between 0 and 1
 
-Source: common Evony community formula
+**Intuition for the counter:** the troops killed in the main strike fire back one last time. The "attackers" in the counter are the casualties (`kills`), not the survivors. The more troops you kill, the bigger the counter — unless you wipe the layer entirely, in which case no counter fires at all.
+
+### Overkill Cliff
+
+The counter gate is `target_count_after_main_strike > 0`. Combined with the kills-scaled magnitude, this produces a discontinuity at the wipe threshold:
+
+- Hit that leaves 0.1 troops alive → counter fires at near-maximum magnitude.
+- Hit that leaves exactly 0 troops alive → **no counter** (cliff).
+
+This creates a real strategic incentive: sizing an attack to *exactly* wipe a dangerous target layer avoids the biggest possible counter that layer could have thrown. Conversely, defensive stacks just barely surviving their rounds generate outsized counter-damage.
+
+### Worked Example: 500 vs 1000 Ranged T1
+
+```
+T1 Ranged: ATK=130, DEF=100, HP=250, modifier=1.0
+per-troop kill ratio r = 130² / ((130+100) × 250) = 0.29391
+
+Exchange 1 (defender of 500 fires first on same-speed tie):
+    main    500 × r            = 147 kills on the 1000 stack
+    counter 147 × r            =  43.2 kills on the 500 stack (casualties counter)
+
+Exchange 2 (attacker's remaining 853 fires second):
+    main    853 × r            = 250.7 kills on the 456.8 stack
+    counter 250.7 × r          =  73.7 kills on the 853 stack
+```
+
+Source: @DerrickDefies video (cited above).
 
 ---
 

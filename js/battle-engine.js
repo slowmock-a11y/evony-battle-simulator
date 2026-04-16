@@ -261,12 +261,16 @@ var BattleEngine = (function () {
         return { damage: damage, kills: kills, modifier: modifier };
     }
 
-    // Counter-strike: simplified flat formula — target's ATK / attacker's HP, no modifier, no DEF ratio
-    // Not scaled by troop count — represents incidental return damage per engagement
-    function calculateCounterKills(attackerLayer, targetLayer, attackerBuffs, defenderBuffs) {
+    // Counter-strike: casualties-counter form. The troops killed in the main strike
+    // fire back one last time using the full damage formula (target as attacker,
+    // attacker as target). Target modifier and DEF ratio both apply.
+    function calculateCounterKills(attackerLayer, targetLayer, attackerBuffs, defenderBuffs, killsDealt) {
         var targetAtk = effectiveAtk(targetLayer, defenderBuffs);
+        var sourceDef = effectiveDef(attackerLayer, attackerBuffs);
         var sourceHp = effectiveHp(attackerLayer, attackerBuffs);
-        return Math.min(targetAtk / sourceHp, attackerLayer.count);
+        var modifier = TroopData.getMultiplier(targetLayer.type, attackerLayer.type, targetLayer.tier);
+        var counterDamage = killsDealt * targetAtk * modifier * targetAtk / (targetAtk + sourceDef);
+        return Math.min(counterDamage / sourceHp, attackerLayer.count);
     }
 
     // --- Target Selection ---
@@ -376,10 +380,10 @@ var BattleEngine = (function () {
                     });
                 }
 
-                // Attacker strikes (range-gated)
-                executePhase(phase, attackerArmy, defenderArmy, 'ATTACKER', round, events, positions);
-                // Defender survivors counter-attack (range-gated)
+                // Defender strikes first (same-speed tie rule).
                 executePhase(phase, defenderArmy, attackerArmy, 'DEFENDER', round, events, positions);
+                // Attacker strikes second.
+                executePhase(phase, attackerArmy, defenderArmy, 'ATTACKER', round, events, positions);
 
                 if (!armyAlive(attackerArmy) || !armyAlive(defenderArmy)) break;
             }
@@ -450,7 +454,7 @@ var BattleEngine = (function () {
             });
             if (target.count > 0 && attacker.count > 0 && distance <= target.range) {
                 var attackerCountBefore = attacker.count;
-                var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs);
+                var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs, result.kills);
                 attacker.count -= counterKills;
 
                 events.push({
