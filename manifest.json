@@ -1,0 +1,17 @@
+{
+  "name": "Evony Battle Simulator",
+  "short_name": "Battle Sim",
+  "description": "Free browser-based Evony PvP march-vs-march combat simulator with spatial battlefield and step-by-step playback.",
+  "start_url": "/evony-battle-simulator/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#c8a84b",
+  "icons": [
+    {
+      "src": "screenshot.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

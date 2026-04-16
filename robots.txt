@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://slowmock-a11y.github.io/evony-battle-simulator/sitemap.xml
