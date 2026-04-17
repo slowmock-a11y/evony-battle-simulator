@@ -2,9 +2,7 @@
 
 ## Purpose
 Pure-function battle simulator — takes attacker and defender armies and produces a movement+attack event log. Owns phase ordering, per-layer positions, movement, targeting, damage calculation, and counter-strikes.
-
 ## Requirements
-
 ### Requirement: Phase-based round execution
 The battle engine SHALL execute each round in four sequential phases ordered by troop speed (fastest first): Ground (speed 350), Mounted (speed 300), Ranged (speed 100), Siege (speed 75). When two troop types have the same speed, the defender's troops of that type SHALL act first. Within each phase, the defender's troops of that type SHALL strike first (same-speed tie rule), then the attacker's surviving troops of that type SHALL strike.
 
@@ -222,9 +220,15 @@ The engine SHALL apply buff percentages to base stats using the formula: `effect
 ### Requirement: Event log generation
 The engine SHALL produce a list of BattleEvent objects, one per layer attack action. Each event SHALL contain: round number, phase (troop type), attacking side, attacking layer (type + tier + count before attack), target layer (type + tier + count before attack), damage dealt, kills inflicted, target remaining count after attack.
 
+The `side` field SHALL use the short-form string values `'ATT'` (attacker) and `'DEF'` (defender), matching the spelling already used for position maps (`positions.ATT` / `positions.DEF`) and for DOM `data-side` attributes in the visualizer. Consumers SHALL NOT need to map between multiple spellings.
+
 #### Scenario: Event content
 - **WHEN** ATT Range T14 (2000 troops) attacks DEF Mounted T14 (5000 troops), dealing 23472 damage and 1948 kills
-- **THEN** the event records round=1, phase=RANGED, side=ATTACKER, source={RANGED, T14, 2000}, target={MOUNTED, T14, 5000}, damage=23472, kills=1948, remaining=3052
+- **THEN** the event records round=1, phase=RANGED, side=ATT, source={RANGED, T14, 2000}, target={MOUNTED, T14, 5000}, damage=23472, kills=1948, remaining=3052
+
+#### Scenario: Side field uses short-form spelling
+- **WHEN** any `attack`, `counter`, or movement sub-event is emitted by the engine
+- **THEN** the `side` field value is exactly `'ATT'` or `'DEF'` (never `'ATTACKER'` or `'DEFENDER'`)
 
 ### Requirement: Battle termination
 The battle SHALL end when one side has zero total surviving troops. The engine SHALL return a summary indicating the winner, total rounds, and surviving troop counts per layer.
@@ -243,3 +247,4 @@ A layer that is reduced to zero troops earlier in the round SHALL NOT attack in 
 #### Scenario: Layer killed before its phase
 - **WHEN** Ground phase kills all of the defender's Range T14 troops
 - **THEN** defender's Range T14 does not attack in the Ranged phase
+

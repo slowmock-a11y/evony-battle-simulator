@@ -1,38 +1,35 @@
 var InfoPages = (function () {
     'use strict';
 
-    var VIEWS = ['simulator', 'about', 'mechanics'];
+    const VIEWS = ['simulator', 'about', 'mechanics'];
 
     function switchView(name) {
-        VIEWS.forEach(function (v) {
-            var el = document.getElementById('view-' + v);
+        VIEWS.forEach((v) => {
+            const el = document.getElementById('view-' + v);
             if (el) el.style.display = v === name ? '' : 'none';
         });
-        var tabs = document.querySelectorAll('.view-tab');
-        for (var i = 0; i < tabs.length; i++) {
-            tabs[i].classList.toggle('active', tabs[i].getAttribute('data-view') === name);
-        }
+        document.querySelectorAll('.view-tab').forEach((tab) => {
+            tab.classList.toggle('active', tab.getAttribute('data-view') === name);
+        });
     }
 
     function init() {
-        var tabs = document.querySelectorAll('.view-tab');
-        for (var i = 0; i < tabs.length; i++) {
-            tabs[i].addEventListener('click', function () {
-                var view = this.getAttribute('data-view');
+        document.querySelectorAll('.view-tab').forEach((tab) => {
+            tab.addEventListener('click', function () {
+                const view = this.getAttribute('data-view');
                 if (this.classList.contains('active')) {
                     switchView('simulator');
                 } else {
                     switchView(view);
                 }
             });
-        }
-        var backLinks = document.querySelectorAll('.back-link[data-view]');
-        for (var i = 0; i < backLinks.length; i++) {
-            backLinks[i].addEventListener('click', function (e) {
+        });
+        document.querySelectorAll('.back-link[data-view]').forEach((link) => {
+            link.addEventListener('click', function (e) {
                 e.preventDefault();
                 switchView(this.getAttribute('data-view'));
             });
-        }
+        });
     }
 
     document.addEventListener('DOMContentLoaded', init);

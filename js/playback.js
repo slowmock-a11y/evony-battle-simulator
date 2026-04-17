@@ -1,12 +1,12 @@
 var Playback = (function () {
     'use strict';
 
-    var events = [];
-    var currentIndex = 0;
-    var isPlaying = false;
-    var animationTimer = null;
-    var onEventCallback = null;
-    var onCompleteCallback = null;
+    let events = [];
+    let currentIndex = 0;
+    let isPlaying = false;
+    let animationTimer = null;
+    let onEventCallback = null;
+    let onCompleteCallback = null;
 
     function load(battleEvents, onEvent, onComplete) {
         events = battleEvents;
@@ -18,7 +18,7 @@ var Playback = (function () {
     }
 
     function getSpeed() {
-        return parseInt(document.getElementById('speed-slider').value) || 200;
+        return parseInt(document.getElementById('speed-slider').value, 10) || 200;
     }
 
     function step() {
@@ -26,7 +26,7 @@ var Playback = (function () {
             if (onCompleteCallback) onCompleteCallback();
             return false;
         }
-        var evt = events[currentIndex];
+        const evt = events[currentIndex];
         currentIndex++;
         if (onEventCallback) onEventCallback(evt, currentIndex, events.length);
         if (currentIndex >= events.length) {
@@ -40,7 +40,7 @@ var Playback = (function () {
             if (onCompleteCallback) onCompleteCallback();
             return;
         }
-        var targetRound = events[currentIndex].round;
+        const targetRound = events[currentIndex].round;
         while (currentIndex < events.length && events[currentIndex].round === targetRound) {
             step();
         }
@@ -49,7 +49,7 @@ var Playback = (function () {
     function playFull() {
         if (isPlaying) return;
         isPlaying = true;
-        var speed = getSpeed();
+        const speed = getSpeed();
 
         function tick() {
             if (!isPlaying || currentIndex >= events.length) {

@@ -3,10 +3,10 @@ var BattleEngine = (function () {
 
     // --- Model ---
 
-    var BATTLEFIELD_LENGTH = 1500;
+    const BATTLEFIELD_LENGTH = 1500;
 
     function createLayer(type, tier, count) {
-        var stats = TroopData.getStats(type, tier);
+        const stats = TroopData.getStats(type, tier);
         return {
             type: type,
             tier: tier,
@@ -24,10 +24,10 @@ var BattleEngine = (function () {
     function createArmy(troopCounts, buffs) {
         // troopCounts: { GROUND: { 1: 1000, 2: 500, ... }, RANGED: {...}, ... }
         // buffs: { GROUND: { atk: 0, def: 0, hp: 0 }, ... }
-        var layers = [];
-        TroopData.PHASE_ORDER.forEach(function (type) {
-            TroopData.TIERS.forEach(function (tier) {
-                var count = (troopCounts[type] && troopCounts[type][tier]) || 0;
+        const layers = [];
+        TroopData.PHASE_ORDER.forEach((type) => {
+            TroopData.TIERS.forEach((tier) => {
+                const count = (troopCounts[type] && troopCounts[type][tier]) || 0;
                 if (count > 0) {
                     layers.push(createLayer(type, tier, count));
                 }
@@ -47,36 +47,26 @@ var BattleEngine = (function () {
     // --- Position Tracking ---
 
     function layerKey(type, tier) {
-        return type + '_' + tier;
+        return `${type}_${tier}`;
     }
 
     function initPositions(attackerArmy, defenderArmy) {
-        var att = {};
-        var def = {};
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var l = attackerArmy.layers[i];
-            att[layerKey(l.type, l.tier)] = 0;
-        }
-        for (var i = 0; i < defenderArmy.layers.length; i++) {
-            var l = defenderArmy.layers[i];
-            def[layerKey(l.type, l.tier)] = BATTLEFIELD_LENGTH;
-        }
+        const att = {};
+        const def = {};
+        attackerArmy.layers.forEach((l) => { att[layerKey(l.type, l.tier)] = 0; });
+        defenderArmy.layers.forEach((l) => { def[layerKey(l.type, l.tier)] = BATTLEFIELD_LENGTH; });
         return { ATT: att, DEF: def };
     }
 
     function snapshotPositions(positions) {
-        var att = {};
-        var def = {};
-        for (var key in positions.ATT) att[key] = positions.ATT[key];
-        for (var key in positions.DEF) def[key] = positions.DEF[key];
-        return { ATT: att, DEF: def };
+        return { ATT: { ...positions.ATT }, DEF: { ...positions.DEF } };
     }
 
     function deriveTypePositions(sidePositions, side) {
-        var result = {};
-        for (var key in sidePositions) {
-            var type = key.split('_')[0];
-            var pos = sidePositions[key];
+        const result = {};
+        for (const key in sidePositions) {
+            const type = key.split('_')[0];
+            const pos = sidePositions[key];
             if (result[type] === undefined) {
                 result[type] = pos;
             } else if (side === 'ATT') {
@@ -89,32 +79,28 @@ var BattleEngine = (function () {
     }
 
     function getMaxRange(army, type) {
-        var maxR = 0;
-        for (var i = 0; i < army.layers.length; i++) {
-            var l = army.layers[i];
+        let maxR = 0;
+        army.layers.forEach((l) => {
             if (l.type === type && l.count > 0) {
                 maxR = Math.max(maxR, l.range);
             }
-        }
+        });
         return maxR;
     }
 
     function hasAliveLayers(army, type) {
-        for (var i = 0; i < army.layers.length; i++) {
-            if (army.layers[i].type === type && army.layers[i].count > 0) return true;
-        }
-        return false;
+        return army.layers.some((l) => l.type === type && l.count > 0);
     }
 
     // Find the nearest enemy position of a specific type for minimum-distance calculation
     function findPriorityTargetDistance(layer, myPos, enemyArmy, enemyPositions, direction) {
-        var chain = TroopData.TARGET_PRIORITY[layer.type];
-        for (var i = 0; i < chain.length; i++) {
-            var targetType = chain[i];
-            for (var j = 0; j < enemyArmy.layers.length; j++) {
-                var el = enemyArmy.layers[j];
+        const chain = TroopData.TARGET_PRIORITY[layer.type];
+        for (let i = 0; i < chain.length; i++) {
+            const targetType = chain[i];
+            for (let j = 0; j < enemyArmy.layers.length; j++) {
+                const el = enemyArmy.layers[j];
                 if (el.count > 0 && el.type === targetType) {
-                    var ePos = enemyPositions[layerKey(el.type, el.tier)];
+                    const ePos = enemyPositions[layerKey(el.type, el.tier)];
                     return direction === 1 ? (ePos - myPos) : (myPos - ePos);
                 }
             }
@@ -131,45 +117,43 @@ var BattleEngine = (function () {
         // the defender always goes first. ATT then evaluates movement against DEF's
         // already-updated positions, which causes ATT to be "held" naturally once DEF
         // has advanced to within attack range — no post-collision logic required.
-        var moves = [];
+        const moves = [];
 
         // Step 1: snapshot ATT positions for DEF's movement reference.
-        var preMoveAtt = {};
-        for (var key in positions.ATT) preMoveAtt[key] = positions.ATT[key];
+        const preMoveAtt = { ...positions.ATT };
 
-        var aliveAttPositions = [];
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var l = attackerArmy.layers[i];
+        const aliveAttPositions = [];
+        attackerArmy.layers.forEach((l) => {
             if (l.count > 0) aliveAttPositions.push(preMoveAtt[layerKey(l.type, l.tier)]);
-        }
+        });
 
         // Step 2: compute and apply DEF moves (uses ATT pre-move snapshot).
-        var defMoves = [];
-        for (var i = 0; i < defenderArmy.layers.length; i++) {
-            var layer = defenderArmy.layers[i];
+        const defMoves = [];
+        for (let i = 0; i < defenderArmy.layers.length; i++) {
+            const layer = defenderArmy.layers[i];
             if (layer.type !== type || layer.count <= 0) continue;
-            var key = layerKey(type, layer.tier);
-            var from = positions.DEF[key];
-            var effectiveRange = layer.speed + layer.range;
-            var held = false;
+            const key = layerKey(type, layer.tier);
+            const from = positions.DEF[key];
+            const effectiveRange = layer.speed + layer.range;
+            let held = false;
 
-            for (var j = 0; j < aliveAttPositions.length; j++) {
+            for (let j = 0; j < aliveAttPositions.length; j++) {
                 if (from - aliveAttPositions[j] <= layer.range) {
                     held = true;
                     break;
                 }
             }
 
-            var newPos = from;
+            let newPos = from;
             if (!held) {
-                var distToTarget = findPriorityTargetDistance(layer, from, attackerArmy, preMoveAtt, -1);
+                const distToTarget = findPriorityTargetDistance(layer, from, attackerArmy, preMoveAtt, -1);
                 if (distToTarget <= effectiveRange) {
-                    var moveNeeded = distToTarget - layer.range;
+                    const moveNeeded = distToTarget - layer.range;
                     newPos = from - Math.max(0, moveNeeded);
                 } else {
                     newPos = from - layer.speed;
                 }
-                for (var j = 0; j < aliveAttPositions.length; j++) {
+                for (let j = 0; j < aliveAttPositions.length; j++) {
                     newPos = Math.max(newPos, aliveAttPositions[j] + 50);
                 }
             }
@@ -179,38 +163,37 @@ var BattleEngine = (function () {
         }
 
         // Step 3: compute and apply ATT moves against DEF's updated positions.
-        var aliveDefPositions = [];
-        for (var i = 0; i < defenderArmy.layers.length; i++) {
-            var l = defenderArmy.layers[i];
+        const aliveDefPositions = [];
+        defenderArmy.layers.forEach((l) => {
             if (l.count > 0) aliveDefPositions.push(positions.DEF[layerKey(l.type, l.tier)]);
-        }
+        });
 
-        var attMoves = [];
-        for (var i = 0; i < attackerArmy.layers.length; i++) {
-            var layer = attackerArmy.layers[i];
+        const attMoves = [];
+        for (let i = 0; i < attackerArmy.layers.length; i++) {
+            const layer = attackerArmy.layers[i];
             if (layer.type !== type || layer.count <= 0) continue;
-            var key = layerKey(type, layer.tier);
-            var from = positions.ATT[key];
-            var effectiveRange = layer.speed + layer.range;
-            var held = false;
+            const key = layerKey(type, layer.tier);
+            const from = positions.ATT[key];
+            const effectiveRange = layer.speed + layer.range;
+            let held = false;
 
-            for (var j = 0; j < aliveDefPositions.length; j++) {
+            for (let j = 0; j < aliveDefPositions.length; j++) {
                 if (aliveDefPositions[j] - from <= layer.range) {
                     held = true;
                     break;
                 }
             }
 
-            var newPos = from;
+            let newPos = from;
             if (!held) {
-                var distToTarget = findPriorityTargetDistance(layer, from, defenderArmy, positions.DEF, 1);
+                const distToTarget = findPriorityTargetDistance(layer, from, defenderArmy, positions.DEF, 1);
                 if (distToTarget <= effectiveRange) {
-                    var moveNeeded = distToTarget - layer.range;
+                    const moveNeeded = distToTarget - layer.range;
                     newPos = from + Math.max(0, moveNeeded);
                 } else {
                     newPos = from + layer.speed;
                 }
-                for (var j = 0; j < aliveDefPositions.length; j++) {
+                for (let j = 0; j < aliveDefPositions.length; j++) {
                     newPos = Math.min(newPos, aliveDefPositions[j] - 50);
                 }
             }
@@ -220,14 +203,12 @@ var BattleEngine = (function () {
         }
 
         // Build event moves: DEF first (it moved first), then ATT.
-        for (var i = 0; i < defMoves.length; i++) {
-            var m = defMoves[i];
+        defMoves.forEach((m) => {
             moves.push({ side: 'DEF', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
-        }
-        for (var i = 0; i < attMoves.length; i++) {
-            var m = attMoves[i];
+        });
+        attMoves.forEach((m) => {
             moves.push({ side: 'ATT', type: type, tier: m.tier, from: m.from, to: m.to, held: m.held });
-        }
+        });
 
         return moves;
     }
@@ -235,29 +216,29 @@ var BattleEngine = (function () {
     // --- Effective stats with buffs ---
 
     function effectiveAtk(layer, buffs) {
-        var b = buffs[layer.type] || { atk: 0 };
+        const b = buffs[layer.type] || { atk: 0 };
         return layer.atk * (1 + (b.atk || 0) / 100);
     }
 
     function effectiveDef(layer, buffs) {
-        var b = buffs[layer.type] || { def: 0 };
+        const b = buffs[layer.type] || { def: 0 };
         return layer.def * (1 + (b.def || 0) / 100);
     }
 
     function effectiveHp(layer, buffs) {
-        var b = buffs[layer.type] || { hp: 0 };
+        const b = buffs[layer.type] || { hp: 0 };
         return layer.hp * (1 + (b.hp || 0) / 100);
     }
 
     // --- Damage Calculation ---
 
     function calculateDamage(attackerLayer, targetLayer, attackerBuffs, defenderBuffs) {
-        var atkVal = effectiveAtk(attackerLayer, attackerBuffs);
-        var defVal = effectiveDef(targetLayer, defenderBuffs);
-        var modifier = TroopData.getMultiplier(attackerLayer.type, targetLayer.type, attackerLayer.tier);
-        var damage = attackerLayer.count * atkVal * modifier * (atkVal / (atkVal + defVal));
-        var targetHp = effectiveHp(targetLayer, defenderBuffs);
-        var kills = Math.min(damage / targetHp, targetLayer.count);
+        const atkVal = effectiveAtk(attackerLayer, attackerBuffs);
+        const defVal = effectiveDef(targetLayer, defenderBuffs);
+        const modifier = TroopData.getMultiplier(attackerLayer.type, targetLayer.type, attackerLayer.tier);
+        const damage = attackerLayer.count * atkVal * modifier * (atkVal / (atkVal + defVal));
+        const targetHp = effectiveHp(targetLayer, defenderBuffs);
+        const kills = Math.min(damage / targetHp, targetLayer.count);
         return { damage: damage, kills: kills, modifier: modifier };
     }
 
@@ -265,31 +246,31 @@ var BattleEngine = (function () {
     // fire back one last time using the full damage formula (target as attacker,
     // attacker as target). Target modifier and DEF ratio both apply.
     function calculateCounterKills(attackerLayer, targetLayer, attackerBuffs, defenderBuffs, killsDealt) {
-        var targetAtk = effectiveAtk(targetLayer, defenderBuffs);
-        var sourceDef = effectiveDef(attackerLayer, attackerBuffs);
-        var sourceHp = effectiveHp(attackerLayer, attackerBuffs);
-        var modifier = TroopData.getMultiplier(targetLayer.type, attackerLayer.type, targetLayer.tier);
-        var counterDamage = killsDealt * targetAtk * modifier * targetAtk / (targetAtk + sourceDef);
+        const targetAtk = effectiveAtk(targetLayer, defenderBuffs);
+        const sourceDef = effectiveDef(attackerLayer, attackerBuffs);
+        const sourceHp = effectiveHp(attackerLayer, attackerBuffs);
+        const modifier = TroopData.getMultiplier(targetLayer.type, attackerLayer.type, targetLayer.tier);
+        const counterDamage = killsDealt * targetAtk * modifier * targetAtk / (targetAtk + sourceDef);
         return Math.min(counterDamage / sourceHp, attackerLayer.count);
     }
 
     // --- Target Selection ---
 
     function selectTarget(attackerLayer, enemyArmy, sourcePos, enemyPositions) {
-        var layerRange = attackerLayer.range;
-        var effectiveRange = attackerLayer.speed + layerRange;
-        var chain = TroopData.TARGET_PRIORITY[attackerLayer.type];
+        const layerRange = attackerLayer.range;
+        const effectiveRange = attackerLayer.speed + layerRange;
+        const chain = TroopData.TARGET_PRIORITY[attackerLayer.type];
 
         // Engagement lock: if locked on a type, check if we should stay locked
         if (attackerLayer.engagedTargetType) {
-            var lockedType = attackerLayer.engagedTargetType;
+            const lockedType = attackerLayer.engagedTargetType;
 
             // Check if locked type still has alive troops in actual range
-            var lockedCandidates = [];
-            for (var j = 0; j < enemyArmy.layers.length; j++) {
-                var l = enemyArmy.layers[j];
+            const lockedCandidates = [];
+            for (let j = 0; j < enemyArmy.layers.length; j++) {
+                const l = enemyArmy.layers[j];
                 if (l.count > 0 && l.type === lockedType) {
-                    var distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
+                    const distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
                     if (distance <= layerRange) {
                         lockedCandidates.push(l);
                     }
@@ -298,13 +279,13 @@ var BattleEngine = (function () {
 
             if (lockedCandidates.length > 0) {
                 // Check if a higher-priority type has entered effective range
-                var higherPriorityAvailable = false;
-                for (var i = 0; i < chain.length; i++) {
+                let higherPriorityAvailable = false;
+                for (let i = 0; i < chain.length; i++) {
                     if (chain[i] === lockedType) break; // reached current lock, nothing higher
-                    for (var j = 0; j < enemyArmy.layers.length; j++) {
-                        var l = enemyArmy.layers[j];
+                    for (let j = 0; j < enemyArmy.layers.length; j++) {
+                        const l = enemyArmy.layers[j];
                         if (l.count > 0 && l.type === chain[i]) {
-                            var distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
+                            const distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
                             if (distance <= effectiveRange) {
                                 higherPriorityAvailable = true;
                                 break;
@@ -316,7 +297,7 @@ var BattleEngine = (function () {
 
                 if (!higherPriorityAvailable) {
                     // Stay locked — pick best candidate of locked type
-                    lockedCandidates.sort(function (a, b) {
+                    lockedCandidates.sort((a, b) => {
                         if (b.tier !== a.tier) return b.tier - a.tier;
                         return b.count - a.count;
                     });
@@ -329,20 +310,20 @@ var BattleEngine = (function () {
         }
 
         // Standard priority chain selection (in actual range)
-        for (var i = 0; i < chain.length; i++) {
-            var targetType = chain[i];
-            var candidates = [];
-            for (var j = 0; j < enemyArmy.layers.length; j++) {
-                var l = enemyArmy.layers[j];
+        for (let i = 0; i < chain.length; i++) {
+            const targetType = chain[i];
+            const candidates = [];
+            for (let j = 0; j < enemyArmy.layers.length; j++) {
+                const l = enemyArmy.layers[j];
                 if (l.count > 0 && l.type === targetType) {
-                    var distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
+                    const distance = Math.abs(enemyPositions[layerKey(l.type, l.tier)] - sourcePos);
                     if (distance <= layerRange) {
                         candidates.push(l);
                     }
                 }
             }
             if (candidates.length > 0) {
-                candidates.sort(function (a, b) {
+                candidates.sort((a, b) => {
                     if (b.tier !== a.tier) return b.tier - a.tier;
                     return b.count - a.count;
                 });
@@ -357,19 +338,19 @@ var BattleEngine = (function () {
     // --- Battle Simulation ---
 
     function simulate(attackerArmy, defenderArmy, options) {
-        var opts = options || {};
-        var events = [];
-        var round = 0;
-        var maxRounds = opts.maxRounds || 100;
-        var positions = initPositions(attackerArmy, defenderArmy);
+        const opts = options || {};
+        const events = [];
+        let round = 0;
+        const maxRounds = opts.maxRounds ?? 100;
+        const positions = initPositions(attackerArmy, defenderArmy);
 
         while (armyAlive(attackerArmy) && armyAlive(defenderArmy) && round < maxRounds) {
             round++;
-            for (var p = 0; p < TroopData.PHASE_ORDER.length; p++) {
-                var phase = TroopData.PHASE_ORDER[p];
+            for (let p = 0; p < TroopData.PHASE_ORDER.length; p++) {
+                const phase = TroopData.PHASE_ORDER[p];
 
                 // Movement evaluation for this type
-                var moves = evaluateMovement(phase, positions, attackerArmy, defenderArmy);
+                const moves = evaluateMovement(phase, positions, attackerArmy, defenderArmy);
                 if (moves.length > 0) {
                     events.push({
                         eventType: 'move',
@@ -381,16 +362,16 @@ var BattleEngine = (function () {
                 }
 
                 // Defender strikes first (same-speed tie rule).
-                executePhase(phase, defenderArmy, attackerArmy, 'DEFENDER', round, events, positions);
+                executePhase(phase, defenderArmy, attackerArmy, 'DEF', round, events, positions);
                 // Attacker strikes second.
-                executePhase(phase, attackerArmy, defenderArmy, 'ATTACKER', round, events, positions);
+                executePhase(phase, attackerArmy, defenderArmy, 'ATT', round, events, positions);
 
                 if (!armyAlive(attackerArmy) || !armyAlive(defenderArmy)) break;
             }
         }
 
-        var winner = armyAlive(attackerArmy) ? 'ATTACKER' :
-                     armyAlive(defenderArmy) ? 'DEFENDER' : 'DRAW';
+        const winner = armyAlive(attackerArmy) ? 'ATTACKER' :
+                       armyAlive(defenderArmy) ? 'DEFENDER' : 'DRAW';
 
         return {
             events: events,
@@ -404,34 +385,29 @@ var BattleEngine = (function () {
 
     function executePhase(phase, actingArmy, enemyArmy, side, round, events, positions) {
         // Get layers of this type, sorted highest tier first
-        var layers = [];
-        for (var i = 0; i < actingArmy.layers.length; i++) {
-            var l = actingArmy.layers[i];
-            if (l.count > 0 && l.type === phase) {
-                layers.push(l);
-            }
-        }
-        layers.sort(function (a, b) { return b.tier - a.tier; });
+        const layers = actingArmy.layers
+            .filter((l) => l.count > 0 && l.type === phase)
+            .sort((a, b) => b.tier - a.tier);
 
-        var sourceKey = side === 'ATTACKER' ? 'ATT' : 'DEF';
-        var enemyKey = side === 'ATTACKER' ? 'DEF' : 'ATT';
-        var enemyPositions = positions[enemyKey];
+        const sourceKey = side;
+        const enemyKey = side === 'ATT' ? 'DEF' : 'ATT';
+        const enemyPositions = positions[enemyKey];
 
-        for (var j = 0; j < layers.length; j++) {
-            var attacker = layers[j];
+        for (let j = 0; j < layers.length; j++) {
+            const attacker = layers[j];
             if (attacker.count <= 0) continue;
 
-            var layerPos = positions[sourceKey][layerKey(phase, attacker.tier)];
-            var target = selectTarget(attacker, enemyArmy, layerPos, enemyPositions);
+            const layerPos = positions[sourceKey][layerKey(phase, attacker.tier)];
+            const target = selectTarget(attacker, enemyArmy, layerPos, enemyPositions);
             if (!target) continue;
 
             // Range guard: verify target is within attacker's actual range
-            var targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
-            var distance = Math.abs(targetPos - layerPos);
+            const targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
+            const distance = Math.abs(targetPos - layerPos);
             if (distance > attacker.range) continue;
 
-            var countBefore = target.count;
-            var result = calculateDamage(attacker, target, actingArmy.buffs, enemyArmy.buffs);
+            const countBefore = target.count;
+            const result = calculateDamage(attacker, target, actingArmy.buffs, enemyArmy.buffs);
             target.count -= result.kills;
 
             events.push({
@@ -453,8 +429,8 @@ var BattleEngine = (function () {
                 positions: snapshotPositions(positions)
             });
             if (target.count > 0 && attacker.count > 0 && distance <= target.range) {
-                var attackerCountBefore = attacker.count;
-                var counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs, result.kills);
+                const attackerCountBefore = attacker.count;
+                const counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs, result.kills);
                 attacker.count -= counterKills;
 
                 events.push({
@@ -477,24 +453,20 @@ var BattleEngine = (function () {
     }
 
     function armyAlive(army) {
-        for (var i = 0; i < army.layers.length; i++) {
-            if (army.layers[i].count > 0) return true;
-        }
-        return false;
+        return army.layers.some((l) => l.count > 0);
     }
 
     function armySummary(army) {
-        var summary = {};
-        var total = 0, totalStart = 0;
-        for (var i = 0; i < army.layers.length; i++) {
-            var l = army.layers[i];
+        const summary = {};
+        let total = 0, totalStart = 0;
+        army.layers.forEach((l) => {
             if (!summary[l.type]) summary[l.type] = { remaining: 0, start: 0, layers: [] };
             summary[l.type].remaining += l.count;
             summary[l.type].start += l.startCount;
             summary[l.type].layers.push({ tier: l.tier, count: l.count, start: l.startCount });
             total += l.count;
             totalStart += l.startCount;
-        }
+        });
         summary._total = total;
         summary._totalStart = totalStart;
         return summary;

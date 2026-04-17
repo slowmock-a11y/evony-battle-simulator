@@ -1,14 +1,13 @@
 var BattleLog = (function () {
     'use strict';
 
-    var logContainer;
-    var entries = [];
-    var maxRound = 0;
+    let logContainer;
+    let entries = [];
+    let maxRound = 0;
 
     function init() {
         logContainer = document.getElementById('battle-log');
 
-        // Bind filter events
         document.getElementById('log-filter-type').addEventListener('change', applyFilters);
         document.getElementById('log-filter-round').addEventListener('change', applyFilters);
         document.getElementById('log-filter-att').addEventListener('change', applyFilters);
@@ -20,79 +19,71 @@ var BattleLog = (function () {
     }
 
     function addEntry(event, index, total) {
-        var info = TroopData.TYPES[event.phase];
-        var el = document.createElement('div');
+        const info = TroopData.TYPES[event.phase];
+        const el = document.createElement('div');
         el.className = 'log-entry';
         el.dataset.phase = event.phase;
         el.dataset.round = event.round;
         el.dataset.side = event.side || 'MOVE';
 
         if (event.eventType === 'move') {
-            // Compact movement lines
-            var moveHtml = '<span class="log-round">R' + event.round + '.' + info.name + '</span> ';
-            var parts = [];
-            for (var i = 0; i < event.moves.length; i++) {
-                var m = event.moves[i];
-                var typeName = TroopData.TYPES[m.type].name;
-                var colorClass = TroopData.TYPES[m.type].colorClass;
-                if (m.held) {
-                    parts.push('<span class="' + colorClass + '">' + m.side + ' ' + typeName + ' holds at ' + Math.round(m.to) + '</span>');
-                } else {
-                    parts.push('<span class="' + colorClass + '">' + m.side + ' ' + typeName + ' \u2192 ' + Math.round(m.to) + '</span>');
-                }
-            }
-            moveHtml += parts.join(', ');
-            el.innerHTML = moveHtml;
+            const parts = event.moves.map((m) => {
+                const typeName = TroopData.TYPES[m.type].name;
+                const colorClass = TroopData.TYPES[m.type].colorClass;
+                const body = m.held
+                    ? `${m.side} ${typeName} holds at ${Math.round(m.to)}`
+                    : `${m.side} ${typeName} \u2192 ${Math.round(m.to)}`;
+                return `<span class="${colorClass}">${body}</span>`;
+            });
+            el.innerHTML = `<span class="log-round">R${event.round}.${info.name}</span> ${parts.join(', ')}`;
         } else if (event.eventType === 'counter') {
-            // Counter-strike entry
-            var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
-            var sourceName = TroopData.TYPES[event.sourceType].name;
-            var targetName = TroopData.TYPES[event.targetType].name;
+            const sideLabel = event.side;
+            const sourceName = TroopData.TYPES[event.sourceType].name;
+            const targetName = TroopData.TYPES[event.targetType].name;
+            const srcColor = TroopData.TYPES[event.sourceType].colorClass;
+            const tgtColor = TroopData.TYPES[event.targetType].colorClass;
 
             el.className = 'log-entry log-counter';
-            el.innerHTML =
-                '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
-                '<span class="log-counter-label">\u21A9</span> ' +
-                '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
-                sourceName + ' T' + event.sourceTier + '</span>' +
-                ' counters ' +
-                '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
-                sideLabel + ' ' + targetName + ' T' + event.targetTier + '</span>: ' +
-                '<span class="log-kills">' + fmtCount(event.kills) + ' killed</span>' +
-                ' (' + fmtCount(event.remaining) + ' left)';
+            el.innerHTML = `
+                <span class="log-round">R${event.round}.${info.name}</span>
+                <span class="log-counter-label">\u21A9</span>
+                <span class="${srcColor}">${sourceName} T${event.sourceTier}</span>
+                counters
+                <span class="${tgtColor}">${sideLabel} ${targetName} T${event.targetTier}</span>:
+                <span class="log-kills">${fmtCount(event.kills)} killed</span>
+                (${fmtCount(event.remaining)} left)
+            `;
         } else {
-            // Attack entry
-            var sideLabel = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
-            var sourceName = TroopData.TYPES[event.sourceType].name;
-            var targetName = TroopData.TYPES[event.targetType].name;
+            const sideLabel = event.side;
+            const sourceName = TroopData.TYPES[event.sourceType].name;
+            const targetName = TroopData.TYPES[event.targetType].name;
+            const srcColor = TroopData.TYPES[event.sourceType].colorClass;
+            const tgtColor = TroopData.TYPES[event.targetType].colorClass;
 
-            el.innerHTML =
-                '<span class="log-round">R' + event.round + '.' + info.name + '</span> ' +
-                '<span class="' + TroopData.TYPES[event.sourceType].colorClass + '">' +
-                sideLabel + ' ' + sourceName + ' T' + event.sourceTier + ' (' + fmtCount(event.sourceCount) + ')</span>' +
-                ' \u2192 ' +
-                '<span class="' + TroopData.TYPES[event.targetType].colorClass + '">' +
-                targetName + ' T' + event.targetTier + '</span>: ' +
-                '<span class="log-damage">' + fmtCount(event.damage) + ' dmg</span>, ' +
-                '<span class="log-kills">' + fmtCount(event.kills) + ' killed</span>' +
-                ' (' + fmtCount(event.remaining) + ' left)';
+            el.innerHTML = `
+                <span class="log-round">R${event.round}.${info.name}</span>
+                <span class="${srcColor}">${sideLabel} ${sourceName} T${event.sourceTier} (${fmtCount(event.sourceCount)})</span>
+                \u2192
+                <span class="${tgtColor}">${targetName} T${event.targetTier}</span>:
+                <span class="log-damage">${fmtCount(event.damage)} dmg</span>,
+                <span class="log-kills">${fmtCount(event.kills)} killed</span>
+                (${fmtCount(event.remaining)} left)
+            `;
         }
 
         entries.push(el);
         logContainer.appendChild(el);
 
-        // Update round filter dropdown
         if (event.round > maxRound) {
             maxRound = event.round;
-            var opt = document.createElement('option');
+            const opt = document.createElement('option');
             opt.value = event.round;
-            opt.textContent = 'Round ' + event.round;
+            opt.textContent = `Round ${event.round}`;
             document.getElementById('log-filter-round').appendChild(opt);
         }
 
         applyFilterToEntry(el);
 
-        // Auto-scroll
         logContainer.scrollTop = logContainer.scrollHeight;
     }
 
@@ -101,16 +92,16 @@ var BattleLog = (function () {
     }
 
     function applyFilterToEntry(el) {
-        var typeFilter = document.getElementById('log-filter-type').value;
-        var roundFilter = document.getElementById('log-filter-round').value;
-        var showAtt = document.getElementById('log-filter-att').checked;
-        var showDef = document.getElementById('log-filter-def').checked;
+        const typeFilter = document.getElementById('log-filter-type').value;
+        const roundFilter = document.getElementById('log-filter-round').value;
+        const showAtt = document.getElementById('log-filter-att').checked;
+        const showDef = document.getElementById('log-filter-def').checked;
 
-        var visible = true;
+        let visible = true;
         if (typeFilter && el.dataset.phase !== typeFilter) visible = false;
         if (roundFilter && el.dataset.round !== roundFilter) visible = false;
-        if (el.dataset.side === 'ATTACKER' && !showAtt) visible = false;
-        if (el.dataset.side === 'DEFENDER' && !showDef) visible = false;
+        if (el.dataset.side === 'ATT' && !showAtt) visible = false;
+        if (el.dataset.side === 'DEF' && !showDef) visible = false;
         // Movement events show both sides — hide only if both are filtered out
         if (el.dataset.side === 'MOVE' && !showAtt && !showDef) visible = false;
 
@@ -121,7 +112,7 @@ var BattleLog = (function () {
         logContainer.innerHTML = '';
         entries = [];
         maxRound = 0;
-        var roundSelect = document.getElementById('log-filter-round');
+        const roundSelect = document.getElementById('log-filter-round');
         roundSelect.innerHTML = '<option value="">All Rounds</option>';
     }
 

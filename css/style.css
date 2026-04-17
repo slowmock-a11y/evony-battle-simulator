@@ -337,11 +337,15 @@ select { width: auto; text-align: left; }
 .attack-info-panel {
     min-height: 1.6rem; padding: 0.2rem 0.6rem;
     font-size: 0.75rem; color: #bbb; text-align: center;
+    font-variant-numeric: tabular-nums;
     background: rgba(13,26,13,0.6);
     border-top: 1px solid rgba(255,255,255,0.06);
     border-radius: 0 0 6px 6px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     line-height: 1.6rem;
+}
+.attack-info-panel .ai-stage {
+    display: inline-block; min-width: 100ch; text-align: left;
 }
 .attack-info-panel .ai-dmg { color: #e94560; font-weight: 700; }
 .attack-info-panel .ai-counter { color: #e9a045; font-weight: 700; }

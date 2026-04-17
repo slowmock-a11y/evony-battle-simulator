@@ -1,25 +1,25 @@
 var Battlefield = (function () {
     'use strict';
 
-    var container;
-    var tooltipEl;
-    var svgOverlay, svgLine;
-    var attackInfoEl;
-    var detailPanelEl;
-    var currentAttackerArmy, currentDefenderArmy;
-    var startAttacker, startDefender;
-    var attackerBuffs, defenderBuffs;
-    var currentPhaseIndex = -1; // -1 = pre-battle
+    let container;
+    let tooltipEl;
+    let svgOverlay, svgLine;
+    let attackInfoEl;
+    let detailPanelEl;
+    let currentAttackerArmy, currentDefenderArmy;
+    let startAttacker, startDefender;
+    let attackerBuffs, defenderBuffs;
+    let currentPhaseIndex = -1; // -1 = pre-battle
 
-    var BATTLEFIELD_LENGTH = 1500;
+    const BATTLEFIELD_LENGTH = 1500;
 
     // Y positions: top = back line (long range), bottom = front line
-    var Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80 };
+    const Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80 };
 
-    var TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S' };
+    const TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S' };
 
     // Engine positions (0–1500), updated from events
-    var currentPositions = null;
+    let currentPositions = null;
 
     function defaultPositions() {
         return {
@@ -36,10 +36,10 @@ var Battlefield = (function () {
         // Legacy per-type format
         if (pos[side][type] !== undefined) return pos[side][type];
         // Per-layer format: find frontmost alive layer of this type
-        var best = null;
-        for (var key in pos[side]) {
+        let best = null;
+        for (const key in pos[side]) {
             if (key.indexOf(type + '_') === 0) {
-                var val = pos[side][key];
+                const val = pos[side][key];
                 if (best === null) best = val;
                 else if (side === 'ATT') best = Math.max(best, val);
                 else best = Math.min(best, val);
@@ -49,45 +49,45 @@ var Battlefield = (function () {
     }
 
     function calcPosition(type, side) {
-        var pos = currentPositions || defaultPositions();
-        var sideKey = side === 'ATT' ? 'ATT' : 'DEF';
+        const pos = currentPositions || defaultPositions();
+        const sideKey = side === 'ATT' ? 'ATT' : 'DEF';
         return { x: mapToScreen(getTypePosition(pos, sideKey, type)), y: Y_POSITIONS[type] };
     }
 
     function computeVerticalOffsets(layers) {
-        var offsets = {};
+        const offsets = {};
         if (!layers) return offsets;
 
         // Group layers by (type, range) — same range = same visual circle
-        var byTypeRange = {};
-        layers.forEach(function (l) {
-            var stats = TroopData.getStats(l.type, l.tier);
-            var key = l.type + '_R' + stats.range;
+        const byTypeRange = {};
+        layers.forEach((l) => {
+            const stats = TroopData.getStats(l.type, l.tier);
+            const key = `${l.type}_R${stats.range}`;
             if (!byTypeRange[key]) byTypeRange[key] = { type: l.type, range: stats.range, tiers: [] };
             byTypeRange[key].tiers.push(l.tier);
         });
 
         // Group range-groups by type
-        var groupsByType = {};
-        for (var key in byTypeRange) {
-            var g = byTypeRange[key];
+        const groupsByType = {};
+        for (const key in byTypeRange) {
+            const g = byTypeRange[key];
             if (!groupsByType[g.type]) groupsByType[g.type] = [];
             groupsByType[g.type].push(g);
         }
 
-        var SPREAD = 3; // vertical spread in % between staggered groups
+        const SPREAD = 3; // vertical spread in % between staggered groups
 
-        for (var type in groupsByType) {
-            var typeGroups = groupsByType[type];
+        for (const type in groupsByType) {
+            const typeGroups = groupsByType[type];
             if (typeGroups.length <= 1) continue;
 
-            typeGroups.sort(function (a, b) { return a.range - b.range; });
-            var mid = (typeGroups.length - 1) / 2;
+            typeGroups.sort((a, b) => a.range - b.range);
+            const mid = (typeGroups.length - 1) / 2;
 
-            typeGroups.forEach(function (g, i) {
-                var yOff = (i - mid) * SPREAD;
-                g.tiers.forEach(function (tier) {
-                    offsets[type + '_' + tier] = yOff;
+            typeGroups.forEach((g, i) => {
+                const yOff = (i - mid) * SPREAD;
+                g.tiers.forEach((tier) => {
+                    offsets[`${type}_${tier}`] = yOff;
                 });
             });
         }
@@ -96,9 +96,9 @@ var Battlefield = (function () {
     }
 
     function calcLayerPosition(type, tier, side) {
-        var pos = currentPositions || defaultPositions();
-        var sideKey = side === 'ATT' ? 'ATT' : 'DEF';
-        var key = type + '_' + tier;
+        const pos = currentPositions || defaultPositions();
+        const sideKey = side === 'ATT' ? 'ATT' : 'DEF';
+        const key = `${type}_${tier}`;
         if (pos[sideKey][key] !== undefined) {
             return { x: mapToScreen(pos[sideKey][key]), y: Y_POSITIONS[type] };
         }
@@ -115,7 +115,7 @@ var Battlefield = (function () {
         document.body.appendChild(tooltipEl);
 
         // Center line
-        var centerLine = document.createElement('div');
+        const centerLine = document.createElement('div');
         centerLine.className = 'bf-center-line';
         container.appendChild(centerLine);
 
@@ -123,15 +123,15 @@ var Battlefield = (function () {
         svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svgOverlay.setAttribute('class', 'bf-svg-overlay');
 
-        var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        var marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         marker.setAttribute('id', 'arrowhead');
         marker.setAttribute('markerWidth', '8');
         marker.setAttribute('markerHeight', '6');
         marker.setAttribute('refX', '8');
         marker.setAttribute('refY', '3');
         marker.setAttribute('orient', 'auto');
-        var polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         polygon.setAttribute('points', '0 0, 8 3, 0 6');
         polygon.setAttribute('fill', '#e94560');
         marker.appendChild(polygon);
@@ -155,7 +155,7 @@ var Battlefield = (function () {
         container.appendChild(detailPanelEl);
 
         // Dismiss detail panel on click outside
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', (e) => {
             if (!detailPanelEl.contains(e.target) && !e.target.closest('.unit-marker')) {
                 detailPanelEl.style.display = 'none';
             }
@@ -181,7 +181,7 @@ var Battlefield = (function () {
 
         // Remove old unit markers, indicators, and axis
         clearIndicators();
-        container.querySelectorAll('.unit-marker, .bf-axis-tick, .bf-axis-label').forEach(function (m) { m.remove(); });
+        container.querySelectorAll('.unit-marker, .bf-axis-tick, .bf-axis-label').forEach((m) => m.remove());
 
         // Place per-layer unit markers
         placeLayerMarkers(attArmy, startAttacker, attBuffs, 'ATT');
@@ -197,16 +197,16 @@ var Battlefield = (function () {
     }
 
     function formatTierRange(tiers) {
-        if (tiers.length === 1) return 'T' + tiers[0];
-        return 'T' + tiers[0] + '-' + tiers[tiers.length - 1];
+        if (tiers.length === 1) return `T${tiers[0]}`;
+        return `T${tiers[0]}-${tiers[tiers.length - 1]}`;
     }
 
     function placeLayerMarkers(army, startSnap, buffs, side) {
         // Group layers by (type, range) — same range = same position always
-        var groups = {};
-        startSnap.forEach(function (sl) {
-            var stats = TroopData.getStats(sl.type, sl.tier);
-            var groupKey = sl.type + '_R' + stats.range;
+        const groups = {};
+        startSnap.forEach((sl) => {
+            const stats = TroopData.getStats(sl.type, sl.tier);
+            const groupKey = `${sl.type}_R${stats.range}`;
             if (!groups[groupKey]) {
                 groups[groupKey] = { type: sl.type, range: stats.range, tiers: [] };
             }
@@ -214,36 +214,36 @@ var Battlefield = (function () {
         });
 
         // Count groups per type to decide label style
-        var groupCountsByType = {};
-        for (var key in groups) {
-            var g = groups[key];
+        const groupCountsByType = {};
+        for (const key in groups) {
+            const g = groups[key];
             groupCountsByType[g.type] = (groupCountsByType[g.type] || 0) + 1;
         }
 
-        var vOffsets = computeVerticalOffsets(startSnap);
+        const vOffsets = computeVerticalOffsets(startSnap);
 
-        for (var key in groups) {
-            var group = groups[key];
-            var type = group.type;
-            group.tiers.sort(function (a, b) { return a - b; });
-            var repTier = group.tiers[group.tiers.length - 1]; // highest tier as representative
+        for (const key in groups) {
+            const group = groups[key];
+            const type = group.type;
+            group.tiers.sort((a, b) => a - b);
+            const repTier = group.tiers[group.tiers.length - 1]; // highest tier as representative
 
             // Aggregate current count across all tiers in this group
-            var currentCount = 0;
-            var allEliminated = true;
-            for (var i = 0; i < army.layers.length; i++) {
-                var l = army.layers[i];
-                if (l.type === type && group.tiers.indexOf(l.tier) >= 0) {
+            let currentCount = 0;
+            let allEliminated = true;
+            for (let i = 0; i < army.layers.length; i++) {
+                const l = army.layers[i];
+                if (l.type === type && group.tiers.includes(l.tier)) {
                     currentCount += l.count;
                     if (l.count > 0) allEliminated = false;
                 }
             }
 
-            var pos = calcLayerPosition(type, repTier, side);
-            var yOffset = vOffsets[type + '_' + repTier] || 0;
+            const pos = calcLayerPosition(type, repTier, side);
+            const yOffset = vOffsets[`${type}_${repTier}`] || 0;
             pos.y += yOffset;
 
-            var marker = document.createElement('div');
+            const marker = document.createElement('div');
             marker.className = 'unit-marker';
             marker.dataset.type = type;
             marker.dataset.tier = repTier;
@@ -251,8 +251,8 @@ var Battlefield = (function () {
             marker.dataset.side = side;
             if (allEliminated) marker.classList.add('eliminated');
 
-            marker.style.left = pos.x + '%';
-            marker.style.top = pos.y + '%';
+            marker.style.left = `${pos.x}%`;
+            marker.style.top = `${pos.y}%`;
             // Face-side alignment: front edge of icon square at the engine position
             // Icon is 44px wide; shift by half-icon (22px) so the face edge sits at X
             if (side === 'ATT') {
@@ -262,39 +262,39 @@ var Battlefield = (function () {
             }
 
             // Icon circle
-            var icon = document.createElement('div');
-            icon.className = 'unit-icon icon-' + type.toLowerCase();
+            const icon = document.createElement('div');
+            icon.className = `unit-icon icon-${type.toLowerCase()}`;
             icon.textContent = TYPE_LETTERS[type];
             marker.appendChild(icon);
 
             // Count
-            var countEl = document.createElement('div');
+            const countEl = document.createElement('div');
             countEl.className = 'unit-count';
             countEl.textContent = formatNum(currentCount);
             marker.appendChild(countEl);
 
             // Label: show tier range when multiple groups exist, otherwise type name
-            var label = document.createElement('div');
+            const label = document.createElement('div');
             label.className = 'unit-label';
             label.textContent = groupCountsByType[type] > 1 ? formatTierRange(group.tiers) : TroopData.TYPES[type].name;
             marker.appendChild(label);
 
             // Click handler — detail panel shows all tiers of this type
-            var typeLayers = army.layers.filter(function (l) { return l.type === type; });
-            var typeStartLayers = startSnap.filter(function (l) { return l.type === type; });
-            marker.addEventListener('click', function (e) {
+            const typeLayers = army.layers.filter((l) => l.type === type);
+            const typeStartLayers = startSnap.filter((l) => l.type === type);
+            marker.addEventListener('click', (e) => {
                 e.stopPropagation();
                 showDetailPanel(marker, typeLayers, typeStartLayers, type, buffs, side);
             });
 
             // Hover tooltip + indicators
-            marker.addEventListener('mouseenter', function (e) {
+            marker.addEventListener('mouseenter', (e) => {
                 showTooltip(e, type, buffs, side);
                 hoveredUnit = { type: type, side: side };
                 highlightHoveredIndicators(type, side);
             });
-            marker.addEventListener('mousemove', function (e) { moveTooltip(e); });
-            marker.addEventListener('mouseleave', function () {
+            marker.addEventListener('mousemove', (e) => moveTooltip(e));
+            marker.addEventListener('mouseleave', () => {
                 hideTooltip();
                 resetHoveredIndicators(type, side);
                 hoveredUnit = null;
@@ -307,90 +307,86 @@ var Battlefield = (function () {
     // --- Detail Panel ---
 
     function showDetailPanel(markerEl, layers, startLayers, type, buffs, side) {
-        var info = TroopData.TYPES[type];
-        var sideLabel = side === 'ATT' ? 'Attacker' : 'Defender';
+        const info = TroopData.TYPES[type];
+        const sideLabel = side === 'ATT' ? 'Attacker' : 'Defender';
 
-        var html = '<div class="detail-title ' + info.colorClass + '">' + sideLabel + ' ' + info.name + '</div>';
-        html += '<div class="detail-tiers">';
-
-        var tierData = [];
-        startLayers.forEach(function (sl) {
-            var current = 0;
-            for (var i = 0; i < layers.length; i++) {
+        const tierData = [];
+        startLayers.forEach((sl) => {
+            let current = 0;
+            for (let i = 0; i < layers.length; i++) {
                 if (layers[i].tier === sl.tier) { current = layers[i].count; break; }
             }
             tierData.push({ tier: sl.tier, current: current, start: sl.startCount });
         });
-        tierData.sort(function (a, b) { return b.tier - a.tier; });
+        tierData.sort((a, b) => b.tier - a.tier);
 
-        tierData.forEach(function (td) {
-            var lost = td.start - td.current;
-            html += '<div class="detail-tier-row">' +
-                    '<span>T' + td.tier + '</span>' +
-                    '<span>' + formatNum(td.current) + ' / ' + formatNum(td.start);
-            if (lost > 0) {
-                html += ' <span class="tier-lost">(-' + formatNum(lost) + ')</span>';
-            }
-            html += '</span></div>';
-        });
+        const tierRows = tierData.map((td) => {
+            const lost = td.start - td.current;
+            const lostSpan = lost > 0 ? ` <span class="tier-lost">(-${formatNum(lost)})</span>` : '';
+            return `
+                <div class="detail-tier-row">
+                    <span>T${td.tier}</span>
+                    <span>${formatNum(td.current)} / ${formatNum(td.start)}${lostSpan}</span>
+                </div>
+            `;
+        }).join('');
 
-        html += '</div>';
+        let total = 0, totalStart = 0;
+        tierData.forEach((td) => { total += td.current; totalStart += td.start; });
 
-        var total = 0, totalStart = 0;
-        tierData.forEach(function (td) { total += td.current; totalStart += td.start; });
-        html += '<div class="detail-total">Total: ' + formatNum(total) + ' / ' + formatNum(totalStart) + '</div>';
+        const chain = TroopData.TARGET_PRIORITY[type].map((t) => TroopData.TYPES[t].name).join(' > ');
 
-        var chain = TroopData.TARGET_PRIORITY[type].map(function (t) {
-            return TroopData.TYPES[t].name;
-        }).join(' > ');
-        html += '<div class="detail-targets">Targets: ' + chain + '</div>';
-
-        detailPanelEl.innerHTML = html;
+        detailPanelEl.innerHTML = `
+            <div class="detail-title ${info.colorClass}">${sideLabel} ${info.name}</div>
+            <div class="detail-tiers">${tierRows}</div>
+            <div class="detail-total">Total: ${formatNum(total)} / ${formatNum(totalStart)}</div>
+            <div class="detail-targets">Targets: ${chain}</div>
+        `;
         detailPanelEl.style.display = 'block';
 
         // Position near the marker
-        var markerRect = markerEl.getBoundingClientRect();
-        var contRect = container.getBoundingClientRect();
-        var top = markerRect.top - contRect.top;
+        const markerRect = markerEl.getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+        const top = markerRect.top - contRect.top;
 
         if (side === 'ATT') {
-            detailPanelEl.style.left = (markerRect.right - contRect.left + 8) + 'px';
+            detailPanelEl.style.left = `${markerRect.right - contRect.left + 8}px`;
             detailPanelEl.style.right = 'auto';
         } else {
             detailPanelEl.style.left = 'auto';
-            detailPanelEl.style.right = (contRect.right - markerRect.left + 8) + 'px';
+            detailPanelEl.style.right = `${contRect.right - markerRect.left + 8}px`;
         }
-        detailPanelEl.style.top = Math.max(0, top) + 'px';
+        detailPanelEl.style.top = `${Math.max(0, top)}px`;
     }
 
     // --- Tooltip ---
 
     function showTooltip(e, type, buffs, side) {
-        var info = TroopData.TYPES[type];
-        var b = buffs[type] || { atk: 0, def: 0, hp: 0 };
-        var chain = TroopData.TARGET_PRIORITY[type].map(function (t) {
-            return TroopData.TYPES[t].name;
-        }).join(' > ');
+        const info = TroopData.TYPES[type];
+        const b = buffs[type] || { atk: 0, def: 0, hp: 0 };
+        const chain = TroopData.TARGET_PRIORITY[type].map((t) => TroopData.TYPES[t].name).join(' > ');
 
-        var html = '<div class="tt-title ' + info.colorClass + '">' + info.name + ' (' + side + ')</div>';
-        html += '<div class="tt-row">Targets: ' + chain + '</div>';
-
+        let buffRow = '';
         if (b.atk || b.def || b.hp) {
-            html += '<div class="tt-row">Buffs: ';
-            if (b.atk) html += 'ATK +' + b.atk + '% ';
-            if (b.def) html += 'DEF +' + b.def + '% ';
-            if (b.hp) html += 'HP +' + b.hp + '%';
-            html += '</div>';
+            const parts = [];
+            if (b.atk) parts.push(`ATK +${b.atk}%`);
+            if (b.def) parts.push(`DEF +${b.def}%`);
+            if (b.hp) parts.push(`HP +${b.hp}%`);
+            buffRow = `<div class="tt-row">Buffs: ${parts.join(' ')}</div>`;
         }
 
-        tooltipEl.innerHTML = html;
+        tooltipEl.innerHTML = `
+            <div class="tt-title ${info.colorClass}">${info.name} (${side})</div>
+            <div class="tt-row">Targets: ${chain}</div>
+            ${buffRow}
+        `;
         tooltipEl.style.display = 'block';
         moveTooltip(e);
     }
 
     function moveTooltip(e) {
-        tooltipEl.style.left = (e.pageX + 15) + 'px';
-        tooltipEl.style.top = (e.pageY + 10) + 'px';
+        tooltipEl.style.left = `${e.pageX + 15}px`;
+        tooltipEl.style.top = `${e.pageY + 10}px`;
     }
 
     function hideTooltip() {
@@ -402,40 +398,41 @@ var Battlefield = (function () {
     function highlightAttack(event) {
         clearHighlights();
 
-        var sourceSide = event.side === 'ATTACKER' ? 'ATT' : 'DEF';
-        var targetSide = event.side === 'ATTACKER' ? 'DEF' : 'ATT';
+        const sourceSide = event.side;
+        const targetSide = sourceSide === 'ATT' ? 'DEF' : 'ATT';
 
-        var sourceMarker = findMarker(sourceSide, event.sourceType, event.sourceTier);
-        var targetMarker = findMarker(targetSide, event.targetType, event.targetTier);
+        const sourceMarker = findMarker(sourceSide, event.sourceType, event.sourceTier);
+        const targetMarker = findMarker(targetSide, event.targetType, event.targetTier);
 
         if (sourceMarker) sourceMarker.classList.add('highlighted');
         if (targetMarker) targetMarker.classList.add('damaged');
 
         if (sourceMarker && targetMarker) {
-            var contRect = container.getBoundingClientRect();
-            var srcRect = sourceMarker.querySelector('.unit-icon').getBoundingClientRect();
-            var tgtRect = targetMarker.querySelector('.unit-icon').getBoundingClientRect();
+            const contRect = container.getBoundingClientRect();
+            const srcRect = sourceMarker.querySelector('.unit-icon').getBoundingClientRect();
+            const tgtRect = targetMarker.querySelector('.unit-icon').getBoundingClientRect();
 
-            var cx1 = (srcRect.left + srcRect.right) / 2 - contRect.left;
-            var cy1 = (srcRect.top + srcRect.bottom) / 2 - contRect.top;
-            var cx2 = (tgtRect.left + tgtRect.right) / 2 - contRect.left;
-            var cy2 = (tgtRect.top + tgtRect.bottom) / 2 - contRect.top;
+            const cx1 = (srcRect.left + srcRect.right) / 2 - contRect.left;
+            const cy1 = (srcRect.top + srcRect.bottom) / 2 - contRect.top;
+            const cx2 = (tgtRect.left + tgtRect.right) / 2 - contRect.left;
+            const cy2 = (tgtRect.top + tgtRect.bottom) / 2 - contRect.top;
 
             // Shorten both ends so arrows don't overlap the icons
-            var dx = cx2 - cx1;
-            var dy = cy2 - cy1;
-            var dist = Math.sqrt(dx * dx + dy * dy);
-            var gap = 32; // square half-width (22) + gap (10)
+            const dx = cx2 - cx1;
+            const dy = cy2 - cy1;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const gap = 32; // square half-width (22) + gap (10)
+            let x1, y1, x2, y2;
             if (dist > gap * 2) {
-                var ux = dx / dist;
-                var uy = dy / dist;
-                var x1 = cx1 + ux * gap;
-                var y1 = cy1 + uy * gap;
-                var x2 = cx2 - ux * gap;
-                var y2 = cy2 - uy * gap;
+                const ux = dx / dist;
+                const uy = dy / dist;
+                x1 = cx1 + ux * gap;
+                y1 = cy1 + uy * gap;
+                x2 = cx2 - ux * gap;
+                y2 = cy2 - uy * gap;
             } else {
-                var x1 = cx1; var y1 = cy1;
-                var x2 = cx2; var y2 = cy2;
+                x1 = cx1; y1 = cy1;
+                x2 = cx2; y2 = cy2;
             }
 
             svgLine.setAttribute('x1', x1);
@@ -445,7 +442,7 @@ var Battlefield = (function () {
             svgLine.style.display = '';
 
             // Animate dash
-            var len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            const len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
             svgLine.style.strokeDasharray = len;
             svgLine.style.strokeDashoffset = len;
             svgLine.getBoundingClientRect();
@@ -453,28 +450,23 @@ var Battlefield = (function () {
             svgLine.style.strokeDashoffset = '0';
 
             // Attack info panel
-            var srcName = event.sourceType.charAt(0).toUpperCase() + event.sourceType.slice(1);
-            var tgtName = event.targetType.charAt(0).toUpperCase() + event.targetType.slice(1);
-            attackInfoEl.innerHTML =
-                srcName + ' T' + event.sourceTier + ' (' + formatNum(event.sourceCount) + ')'
-                + ' \u2192 ' + tgtName + ' T' + event.targetTier + ' (' + formatNum(event.targetCountBefore) + ')'
-                + ' \u00a0|\u00a0 <span class="ai-dmg">' + formatNum(event.damage) + ' dmg</span>'
-                + ' \u00b7 ' + formatNum(event.kills) + ' killed';
+            const srcName = event.sourceType.charAt(0).toUpperCase() + event.sourceType.slice(1);
+            const tgtName = event.targetType.charAt(0).toUpperCase() + event.targetType.slice(1);
+            attackInfoEl.innerHTML = `<span class="ai-stage">${srcName} T${event.sourceTier} (${formatNum(event.sourceCount)}) \u2192 ${tgtName} T${event.targetTier} (${formatNum(event.targetCountBefore)}) \u00a0|\u00a0 <span class="ai-dmg">${formatNum(event.damage)} dmg</span> \u00b7 ${formatNum(event.kills)} killed</span>`;
         }
     }
 
     function highlightCounter(event) {
         if (!attackInfoEl) return;
-        attackInfoEl.innerHTML += ' \u00a0\u21a9\u00a0 <span class="ai-counter">' + formatNum(event.kills) + ' counter-kills</span>';
+        const stage = attackInfoEl.querySelector('.ai-stage');
+        const html = ` \u00a0\u21a9\u00a0 <span class="ai-counter">${formatNum(event.kills)} counter-kills</span>`;
+        if (stage) stage.innerHTML += html;
+        else attackInfoEl.innerHTML += html;
     }
 
     function clearHighlights() {
-        container.querySelectorAll('.highlighted').forEach(function (el) {
-            el.classList.remove('highlighted');
-        });
-        container.querySelectorAll('.damaged').forEach(function (el) {
-            el.classList.remove('damaged');
-        });
+        container.querySelectorAll('.highlighted').forEach((el) => el.classList.remove('highlighted'));
+        container.querySelectorAll('.damaged').forEach((el) => el.classList.remove('damaged'));
         if (svgLine) {
             svgLine.style.display = 'none';
             svgLine.style.transition = '';
@@ -485,17 +477,17 @@ var Battlefield = (function () {
     function findMarker(side, type, tier) {
         if (tier !== undefined) {
             // Try exact match on representative tier first
-            var exact = container.querySelector('.unit-marker[data-side="' + side + '"][data-type="' + type + '"][data-tier="' + tier + '"]');
+            const exact = container.querySelector(`.unit-marker[data-side="${side}"][data-type="${type}"][data-tier="${tier}"]`);
             if (exact) return exact;
             // Search grouped markers that contain this tier
-            var markers = container.querySelectorAll('.unit-marker[data-side="' + side + '"][data-type="' + type + '"]');
-            for (var i = 0; i < markers.length; i++) {
-                var tiers = markers[i].dataset.tiers;
+            const markers = container.querySelectorAll(`.unit-marker[data-side="${side}"][data-type="${type}"]`);
+            for (let i = 0; i < markers.length; i++) {
+                const tiers = markers[i].dataset.tiers;
                 if (tiers && (',' + tiers + ',').indexOf(',' + tier + ',') >= 0) return markers[i];
             }
             return null;
         }
-        return container.querySelector('.unit-marker[data-side="' + side + '"][data-type="' + type + '"]');
+        return container.querySelector(`.unit-marker[data-side="${side}"][data-type="${type}"]`);
     }
 
     // --- End State ---
@@ -503,7 +495,7 @@ var Battlefield = (function () {
     function showEndState(result) {
         clearHighlights();
 
-        var banner = container.querySelector('.winner-banner');
+        let banner = container.querySelector('.winner-banner');
         if (!banner) {
             banner = document.createElement('div');
             banner.className = 'winner-banner';
@@ -518,18 +510,18 @@ var Battlefield = (function () {
             banner.style.border = '1px solid #ffd700';
             container.appendChild(banner);
         }
-        if (result.winner === 'ATTACKER') banner.textContent = '★ ATTACKER WINS ★';
-        else if (result.winner === 'DEFENDER') banner.textContent = '★ DEFENDER WINS ★';
-        else banner.textContent = '— DRAW —';
-        banner.textContent += ' (Round ' + result.rounds + ')';
+        const label = result.winner === 'ATTACKER' ? '★ ATTACKER WINS ★'
+                    : result.winner === 'DEFENDER' ? '★ DEFENDER WINS ★'
+                    : '— DRAW —';
+        banner.textContent = `${label} (Round ${result.rounds})`;
     }
 
     function reset() {
         // Remove unit markers, indicators, and axis
-        container.querySelectorAll('.unit-marker, .bf-axis-tick, .bf-axis-label').forEach(function (m) { m.remove(); });
+        container.querySelectorAll('.unit-marker, .bf-axis-tick, .bf-axis-label').forEach((m) => m.remove());
         clearIndicators();
         // Remove winner banner
-        var banner = container.querySelector('.winner-banner');
+        const banner = container.querySelector('.winner-banner');
         if (banner) banner.remove();
         if (detailPanelEl) detailPanelEl.style.display = 'none';
         clearHighlights();
@@ -544,60 +536,71 @@ var Battlefield = (function () {
     // --- Summary Bar ---
 
     function updateSummary(attArmy, defArmy) {
-        var bar = document.getElementById('summary-bar');
+        const bar = document.getElementById('summary-bar');
         if (!bar) return;
         bar.classList.add('visible');
 
-        var attTotal = 0, attStart = 0, defTotal = 0, defStart = 0;
-        var attByType = {}, defByType = {};
+        let attTotal = 0, attStart = 0, defTotal = 0, defStart = 0;
+        const attByType = {}, defByType = {};
 
-        TroopData.PHASE_ORDER.forEach(function (type) {
+        TroopData.PHASE_ORDER.forEach((type) => {
             attByType[type] = { current: 0, start: 0 };
             defByType[type] = { current: 0, start: 0 };
         });
 
-        attArmy.layers.forEach(function (l) {
+        attArmy.layers.forEach((l) => {
             attByType[l.type].current += l.count;
             attByType[l.type].start += l.startCount;
             attTotal += l.count;
             attStart += l.startCount;
         });
-        defArmy.layers.forEach(function (l) {
+        defArmy.layers.forEach((l) => {
             defByType[l.type].current += l.count;
             defByType[l.type].start += l.startCount;
             defTotal += l.count;
             defStart += l.startCount;
         });
 
-        bar.innerHTML = '<div class="summary-content">' +
-            buildSummaryHtml('Attacker', attByType, attTotal, attStart) +
-            buildSummaryHtml('Defender', defByType, defTotal, defStart) +
-            '</div>';
+        bar.innerHTML = `
+            <div class="summary-content">
+                ${buildSummaryHtml('Attacker', attByType, attTotal, attStart)}
+                ${buildSummaryHtml('Defender', defByType, defTotal, defStart)}
+            </div>
+        `;
     }
 
     function buildSummaryHtml(title, byType, total, start) {
-        var pct = start > 0 ? Math.round(total / start * 100) : 0;
-        var lostPct = start > 0 ? Math.round((1 - total / start) * 100) : 0;
-        var html = '<div class="summary-side"><h4>' + title + '</h4>';
-        TroopData.PHASE_ORDER.forEach(function (type) {
-            var info = TroopData.TYPES[type];
-            var d = byType[type];
-            if (d.start === 0) return;
-            var loss = d.start > 0 ? Math.round((1 - d.current / d.start) * 100) : 0;
-            html += '<div class="summary-row"><span class="' + info.colorClass + '">' + info.name + '</span>' +
-                '<span>' + formatNum(d.start) + ' \u2192 ' + formatNum(d.current) +
-                ' <span class="loss">(-' + loss + '%)</span></span></div>';
-        });
-        html += '<div class="summary-row" style="font-weight:700"><span>TOTAL</span>' +
-            '<span>' + formatNum(start) + ' \u2192 ' + formatNum(total) +
-            ' <span class="loss">(-' + lostPct + '%)</span></span></div>';
-        html += '<div class="health-bar"><div class="fill" style="width:' + pct + '%"></div></div>';
-        html += '</div>';
-        return html;
+        const pct = start > 0 ? Math.round(total / start * 100) : 0;
+        const lostPct = start > 0 ? Math.round((1 - total / start) * 100) : 0;
+
+        const typeRows = TroopData.PHASE_ORDER.map((type) => {
+            const info = TroopData.TYPES[type];
+            const d = byType[type];
+            if (d.start === 0) return '';
+            const loss = d.start > 0 ? Math.round((1 - d.current / d.start) * 100) : 0;
+            return `
+                <div class="summary-row">
+                    <span class="${info.colorClass}">${info.name}</span>
+                    <span>${formatNum(d.start)} \u2192 ${formatNum(d.current)} <span class="loss">(-${loss}%)</span></span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="summary-side">
+                <h4>${title}</h4>
+                ${typeRows}
+                <div class="summary-row" style="font-weight:700">
+                    <span>TOTAL</span>
+                    <span>${formatNum(start)} \u2192 ${formatNum(total)} <span class="loss">(-${lostPct}%)</span></span>
+                </div>
+                <div class="health-bar"><div class="fill" style="width:${pct}%"></div></div>
+            </div>
+        `;
     }
 
     function hideSummary() {
-        var bar = document.getElementById('summary-bar');
+        const bar = document.getElementById('summary-bar');
         if (bar) bar.classList.remove('visible');
     }
 
@@ -606,21 +609,21 @@ var Battlefield = (function () {
     function setPhase(phase, positions, round) {
         // Update round label
         if (round != null) {
-            var roundLabel = document.getElementById('round-label');
-            if (roundLabel) roundLabel.textContent = 'Round ' + round;
+            const roundLabel = document.getElementById('round-label');
+            if (roundLabel) roundLabel.textContent = `Round ${round}`;
         }
 
         // Update phase index
-        var idx = TroopData.PHASE_ORDER.indexOf(phase);
+        const idx = TroopData.PHASE_ORDER.indexOf(phase);
         if (idx >= 0) currentPhaseIndex = idx;
 
         // Update positions from engine
         if (positions) currentPositions = positions;
 
         // Update phase dots
-        var dots = document.querySelectorAll('.phase-dot');
-        var found = false;
-        dots.forEach(function (dot) {
+        const dots = document.querySelectorAll('.phase-dot');
+        let found = false;
+        dots.forEach((dot) => {
             if (dot.dataset.phase === phase) {
                 dot.className = 'phase-dot active';
                 found = true;
@@ -644,40 +647,39 @@ var Battlefield = (function () {
     }
 
     function repositionMarkers() {
-        var attOffsets = computeVerticalOffsets(startAttacker);
-        var defOffsets = computeVerticalOffsets(startDefender);
-        var markers = container.querySelectorAll('.unit-marker');
-        markers.forEach(function (m) {
-            var tier = m.dataset.tier;
-            var side = m.dataset.side;
-            var pos = tier
-                ? calcLayerPosition(m.dataset.type, parseInt(tier), side)
+        const attOffsets = computeVerticalOffsets(startAttacker);
+        const defOffsets = computeVerticalOffsets(startDefender);
+        container.querySelectorAll('.unit-marker').forEach((m) => {
+            const tier = m.dataset.tier;
+            const side = m.dataset.side;
+            const pos = tier
+                ? calcLayerPosition(m.dataset.type, parseInt(tier, 10), side)
                 : calcPosition(m.dataset.type, side);
-            var offsets = side === 'ATT' ? attOffsets : defOffsets;
-            var yOffset = offsets[m.dataset.type + '_' + tier] || 0;
-            m.style.left = pos.x + '%';
-            m.style.top = (pos.y + yOffset) + '%';
+            const offsets = side === 'ATT' ? attOffsets : defOffsets;
+            const yOffset = offsets[`${m.dataset.type}_${tier}`] || 0;
+            m.style.left = `${pos.x}%`;
+            m.style.top = `${pos.y + yOffset}%`;
         });
     }
 
     function resetPhase() {
         currentPhaseIndex = -1;
-        var roundLabel = document.getElementById('round-label');
+        const roundLabel = document.getElementById('round-label');
         if (roundLabel) roundLabel.textContent = 'Round 1';
-        document.querySelectorAll('.phase-dot').forEach(function (dot) {
+        document.querySelectorAll('.phase-dot').forEach((dot) => {
             dot.className = 'phase-dot';
         });
     }
 
     // --- Range & Speed Indicators ---
 
-    var hoveredUnit = null; // { type, side } — tracks current hover for re-show on render
+    let hoveredUnit = null; // { type, side } — tracks current hover for re-show on render
 
     function getMaxRangeForType(army, type) {
-        var maxRange = 0;
-        army.layers.forEach(function (l) {
+        let maxRange = 0;
+        army.layers.forEach((l) => {
             if (l.type === type && l.count > 0) {
-                var stats = TroopData.getStats(l.type, l.tier);
+                const stats = TroopData.getStats(l.type, l.tier);
                 if (stats.range > maxRange) maxRange = stats.range;
             }
         });
@@ -689,26 +691,24 @@ var Battlefield = (function () {
     }
 
     function clearIndicators() {
-        container.querySelectorAll('.bf-range-indicator, .bf-speed-projection').forEach(function (el) {
-            el.remove();
-        });
+        container.querySelectorAll('.bf-range-indicator, .bf-speed-projection').forEach((el) => el.remove());
     }
 
     function renderAxis() {
         // Minor ticks every 50, major ticks every 100
-        for (var val = 0; val <= BATTLEFIELD_LENGTH; val += 50) {
-            var screenX = mapToScreen(val);
-            var isMajor = val % 100 === 0;
+        for (let val = 0; val <= BATTLEFIELD_LENGTH; val += 50) {
+            const screenX = mapToScreen(val);
+            const isMajor = val % 100 === 0;
 
-            var tick = document.createElement('div');
-            tick.className = 'bf-axis-tick ' + (isMajor ? 'major' : 'minor');
-            tick.style.left = screenX + '%';
+            const tick = document.createElement('div');
+            tick.className = `bf-axis-tick ${isMajor ? 'major' : 'minor'}`;
+            tick.style.left = `${screenX}%`;
             container.appendChild(tick);
 
             if (isMajor) {
-                var label = document.createElement('div');
+                const label = document.createElement('div');
                 label.className = 'bf-axis-label';
-                label.style.left = screenX + '%';
+                label.style.left = `${screenX}%`;
                 label.textContent = val;
                 container.appendChild(label);
             }
@@ -716,55 +716,52 @@ var Battlefield = (function () {
     }
 
     function getLayerEnginePos(type, tier, side) {
-        var pos = currentPositions || defaultPositions();
-        var key = type + '_' + tier;
+        const pos = currentPositions || defaultPositions();
+        const key = `${type}_${tier}`;
         if (pos[side][key] !== undefined) return pos[side][key];
         return getTypePosition(pos, side, type);
     }
 
     function renderAllRangeIndicators() {
-        ['ATT', 'DEF'].forEach(function (side) {
-            var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            var snap = side === 'ATT' ? startAttacker : startDefender;
+        ['ATT', 'DEF'].forEach((side) => {
+            const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+            const snap = side === 'ATT' ? startAttacker : startDefender;
             if (!army || !snap) return;
-            var vOffsets = computeVerticalOffsets(snap);
+            const vOffsets = computeVerticalOffsets(snap);
 
             // Group alive layers by (type, range)
-            var groups = {};
-            army.layers.forEach(function (l) {
+            const groups = {};
+            army.layers.forEach((l) => {
                 if (l.count <= 0) return;
-                var stats = TroopData.getStats(l.type, l.tier);
-                var key = l.type + '_R' + stats.range;
+                const stats = TroopData.getStats(l.type, l.tier);
+                const key = `${l.type}_R${stats.range}`;
                 if (!groups[key]) {
                     groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
                 }
                 if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
             });
 
-            for (var key in groups) {
-                var g = groups[key];
+            for (const key in groups) {
+                const g = groups[key];
                 if (g.range <= 50) continue;
 
-                var enginePos = getLayerEnginePos(g.type, g.repTier, side);
-                var extentPos;
-                if (side === 'ATT') {
-                    extentPos = Math.min(enginePos + g.range, BATTLEFIELD_LENGTH);
-                } else {
-                    extentPos = Math.max(enginePos - g.range, 0);
-                }
+                const enginePos = getLayerEnginePos(g.type, g.repTier, side);
+                const extentPos = side === 'ATT'
+                    ? Math.min(enginePos + g.range, BATTLEFIELD_LENGTH)
+                    : Math.max(enginePos - g.range, 0);
 
-                var screenStart = mapToScreen(Math.min(enginePos, extentPos));
-                var screenEnd = mapToScreen(Math.max(enginePos, extentPos));
-                var color = TroopData.TYPES[g.type].color;
-                var yOffset = vOffsets[g.type + '_' + g.repTier] || 0;
+                const screenStart = mapToScreen(Math.min(enginePos, extentPos));
+                const screenEnd = mapToScreen(Math.max(enginePos, extentPos));
+                const color = TroopData.TYPES[g.type].color;
+                const yOffset = vOffsets[`${g.type}_${g.repTier}`] || 0;
 
-                var bar = document.createElement('div');
+                const bar = document.createElement('div');
                 bar.className = 'bf-range-indicator';
                 bar.dataset.indSide = side;
                 bar.dataset.indType = g.type;
-                bar.style.left = screenStart + '%';
-                bar.style.width = (screenEnd - screenStart) + '%';
-                bar.style.top = (Y_POSITIONS[g.type] + yOffset) + '%';
+                bar.style.left = `${screenStart}%`;
+                bar.style.width = `${screenEnd - screenStart}%`;
+                bar.style.top = `${Y_POSITIONS[g.type] + yOffset}%`;
                 bar.style.background = color;
                 container.appendChild(bar);
             }
@@ -772,45 +769,42 @@ var Battlefield = (function () {
     }
 
     function renderAllSpeedProjections() {
-        ['ATT', 'DEF'].forEach(function (side) {
-            var army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            var snap = side === 'ATT' ? startAttacker : startDefender;
+        ['ATT', 'DEF'].forEach((side) => {
+            const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+            const snap = side === 'ATT' ? startAttacker : startDefender;
             if (!army || !snap) return;
-            var vOffsets = computeVerticalOffsets(snap);
+            const vOffsets = computeVerticalOffsets(snap);
 
             // Group alive layers by (type, range)
-            var groups = {};
-            army.layers.forEach(function (l) {
+            const groups = {};
+            army.layers.forEach((l) => {
                 if (l.count <= 0) return;
-                var stats = TroopData.getStats(l.type, l.tier);
-                var key = l.type + '_R' + stats.range;
+                const stats = TroopData.getStats(l.type, l.tier);
+                const key = `${l.type}_R${stats.range}`;
                 if (!groups[key]) {
                     groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
                 }
                 if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
             });
 
-            for (var key in groups) {
-                var g = groups[key];
-                var enginePos = getLayerEnginePos(g.type, g.repTier, side);
-                var speed = getSpeed(g.type);
-                var projectedPos;
-                if (side === 'ATT') {
-                    projectedPos = Math.min(enginePos + speed, BATTLEFIELD_LENGTH);
-                } else {
-                    projectedPos = Math.max(enginePos - speed, 0);
-                }
+            for (const key in groups) {
+                const g = groups[key];
+                const enginePos = getLayerEnginePos(g.type, g.repTier, side);
+                const speed = getSpeed(g.type);
+                const projectedPos = side === 'ATT'
+                    ? Math.min(enginePos + speed, BATTLEFIELD_LENGTH)
+                    : Math.max(enginePos - speed, 0);
 
-                var screenX = mapToScreen(projectedPos);
-                var color = TroopData.TYPES[g.type].color;
-                var yOffset = vOffsets[g.type + '_' + g.repTier] || 0;
+                const screenX = mapToScreen(projectedPos);
+                const color = TroopData.TYPES[g.type].color;
+                const yOffset = vOffsets[`${g.type}_${g.repTier}`] || 0;
 
-                var ghost = document.createElement('div');
+                const ghost = document.createElement('div');
                 ghost.className = 'bf-speed-projection';
                 ghost.dataset.indSide = side;
                 ghost.dataset.indType = g.type;
-                ghost.style.left = screenX + '%';
-                ghost.style.top = (Y_POSITIONS[g.type] + yOffset) + '%';
+                ghost.style.left = `${screenX}%`;
+                ghost.style.top = `${Y_POSITIONS[g.type] + yOffset}%`;
                 ghost.style.borderColor = color;
                 ghost.style.background = color;
                 container.appendChild(ghost);
@@ -819,19 +813,19 @@ var Battlefield = (function () {
     }
 
     function highlightHoveredIndicators(type, side) {
-        container.querySelectorAll('.bf-range-indicator[data-ind-side="' + side + '"][data-ind-type="' + type + '"]').forEach(function (el) {
+        container.querySelectorAll(`.bf-range-indicator[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
             el.style.opacity = '0.22';
         });
-        container.querySelectorAll('.bf-speed-projection[data-ind-side="' + side + '"][data-ind-type="' + type + '"]').forEach(function (el) {
+        container.querySelectorAll(`.bf-speed-projection[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
             el.style.opacity = '0.30';
         });
     }
 
     function resetHoveredIndicators(type, side) {
-        container.querySelectorAll('.bf-range-indicator[data-ind-side="' + side + '"][data-ind-type="' + type + '"]').forEach(function (el) {
+        container.querySelectorAll(`.bf-range-indicator[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
             el.style.opacity = '';
         });
-        container.querySelectorAll('.bf-speed-projection[data-ind-side="' + side + '"][data-ind-type="' + type + '"]').forEach(function (el) {
+        container.querySelectorAll(`.bf-speed-projection[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
             el.style.opacity = '';
         });
     }
@@ -839,9 +833,9 @@ var Battlefield = (function () {
     // --- Helpers ---
 
     function snapshotArmy(army) {
-        return army.layers.map(function (l) {
-            return { type: l.type, tier: l.tier, count: l.count, startCount: l.startCount };
-        });
+        return army.layers.map((l) => ({
+            type: l.type, tier: l.tier, count: l.count, startCount: l.startCount
+        }));
     }
 
     function formatNum(n) {

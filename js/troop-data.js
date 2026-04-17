@@ -1,7 +1,7 @@
 var TroopData = (function () {
     'use strict';
 
-    var TYPES = {
+    const TYPES = {
         SIEGE:   { name: 'Siege',   color: '#e07040', bgClass: 'bg-siege',   borderClass: 'border-siege',   colorClass: 'color-siege'   },
         RANGED:  { name: 'Ranged',  color: '#4caf6e', bgClass: 'bg-ranged',  borderClass: 'border-ranged',  colorClass: 'color-ranged'  },
         MOUNTED: { name: 'Mounted', color: '#5b9bd5', bgClass: 'bg-mounted', borderClass: 'border-mounted', colorClass: 'color-mounted' },
@@ -9,10 +9,10 @@ var TroopData = (function () {
     };
 
     // Phase order: fastest actual speed first (game-DB values)
-    var PHASE_ORDER = ['GROUND', 'MOUNTED', 'RANGED', 'SIEGE'];
+    const PHASE_ORDER = ['GROUND', 'MOUNTED', 'RANGED', 'SIEGE'];
 
     // Targeting priority chains (1 = first choice)
-    var TARGET_PRIORITY = {
+    const TARGET_PRIORITY = {
         SIEGE:   ['SIEGE', 'RANGED', 'GROUND', 'MOUNTED'],
         RANGED:  ['MOUNTED', 'RANGED', 'GROUND', 'SIEGE'],
         MOUNTED: ['GROUND', 'SIEGE', 'MOUNTED', 'RANGED'],
@@ -23,13 +23,13 @@ var TroopData = (function () {
     // Tier-dependent: T1-T10 and T11+ have different matrices
     // Source: community research by @DerrickDefies
     // https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s
-    var DAMAGE_MULTIPLIERS_LOW = {
+    const DAMAGE_MULTIPLIERS_LOW = {
         GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
         RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
         MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 0.9 },
         SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.5 }
     };
-    var DAMAGE_MULTIPLIERS_HIGH = {
+    const DAMAGE_MULTIPLIERS_HIGH = {
         GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
         RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
         MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 1.1 },
@@ -37,15 +37,15 @@ var TroopData = (function () {
     };
 
     function getMultiplier(attackerType, defenderType, attackerTier) {
-        var table = attackerTier >= 11 ? DAMAGE_MULTIPLIERS_HIGH : DAMAGE_MULTIPLIERS_LOW;
-        var m = table[attackerType];
+        const table = attackerTier >= 11 ? DAMAGE_MULTIPLIERS_HIGH : DAMAGE_MULTIPLIERS_LOW;
+        const m = table[attackerType];
         return (m && m[defenderType]) || 1.0;
     }
 
-    var TIERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+    const TIERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
     // Base stats: [ATK, DEF, HP, Speed, Range]
-    var STATS = {
+    const STATS = {
         GROUND: {
             1:  [100,   300,    600,   350, 50],
             2:  [140,   410,    810,   350, 50],
@@ -121,7 +121,7 @@ var TroopData = (function () {
     };
 
     function getStats(type, tier) {
-        var s = STATS[type][tier];
+        const s = STATS[type][tier];
         return { atk: s[0], def: s[1], hp: s[2], speed: s[3], range: s[4] };
     }
 
