@@ -161,16 +161,40 @@ Source: evonyanswers.com — "Order of Movement and/or Attack for Troop Groups i
 
 ## Battlefield
 
-Linear battlefield, **1500 units** long. Attacker starts at position 0, defender at position 1500.
+Linear battlefield. Attacker starts at position 0, defender starts at the far end. Each troop type has its own independent position on the field (8 positions total: 4 per side). Troops never share a forced formation — they advance and hold independently.
+
+**Current simulator assumption:** fixed length **1500 units**.
 
 ```
 Attacker start (0)                Defender start (1500)
     ├──────── 1500 units ────────┤
 ```
 
-Each troop type has its own independent position on the field (8 positions total: 4 per side). Troops never share a forced formation — they advance and hold independently.
+**Confidence: LOW — disputed (2026-04-17).** The 1500 value originates from evonyanswers.com citing @DerrickDefies, without a primary game-database reference. A competing community formula proposes:
 
-Source: game database analysis by [@DerrickDefies](https://www.youtube.com/@DerrickDefies), confirmed by evonyanswers.com.
+```
+BATTLEFIELD_LENGTH = max(base_range(layer) for layer in all_layers_present) + 200
+```
+
+Under that formula the field is dynamic and matchup-dependent:
+
+| Highest base range present | Field under H2 |
+|----------------------------|----------------|
+| Melee only (50)            | 250            |
+| + Ranged (500)             | 700            |
+| + Siege T1–T4 (900)        | 1,100          |
+| + Siege T5–T8 (1,000)      | 1,200          |
+| + Siege T9–T10 (1,100)     | 1,300          |
+| + Siege T11–T12 (1,200)    | 1,400          |
+| + Siege T13–T16 (1,400)    | 1,600          |
+
+**Notable:** no troop-tier combination yields exactly 1500 under H2, so at least one of the two hypotheses is wrong — they cannot both be correct simultaneously.
+
+The H2 formula is defined on **base** range values (as listed in this document). Range-modifying buffs (research, skills, gear) are excluded from the formula.
+
+**Test protocol:** `openspec/changes/2026-04-17-investigate-battlefield-size/design.md` defines an in-game differential test (siege-ingredient test on pure-Ranged matchups) whose outcome adjudicates between the two hypotheses. Until that test is run, both hypotheses remain live and `BATTLEFIELD_LENGTH = 1500` in the codebase should be treated as a provisional value.
+
+Source: evonyanswers.com citing @DerrickDefies — primary database reference not yet located.
 
 ---
 
@@ -211,7 +235,7 @@ Siege T13–T15:  75  + 1400 = 1475
 Siege T16:      76  + 1400 = 1476
 ```
 
-**Engagement cascade on a 1500 field (typical, both sides identical):**
+**Engagement cascade (typical, both sides identical, assuming a 1500-unit field):**
 
 ```
 Round 1:  Siege (ER 975+) detects approaching troops. Ground/Mounted advance.
@@ -221,9 +245,9 @@ Round ~5: Ranged reach engagement range.
 Round ~7: All types engaged, siege firing into melee zone.
 ```
 
-On the shorter 1500-unit field, engagements happen much faster than the old 5200-unit model.
+The cascade above reflects the current simulator assumption (field = 1500). If the alternative `max(base_range) + 200` hypothesis is correct (see Battlefield section), the cascade collapses substantially for matchups without T13+ Siege — Ranged pairs could engage as early as round 1 on a 700-unit field.
 
-**Confidence:** Minimum-distance movement, effective range concept, and engagement lock from evonyanswers.com (based on @DerrickDefies analysis). Battlefield length 1500 confirmed.
+**Confidence:** Minimum-distance movement, effective range concept, and engagement lock from evonyanswers.com (based on @DerrickDefies analysis). **Battlefield length is disputed — see Battlefield section.**
 
 ---
 
@@ -358,7 +382,8 @@ The following values are used as-is from the game UI but have **not been confirm
 - **Mounted actual range:** Currently 50. Unconfirmed against DB files.
 - **Siege T16 actual range:** Currently inferred as 1,400 (via the consistent 14/9 displayed/actual ratio from T1–T15). Not yet DB-confirmed.
 - **MER gear bonuses:** The full MER formula includes gear bonuses (15% of actual range + 20 flat). Not modeled yet — base MER only.
-- **Round cap:** Whether march-vs-march battles on a 1500-unit field have a fixed round limit.
+- **Battlefield length:** Two live hypotheses — fixed 1500 vs. `max(base_range) + 200`. See the Battlefield section above and `openspec/changes/2026-04-17-investigate-battlefield-size/` for the test protocol.
+- **Round cap:** Whether march-vs-march battles have a fixed round limit (often cited as 4, unconfirmed).
 - **T17 and beyond:** Unknown whether further tiers exist or are planned.
 
 **Recently resolved (2026-04-15):** Ground actual speed (350), Ranged actual speed (100), and Ranged actual range (500) are all confirmed — no UI-doubling beyond Mounted. The "Siege > Ground > Ranged & Mounted" range-ordering claim is disproven.

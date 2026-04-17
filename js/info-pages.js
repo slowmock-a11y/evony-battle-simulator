@@ -1,7 +1,7 @@
 var InfoPages = (function () {
     'use strict';
 
-    const VIEWS = ['simulator', 'about', 'mechanics'];
+    const VIEWS = ['simulator', 'about', 'mechanics', 'battlefield-investigation'];
 
     function switchView(name) {
         VIEWS.forEach((v) => {
@@ -24,10 +24,11 @@ var InfoPages = (function () {
                 }
             });
         });
-        document.querySelectorAll('.back-link[data-view]').forEach((link) => {
+        document.querySelectorAll('a[data-view]').forEach((link) => {
             link.addEventListener('click', function (e) {
                 e.preventDefault();
                 switchView(this.getAttribute('data-view'));
+                window.scrollTo(0, 0);
             });
         });
     }

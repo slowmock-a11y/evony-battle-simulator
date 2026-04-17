@@ -144,6 +144,12 @@
             <section class="info-content">
                 <a href="#" class="back-link" data-view="simulator">&#8592; Back to Setup</a>
                 <h2>About</h2>
+                <blockquote style="border-left: 3px solid #5b9bd5; padding: 0.5rem 1rem; margin: 1rem 0; font-style: italic; color: #bbb;">
+                    &ldquo;Evony &mdash; A war game full of adults acting like children throwing away tons of money to fill in that void of acceptance in their lives.&rdquo;
+                    <footer style="margin-top: 0.5rem; font-style: normal; font-size: 0.85rem; color: #888;">
+                        &mdash; <a href="https://youtu.be/V5wld-IB3j4?t=25" target="_blank" rel="noopener" style="color:#5b9bd5;">Derrick Defies</a>
+                    </footer>
+                </blockquote>
                 <p class="info-lead">
                     The <strong>Evony Battle Simulator</strong> models march-vs-march PvP combat using community-researched battle mechanics.
                     Configure two armies, set buff percentages, and watch the engagement unfold step-by-step on a spatial battlefield.
@@ -161,7 +167,7 @@
                 <ul class="info-list">
                     <li><strong>Army Configuration</strong> &mdash; Set troop counts per type and tier (T1&ndash;T16) for attacker and defender, with ATK/DEF/HP buff percentages per troop type.</li>
                     <li><strong>Step / Round / Full Playback</strong> &mdash; Advance the battle one attack at a time, one full round, or run to completion, with adjustable speed.</li>
-                    <li><strong>Spatial Battlefield</strong> &mdash; A 1500-unit linear field with troop movement, range indicators, and attack arrows.</li>
+                    <li><strong>Spatial Battlefield</strong> &mdash; A 1500-unit linear field with troop movement, range indicators, and attack arrows. (Field length is currently <a href="#" data-view="battlefield-investigation" style="color:#e9a045;">under investigation</a> &mdash; a competing hypothesis says field = max base range + 200.)</li>
                     <li><strong>Battle Log &amp; Summary</strong> &mdash; Filterable log of every attack event, plus a side-by-side loss comparison panel.</li>
                 </ul>
 
@@ -242,9 +248,11 @@
 
                 <!-- Battlefield & Movement -->
                 <h3>Battlefield &amp; Movement</h3>
-                <p>Linear battlefield, <strong>1,500 units</strong> long. Attacker starts at position 0, defender at 1,500. Each troop type has its own independent position (8 positions total: 4 per side).</p>
+                <p>Linear battlefield. Attacker starts at position 0, defender at the far end. Each troop type has its own independent position (8 positions total: 4 per side).</p>
+                <p style="color:#e9a045;"><strong>Field length is disputed.</strong> The simulator currently assumes a fixed length of <strong>1,500 units</strong>, but this value has no primary game-database citation. A competing community formula proposes a dynamic field: <code>max(base range of any troop type present) + 200</code>, which would range from 250 (pure melee) to 1,600 (with T13+ Siege present). The two hypotheses are mutually exclusive &mdash; no troop composition yields exactly 1,500 under the dynamic formula. Until an in-game test resolves this, the 1,500 value should be treated as provisional. See the <a href="#" data-view="battlefield-investigation" style="color:#5b9bd5;">battlefield-length investigation page</a> for the two hypotheses, the differential test protocol, and how to share your findings.</p>
                 <div class="info-diagram">
-                    Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 1,500 units &mdash;&mdash;&mdash;&mdash;&mdash; Defender (1500)
+                    Attacker (0) &mdash;&mdash;&mdash;&mdash;&mdash; 1,500 units* &mdash;&mdash;&mdash;&mdash;&mdash; Defender (1500)<br>
+                    <span style="font-size:0.8rem;color:#888;">*provisional &mdash; see disputed-field note above</span>
                 </div>
                 <p>Each round, <strong>before</strong> attacking, each troop type evaluates movement:</p>
                 <ul class="info-list">
@@ -262,14 +270,14 @@
                     <li><strong>Melee collision:</strong> When opposing troops would pass through each other, they stop at melee range (50 units apart).</li>
                     <li><strong>Engagement lock:</strong> Once attacking a target type, troops stay locked on until that type is eliminated or a higher-priority type enters effective range.</li>
                 </ul>
-                <p><strong>Typical engagement timeline on 1,500-unit field (both sides identical):</strong></p>
+                <p><strong>Typical engagement timeline (assuming the provisional 1,500-unit field, both sides identical):</strong></p>
                 <ul class="info-list info-list-muted">
                     <li>Round 1: Siege detects approaching troops. Ground/Mounted advance.</li>
                     <li>Round 2: Mounted pairs close to melee near midfield.</li>
                     <li>Round 3: Ground pairs lock in melee.</li>
                     <li>Round ~5: Ranged reach engagement range.</li>
                 </ul>
-                <p class="info-note">On the shorter 1,500-unit field, engagements happen much faster. All values use actual game-DB data (UI displays inflated numbers for some stats).</p>
+                <p class="info-note">Timeline reflects the 1,500-unit assumption. Under the competing dynamic-field hypothesis, matchups without T13+ Siege would collapse the cascade substantially &mdash; e.g. Ranged pairs could engage as early as Round 1 on a 700-unit field. All other values use actual game-DB data (UI displays inflated numbers for some stats).</p>
                 <p class="info-section-refs">
                     Sources:
                     <a href="https://www.evonytips.com/index/strategy/how-the-battles-work-battle-mechanics" target="_blank" rel="noopener">EvonyTips &mdash; How Battles Work</a> &bull;
@@ -411,6 +419,235 @@
                 </p>
             </section>
         </div><!-- /view-mechanics -->
+
+        <div id="view-battlefield-investigation" class="info-page" style="display:none">
+            <section class="info-content">
+                <a href="#" class="back-link" data-view="mechanics">&#8592; Back to Battle Mechanics</a>
+                <h2>Battlefield Length &mdash; Open Investigation</h2>
+                <p class="info-lead">
+                    This page documents an <strong>unresolved factual uncertainty</strong> in the simulator: the length of the battlefield.
+                    The simulator currently uses a fixed value of <strong>1,500 units</strong>, but that value is disputed.
+                    Until an in-game test resolves the question, simulated outcomes for matchups where engagement timing matters may be systematically off.
+                </p>
+                <p class="info-lead" style="color:#e9a045;">
+                    <strong>Status (2026-04-17):</strong> open question, confidence LOW. Test protocol defined, awaiting in-game runs.
+                </p>
+
+                <h3>Why this matters</h3>
+                <p>
+                    Battlefield length determines how many rounds of movement each troop type needs before it can fire.
+                    A longer field means slower or shorter-range types spend more rounds being shot at before they close to melee.
+                    That changes survivor counts in every asymmetric matchup.
+                </p>
+                <p>
+                    The simulator hard-codes <code>BATTLEFIELD_LENGTH = 1500</code> in both <code>js/battle-engine.js</code> and <code>js/battlefield.js</code>.
+                    The mechanics fact sheet previously labeled 1500 as &ldquo;confirmed,&rdquo; but that label traces to a single community source chain
+                    (<a href="https://www.evonyanswers.com" target="_blank" rel="noopener" style="color:#5b9bd5;">evonyanswers.com</a>
+                    citing <a href="https://www.youtube.com/@DerrickDefies" target="_blank" rel="noopener" style="color:#5b9bd5;">@DerrickDefies</a>) without a primary game-database reference.
+                </p>
+
+                <h3>The two hypotheses</h3>
+                <p><strong>H1 &mdash; Fixed field:</strong></p>
+                <div class="info-diagram">
+                    BATTLEFIELD_LENGTH = 1500&nbsp;&nbsp;(constant, independent of composition)
+                </div>
+                <p><strong>H2 &mdash; Dynamic field on base range:</strong></p>
+                <div class="info-diagram">
+                    BATTLEFIELD_LENGTH = max(base_range(layer) for layer in all_layers_present) + 200
+                </div>
+                <p>
+                    The H2 formula uses <strong>base</strong> range values (Ground 50, Mounted 50, Ranged 500, Siege 900&ndash;1400 by tier band).
+                    Range-modifying buffs (research, skills, gear) are explicitly excluded from the formula.
+                </p>
+                <p>Under H2, field length is matchup-dependent:</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Highest base range present</th><th>Field under H2</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Melee only (50)</td><td>250</td></tr>
+                        <tr><td>+ Ranged (500)</td><td>700</td></tr>
+                        <tr><td>+ Siege T1&ndash;T4 (900)</td><td>1,100</td></tr>
+                        <tr><td>+ Siege T5&ndash;T8 (1,000)</td><td>1,200</td></tr>
+                        <tr><td>+ Siege T9&ndash;T10 (1,100)</td><td>1,300</td></tr>
+                        <tr><td>+ Siege T11&ndash;T12 (1,200)</td><td>1,400</td></tr>
+                        <tr><td>+ Siege T13&ndash;T16 (1,400)</td><td>1,600</td></tr>
+                    </tbody>
+                </table>
+                <p class="info-note">
+                    Notable: no troop-tier combination yields exactly 1,500 under H2.
+                    This means at least one of the two hypotheses must be wrong &mdash; they cannot both be correct.
+                </p>
+
+                <h3>Why a differential test instead of an absolute prediction</h3>
+                <p>
+                    In-game battle reports on this server expose <strong>only start counts and final survivor counts</strong> per layer.
+                    There is no round counter, no timeline, no per-round damage log.
+                    An absolute-prediction test (&ldquo;the sim says 743 Ranged survive; did reality match?&rdquo;) depends on matching every buff,
+                    every coefficient, every tier stat exactly. Too brittle.
+                </p>
+                <p>
+                    Instead, we use a <strong>differential test</strong>: run two in-game battles that differ by <strong>one ingredient</strong>,
+                    where H1 and H2 disagree about whether that ingredient matters.
+                    Buffs held constant between the two runs cancel out. Only the hypothesis-relevant variable drives the delta.
+                </p>
+
+                <h3>Test protocol &mdash; the siege-ingredient test</h3>
+                <p><strong>Run A (baseline):</strong></p>
+                <ul class="info-list">
+                    <li>Attacker: 1000 Ranged T1</li>
+                    <li>Defender: 1000 Ranged T1</li>
+                    <li>Everything else: zero (no Ground, no Mounted, no Siege, no walls, no traps)</li>
+                </ul>
+                <p><strong>Run B (ingredient added):</strong></p>
+                <ul class="info-list">
+                    <li>Attacker: 1000 Ranged T1 <strong>+ 1 Siege T13</strong> (single unit, purely to stretch the field under H2)</li>
+                    <li>Defender: 1000 Ranged T1 (unchanged)</li>
+                    <li>Everything else: zero</li>
+                </ul>
+                <p>The Siege T13 unit is chosen because:</p>
+                <ul class="info-list">
+                    <li>Its base range (1,400) is the maximum in-game, so it maximises H2's field-length jump: <strong>700 &rarr; 1,600</strong>.</li>
+                    <li>A count of 1 contributes negligibly to damage output (1 &times; 2,780 ATK &lt;&lt; 1000 &times; 130 &times; 0.29 Ranged mutual output), so its direct combat effect is below the noise floor.</li>
+                    <li>T13 is more accessible than T14&ndash;T16 for most players; T14/T15/T16 would also work and are interchangeable from a range standpoint (all are 1,400).</li>
+                </ul>
+
+                <h3>Predicted outcomes</h3>
+                <table class="info-table">
+                    <thead>
+                        <tr><th></th><th>H1: field = 1500</th><th>H2: field = max_base_range + 200</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Run A</strong> (Ranged only)</td>
+                            <td>Field 1500. Ranged fires starting round ~5, battle continues to exhaustion.</td>
+                            <td>Field = 500+200 = 700. Ranged fires starting round 1. More firing rounds &rarr; much deeper mutual attrition.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Run B</strong> (Ranged + 1 Siege T13)</td>
+                            <td>Field 1500 (unchanged). Single siege unit is irrelevant. Essentially identical to Run A.</td>
+                            <td>Field = 1400+200 = 1,600. Ranged now needs ~6 rounds to close. Fewer firing rounds &rarr; less attrition than Run A.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>&Delta; (B &minus; A) Ranged casualties</strong></td>
+                            <td>&asymp; 0 (within RNG noise)</td>
+                            <td>Clearly negative (Run B preserves more Ranged than Run A)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    The adjudicating signal: <strong>does adding a single Siege T13 to one side of a pure-Ranged matchup change Ranged survivor counts?</strong>
+                    H1 says no. H2 says yes, materially.
+                </p>
+
+                <h3>Controlling for buffs</h3>
+                <p>Both A and B runs must use:</p>
+                <ul class="info-list">
+                    <li>The <strong>same general</strong> on both sides if possible (alliance partner uses the same level/skill configuration for both), OR the same two generals across runs (do not swap between A and B).</li>
+                    <li><strong>No Range-affecting research, skills, gear, or sub-city tech active on either side.</strong> H2 is defined on base range; if Range is buffed, the field length under H2 is no longer cleanly predictable from the formula.</li>
+                    <li>Preferably: low-tier general, no specialties activated, no monarch gear, no active spiritual beast / dragon bonuses. This minimises absolute-magnitude variance but is not strictly required as long as buffs are identical between runs.</li>
+                </ul>
+                <p>
+                    <strong>ATK/DEF/HP buffs do not need to be zeroed.</strong> They scale both sides' firing output identically and therefore scale total casualties uniformly.
+                    They do not interact with field length. As long as they are held constant between Run A and Run B, the differential signal is preserved.
+                </p>
+
+                <h3>Noise reduction</h3>
+                <p>
+                    A single battle pair (A, B) can be dominated by RNG, accidental asymmetry, or misconfiguration.
+                    <strong>Run each scenario three times</strong> (three A battles, three B battles). Average the Ranged casualty count.
+                </p>
+                <ul class="info-list">
+                    <li><strong>H1 prediction:</strong> |mean_B &minus; mean_A| / mean_A &lt; 2% (the single siege is negligible).</li>
+                    <li><strong>H2 prediction:</strong> &Delta; on attacker and defender Ranged are both positive (more Ranged survive when siege is present) and at least one is &ge; 10% of mean_A.</li>
+                </ul>
+
+                <h3>Running the test &mdash; checklist</h3>
+                <p><strong>1. Pre-test preparation</strong></p>
+                <ul class="info-list">
+                    <li>Identify every source of Range buff available on the server (research, general skills, specialties, gear, sub-city buffs, alliance tech, spiritual beast, dragon, civilisation bonus, monarch equipment) and confirm each can be disabled or is not currently active on the test account.</li>
+                    <li>Recruit an alliance sparring partner willing to run six battles with identical setups. Confirm their general/buff configuration is available and will be held constant across runs.</li>
+                    <li>Screenshot the general, skill activation state, and any visible buff panel on both accounts before the test begins. Store screenshots alongside the results.</li>
+                </ul>
+                <p><strong>2. Run A &mdash; baseline, three repetitions</strong></p>
+                <ul class="info-list info-list-muted">
+                    <li>A1: 1000 Ranged T1 attacker vs 1000 Ranged T1 defender. Record attacker/defender Ranged survivors.</li>
+                    <li>A2: same setup as A1. Record.</li>
+                    <li>A3: same setup as A1. Record.</li>
+                </ul>
+                <p><strong>3. Run B &mdash; siege ingredient added, three repetitions</strong></p>
+                <ul class="info-list info-list-muted">
+                    <li>B1: (1000 Ranged T1 + 1 Siege T13) attacker vs 1000 Ranged T1 defender. Record.</li>
+                    <li>B2: same setup as B1. Record.</li>
+                    <li>B3: same setup as B1. Record.</li>
+                </ul>
+                <p><strong>4. Analysis</strong></p>
+                <ul class="info-list">
+                    <li>Compute mean Ranged survivors across A1&ndash;A3 and across B1&ndash;B3 on each side.</li>
+                    <li>Compute &Delta; = mean_B &minus; mean_A for attacker Ranged and for defender Ranged.</li>
+                    <li>Apply the H1 vs H2 thresholds from &ldquo;Noise reduction&rdquo; above.</li>
+                </ul>
+
+                <h3>Reporting template</h3>
+                <p>For each run, record:</p>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Run</th><th>Side</th><th>Start Ranged T1</th><th>Start Siege T13</th><th>Survivor Ranged T1</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>A1</td><td>ATT</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>A1</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>A2</td><td>ATT</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>A2</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>A3</td><td>ATT</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>A3</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B1</td><td>ATT</td><td>1000</td><td>1</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B1</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B2</td><td>ATT</td><td>1000</td><td>1</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B2</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B3</td><td>ATT</td><td>1000</td><td>1</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>B3</td><td>DEF</td><td>1000</td><td>0</td><td>&mdash;</td><td></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Known risks / caveats</h3>
+                <ul class="info-list info-list-muted">
+                    <li><strong>Alliance-partner cooperation needed.</strong> Without a willing sparring partner, the player must find a target whose defence composition they know exactly. The differential design tolerates some unknowns as long as they are constant between A and B.</li>
+                    <li><strong>Hidden round cap.</strong> If march-vs-march has an undocumented round cap, H1's Run A might show very few casualties (no Ranged fires before cap expires). That is itself a useful data point and strengthens the test rather than invalidating it.</li>
+                    <li><strong>Ranged-buff leakage.</strong> If a buff that affects Range is overlooked, the H2 formula input is wrong. The pre-test preparation step asks you to enumerate and disable them.</li>
+                    <li><strong>Damage-formula RNG on this server.</strong> If there is RNG, the three-run average mitigates but does not eliminate it. If results are borderline, extend to 5 or 7 runs.</li>
+                    <li><strong>MER (buffed range) variant not addressed.</strong> If the field uses buffed MER rather than base range, the formula is again different. If Run A and Run B behave per H2 but absolute magnitudes disagree with predicted values, MER may be the next hypothesis to test.</li>
+                    <li><strong>Static vs dynamic layer death.</strong> The current test cannot distinguish whether field length depends on &ldquo;layers present at start&rdquo; or &ldquo;layers alive now.&rdquo; A multi-phase follow-up test is needed for that.</li>
+                </ul>
+
+                <h3>Follow-up decision tree</h3>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Test result</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>H1 confirmed</strong></td><td>Raise confidence back to HIGH with a direct primary source citation. Close this investigation.</td></tr>
+                        <tr><td><strong>H2 confirmed</strong></td><td>Open a new change to replace <code>BATTLEFIELD_LENGTH</code> in <code>js/battle-engine.js</code> and <code>js/battlefield.js</code> with a derived value; update the axis and range-indicator UI to handle variable field length; rewrite scenarios in specs that assume 1500.</td></tr>
+                        <tr><td><strong>Ambiguous</strong></td><td>Keep the open question, add measured values to the facts document, and define a sharper follow-up test.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Share your findings</h3>
+                <p>
+                    If you run any version of this test &mdash; full six-battle protocol or even a partial attempt &mdash; please post the numbers so the community can triangulate.
+                </p>
+                <ul class="info-list">
+                    <li><a href="https://github.com/slowmock-a11y/evony-battle-simulator/discussions" target="_blank" rel="noopener" style="color:#5b9bd5;">GitHub Discussions</a> &mdash; preferred (threaded, persistent).</li>
+                    <li><a href="https://github.com/slowmock-a11y/evony-battle-simulator/issues" target="_blank" rel="noopener" style="color:#5b9bd5;">Open an issue</a> if you believe you have a decisive result.</li>
+                </ul>
+
+                <p class="info-section-refs" style="margin-top: 1rem;">
+                    This investigation also lives in the repository as an OpenSpec change under
+                    <code>openspec/changes/2026-04-17-investigate-battlefield-size/</code> (not yet committed at the time of writing).
+                    The content on this page is authoritative while the OpenSpec change is pending.
+                </p>
+            </section>
+        </div><!-- /view-battlefield-investigation -->
     </main>
 
     <script src="js/info-pages.js"></script>
