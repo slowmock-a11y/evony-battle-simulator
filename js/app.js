@@ -137,33 +137,44 @@ var App = (function () {
         BattleLog.addEntry(evt, index, total);
     }
 
+    function updateFullBtn() {
+        const btn = document.getElementById('btn-full');
+        if (Playback.isAnimating()) {
+            btn.textContent = '\u23F8 Pause';
+            btn.classList.add('btn-active');
+        } else {
+            btn.innerHTML = '&#9654;&#9654;&#9654; Full Battle';
+            btn.classList.remove('btn-active');
+        }
+    }
+
     function onBattleComplete() {
         Battlefield.showEndState(battleResult);
         Battlefield.clearHighlights();
         updateComparison();
+        updateFullBtn();
     }
 
     function onStep() {
         if (!ensureSimulated()) return;
         Playback.step();
+        updateFullBtn();
     }
 
     function onRound() {
         if (!ensureSimulated()) return;
         Playback.playRound();
+        updateFullBtn();
     }
 
     function onFull() {
         if (!ensureSimulated()) return;
         Playback.playFull();
+        updateFullBtn();
     }
 
     function onReset() {
         Playback.reset();
-        Battlefield.reset();
-        Battlefield.hideSummary();
-        Battlefield.resetPhase();
-        BattleLog.clear();
 
         if (isSimulated && battleResult) {
             previousResult = {
@@ -180,6 +191,15 @@ var App = (function () {
         battleResult = null;
         displayAtt = null;
         displayDef = null;
+
+        Battlefield.reset();
+
+        // Re-simulate to restore troops at starting positions
+        runSimulation();
+
+        Battlefield.hideSummary();
+        Battlefield.resetPhase();
+        updateFullBtn();
     }
 
     // --- Result Comparison ---

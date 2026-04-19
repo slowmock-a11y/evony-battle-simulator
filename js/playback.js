@@ -21,7 +21,7 @@ var Playback = (function () {
         return parseInt(document.getElementById('speed-slider').value, 10) || 200;
     }
 
-    function step() {
+    function _advance() {
         if (currentIndex >= events.length) {
             if (onCompleteCallback) onCompleteCallback();
             return false;
@@ -35,19 +35,28 @@ var Playback = (function () {
         return true;
     }
 
+    function step() {
+        stop();
+        return _advance();
+    }
+
     function playRound() {
+        stop();
         if (currentIndex >= events.length) {
             if (onCompleteCallback) onCompleteCallback();
             return;
         }
         const targetRound = events[currentIndex].round;
         while (currentIndex < events.length && events[currentIndex].round === targetRound) {
-            step();
+            _advance();
         }
     }
 
     function playFull() {
-        if (isPlaying) return;
+        if (isPlaying) {
+            stop();
+            return;
+        }
         isPlaying = true;
         const speed = getSpeed();
 
@@ -56,7 +65,7 @@ var Playback = (function () {
                 isPlaying = false;
                 return;
             }
-            step();
+            _advance();
             if (currentIndex < events.length) {
                 animationTimer = setTimeout(tick, speed);
             } else {
@@ -85,6 +94,10 @@ var Playback = (function () {
         return { current: currentIndex, total: events.length };
     }
 
+    function isAnimating() {
+        return isPlaying;
+    }
+
     return {
         load: load,
         step: step,
@@ -93,6 +106,7 @@ var Playback = (function () {
         stop: stop,
         reset: reset,
         isDone: isDone,
-        getProgress: getProgress
+        getProgress: getProgress,
+        isAnimating: isAnimating
     };
 })();
