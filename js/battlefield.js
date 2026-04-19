@@ -447,7 +447,7 @@ var Battlefield = (function () {
             svgLine.style.strokeDasharray = len;
             svgLine.style.strokeDashoffset = len;
             svgLine.getBoundingClientRect();
-            if (playSpeed < 100) {
+            if (playSpeed < 200) {
                 svgLine.style.transition = '';
                 svgLine.style.strokeDashoffset = '0';
             } else {
