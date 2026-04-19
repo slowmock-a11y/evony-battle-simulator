@@ -23,8 +23,10 @@ Unit markers SHALL be arranged vertically by range: Siege at the top (back line,
 - **WHEN** both sides have all four troop types
 - **THEN** Siege markers are near the top of the battlefield, Ground markers near the bottom, with Ranged and Mounted in between
 
-### Requirement: X-axis positioning by speed and phase
-Unit markers SHALL advance horizontally toward the center line as the battle progresses through phases. The X position SHALL be calculated from: `timeFactor × speedFactor`, where `timeFactor` derives from the current phase index and `speedFactor` is proportional to the troop type's speed stat. Faster troops (Ground, speed 350) SHALL advance further toward the center than slower troops (Siege, speed 75).
+### Requirement: X-axis positioning follows frontmost alive layer in group
+Unit markers SHALL advance horizontally toward the center line as the battle progresses, using engine-tracked per-tier positions. Because markers group tiers that share a (type, base-range) band into a single visual element, a grouped marker's displayed X SHALL reflect the engine position of the **frontmost currently alive** layer in its group. When the starting rep tier dies mid-battle, the marker SHALL continue to advance with the remaining alive tiers in its group. When every tier in the group is dead, the marker SHALL remain at its last valid position and SHALL be rendered as eliminated (faded via the `.eliminated` class).
+
+The underlying engine SHALL continue to track positions per tier and only update positions for layers with `count > 0`. This requirement governs the presentation layer only.
 
 #### Scenario: Pre-battle positioning
 - **WHEN** the battle has not yet started (no phase active)
@@ -37,6 +39,14 @@ Unit markers SHALL advance horizontally toward the center line as the battle pro
 #### Scenario: Phase progression causes movement
 - **WHEN** the phase advances from Siege to Ranged
 - **THEN** all unit markers move closer to the center, with faster troops having moved proportionally more
+
+#### Scenario: Rep tier dies, surviving tiers continue advancing
+- **WHEN** the highest-tier Ground layer on the attacker side is wiped in round 4, while lower-tier Ground layers in the same group remain alive and continue moving forward each round
+- **THEN** the attacker's Ground marker continues to advance each round toward the center, tracking the surviving lower-tier Ground layers, and does not freeze at round 4's position
+
+#### Scenario: Attack arrow origin matches alive attacker
+- **WHEN** a lower-tier Ground layer attacks an enemy Siege layer at engine distance 50 in a round where the Ground group's starting rep tier has been dead for several rounds
+- **THEN** the attack arrow originates from the Ground marker's current on-screen position (the alive attacking tier's engine position), producing a short arrow spanning the ~50-unit engine distance, not a long arrow reaching from the rep tier's death location
 
 ### Requirement: Smooth position transitions
 Unit markers SHALL animate smoothly between positions when the phase changes, using CSS transitions on the `left` property.

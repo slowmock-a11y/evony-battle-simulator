@@ -95,10 +95,26 @@ var Battlefield = (function () {
         return offsets;
     }
 
-    function calcLayerPosition(type, tier, side) {
+    // Resolve the tier to use for position lookup within a grouped marker.
+    // Position must track alive layers — dead tiers freeze their engine position
+    // when count hits 0, so using a dead rep tier pins the marker to a grave.
+    function resolvePositionTier(type, groupTiers, army) {
+        if (!army) return groupTiers[groupTiers.length - 1];
+        for (let i = groupTiers.length - 1; i >= 0; i--) {
+            const tier = groupTiers[i];
+            for (let j = 0; j < army.layers.length; j++) {
+                const l = army.layers[j];
+                if (l.type === type && l.tier === tier && l.count > 0) return tier;
+            }
+        }
+        return groupTiers[groupTiers.length - 1];
+    }
+
+    function calcLayerPosition(type, tier, side, positionTier) {
         const pos = currentPositions || defaultPositions();
         const sideKey = side === 'ATT' ? 'ATT' : 'DEF';
-        const key = `${type}_${tier}`;
+        const lookupTier = positionTier !== undefined ? positionTier : tier;
+        const key = `${type}_${lookupTier}`;
         if (pos[sideKey][key] !== undefined) {
             return { x: mapToScreen(pos[sideKey][key]), y: Y_POSITIONS[type] };
         }
@@ -238,7 +254,8 @@ var Battlefield = (function () {
                 }
             }
 
-            const pos = calcLayerPosition(type, repTier, side);
+            const posTier = resolvePositionTier(type, group.tiers, army);
+            const pos = calcLayerPosition(type, repTier, side, posTier);
             const yOffset = vOffsets[`${type}_${repTier}`] || 0;
             pos.y += yOffset;
 
@@ -657,8 +674,15 @@ var Battlefield = (function () {
         container.querySelectorAll('.unit-marker').forEach((m) => {
             const tier = m.dataset.tier;
             const side = m.dataset.side;
+            const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+            const groupTiers = m.dataset.tiers
+                ? m.dataset.tiers.split(',').map((t) => parseInt(t, 10))
+                : (tier ? [parseInt(tier, 10)] : []);
+            const posTier = groupTiers.length > 0
+                ? resolvePositionTier(m.dataset.type, groupTiers, army)
+                : undefined;
             const pos = tier
-                ? calcLayerPosition(m.dataset.type, parseInt(tier, 10), side)
+                ? calcLayerPosition(m.dataset.type, parseInt(tier, 10), side, posTier)
                 : calcPosition(m.dataset.type, side);
             const offsets = side === 'ATT' ? attOffsets : defOffsets;
             const yOffset = offsets[`${m.dataset.type}_${tier}`] || 0;
