@@ -295,19 +295,42 @@ select { width: auto; text-align: left; }
 }
 .unit-marker.damaged .unit-icon { animation: damage-flash-icon 0.35s ease-out; }
 
-/* Range & speed indicators (persistent, brightened on hover) */
+/* Hover-reveal range bar — shown only while a Ranged/Siege unit is hovered */
 .bf-range-indicator {
     position: absolute; height: 4px;
-    opacity: 0.12; pointer-events: none;
+    opacity: 0.22; pointer-events: none;
     z-index: 2; transform: translateY(-50%);
-    border-radius: 2px; transition: opacity 0.15s;
+    border-radius: 2px;
 }
-.bf-speed-projection {
-    position: absolute; width: 16px; height: 16px;
-    border-radius: 3px; opacity: 0.20;
-    border: 2px dashed; pointer-events: none;
-    z-index: 2; transform: translate(-50%, -50%);
-    transition: opacity 0.15s;
+/* Persistent tip mark at the reach boundary */
+.bf-range-tip {
+    position: absolute; width: 2px; height: 14px;
+    pointer-events: none; z-index: 3;
+    transform: translate(-50%, -50%);
+    border-radius: 1px;
+}
+.bf-range-tip-label {
+    position: absolute; pointer-events: none; z-index: 3;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 10px; font-weight: bold;
+    white-space: nowrap;
+    text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9);
+}
+/* ATT label: text on the left of the tick, arrow pointing right into the tick */
+.bf-range-tip-label[data-ind-side="ATT"] {
+    transform: translate(calc(-100% - 4px), -50%);
+}
+/* DEF label: text on the right of the tick, arrow pointing left into the tick */
+.bf-range-tip-label[data-ind-side="DEF"] {
+    transform: translate(4px, -50%);
+}
+/* Firefight zone — shaded overlap between the two sides' reaches on a row */
+.bf-firefight-zone {
+    position: absolute; height: 22px;
+    background: #e94560; opacity: 0.10;
+    pointer-events: none; z-index: 1;
+    transform: translateY(-50%);
+    border-radius: 2px;
 }
 
 /* X-axis scale */

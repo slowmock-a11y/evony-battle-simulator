@@ -190,9 +190,8 @@ var Battlefield = (function () {
         // Render axis and persistent indicators
         renderAxis();
         renderAllRangeIndicators();
-        renderAllSpeedProjections();
         if (hoveredUnit) {
-            highlightHoveredIndicators(hoveredUnit.type, hoveredUnit.side);
+            highlightHoveredIndicators(hoveredUnit.type, hoveredUnit.side, hoveredUnit.repTier);
         }
     }
 
@@ -290,8 +289,8 @@ var Battlefield = (function () {
             // Hover tooltip + indicators
             marker.addEventListener('mouseenter', (e) => {
                 showTooltip(e, type, buffs, side);
-                hoveredUnit = { type: type, side: side };
-                highlightHoveredIndicators(type, side);
+                hoveredUnit = { type: type, side: side, repTier: repTier };
+                highlightHoveredIndicators(type, side, repTier);
             });
             marker.addEventListener('mousemove', (e) => moveTooltip(e));
             marker.addEventListener('mouseleave', () => {
@@ -647,9 +646,8 @@ var Battlefield = (function () {
         // Re-render indicators at new positions
         clearIndicators();
         renderAllRangeIndicators();
-        renderAllSpeedProjections();
         if (hoveredUnit) {
-            highlightHoveredIndicators(hoveredUnit.type, hoveredUnit.side);
+            highlightHoveredIndicators(hoveredUnit.type, hoveredUnit.side, hoveredUnit.repTier);
         }
     }
 
@@ -682,23 +680,10 @@ var Battlefield = (function () {
 
     let hoveredUnit = null; // { type, side } — tracks current hover for re-show on render
 
-    function getMaxRangeForType(army, type) {
-        let maxRange = 0;
-        army.layers.forEach((l) => {
-            if (l.type === type && l.count > 0) {
-                const stats = TroopData.getStats(l.type, l.tier);
-                if (stats.range > maxRange) maxRange = stats.range;
-            }
-        });
-        return maxRange;
-    }
-
-    function getSpeed(type) {
-        return TroopData.getStats(type, 1).speed;
-    }
-
     function clearIndicators() {
-        container.querySelectorAll('.bf-range-indicator, .bf-speed-projection').forEach((el) => el.remove());
+        container.querySelectorAll(
+            '.bf-range-indicator, .bf-range-tip, .bf-range-tip-label, .bf-firefight-zone'
+        ).forEach((el) => el.remove());
     }
 
     function renderAxis() {
@@ -729,110 +714,170 @@ var Battlefield = (function () {
         return getTypePosition(pos, side, type);
     }
 
+    // Tip markers + firefight-zone shade for Ranged and Siege rows.
+    // One tip per unique buffed range per (type, side); zone uses max reach.
     function renderAllRangeIndicators() {
+        const TYPES_WITH_RANGE = ['RANGED', 'SIEGE'];
+
+        // Per (side, type): list of { range, repTier, unitPos, tipPos } for each unique alive buffed range.
+        const reach = { ATT: {}, DEF: {} };
         ['ATT', 'DEF'].forEach((side) => {
             const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            const snap = side === 'ATT' ? startAttacker : startDefender;
-            if (!army || !snap) return;
-            const vOffsets = computeVerticalOffsets(snap);
+            if (!army) return;
 
-            // Group alive layers by (type, buffed range)
-            const groups = {};
-            army.layers.forEach((l) => {
-                if (l.count <= 0) return;
-                const key = `${l.type}_R${l.range}`;
-                if (!groups[key]) {
-                    groups[key] = { type: l.type, range: l.range, repTier: l.tier };
+            TYPES_WITH_RANGE.forEach((type) => {
+                const byRange = {};
+                army.layers.forEach((l) => {
+                    if (l.type !== type || l.count <= 0 || l.range <= 50) return;
+                    const key = l.range;
+                    if (!byRange[key]) {
+                        byRange[key] = { range: l.range, repTier: l.tier, tiers: [l.tier] };
+                    } else {
+                        byRange[key].tiers.push(l.tier);
+                        if (l.tier > byRange[key].repTier) byRange[key].repTier = l.tier;
+                    }
+                });
+
+                const entries = [];
+                for (const k in byRange) {
+                    const entry = byRange[k];
+                    const unitPos = getLayerEnginePos(type, entry.repTier, side);
+                    const tipPos = side === 'ATT'
+                        ? Math.min(unitPos + entry.range, BATTLEFIELD_LENGTH)
+                        : Math.max(unitPos - entry.range, 0);
+                    entry.tiers.sort((a, b) => a - b);
+                    entries.push({
+                        range: entry.range,
+                        repTier: entry.repTier,
+                        tiers: entry.tiers,
+                        unitPos: unitPos,
+                        tipPos: tipPos
+                    });
                 }
-                if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
+                entries.sort((a, b) => a.range - b.range);
+                reach[side][type] = entries;
             });
+        });
 
-            for (const key in groups) {
-                const g = groups[key];
-                if (g.range <= 50) continue;
+        // Tip marks + labels — one pair per unique range per side.
+        // Vertical layout: a range-based spread across a band centered on the
+        // type's Y (for multi-entry rows like Siege) plus a side offset so ATT
+        // goes up and DEF goes down — prevents ATT/DEF labels colliding when
+        // reaches cross over mid-battle.
+        const VERTICAL_BAND = 16; // % of battlefield height for per-range spread
+        const SIDE_SPREAD = 3;    // % vertical offset per side
+        ['ATT', 'DEF'].forEach((side) => {
+            const sideOffset = side === 'ATT' ? -SIDE_SPREAD : SIDE_SPREAD;
+            TYPES_WITH_RANGE.forEach((type) => {
+                const entries = reach[side][type];
+                if (!entries || entries.length === 0) return;
+                const color = TroopData.TYPES[type].color;
+                const baseY = Y_POSITIONS[type];
+                const n = entries.length;
+                const step = n > 1 ? VERTICAL_BAND / (n - 1) : 0;
 
-                const enginePos = getLayerEnginePos(g.type, g.repTier, side);
-                const extentPos = side === 'ATT'
-                    ? Math.min(enginePos + g.range, BATTLEFIELD_LENGTH)
-                    : Math.max(enginePos - g.range, 0);
+                entries.forEach((r, i) => {
+                    const rangeOffset = n > 1 ? -VERTICAL_BAND / 2 + i * step : 0;
+                    const y = baseY + rangeOffset + sideOffset;
+                    const screenX = mapToScreen(r.tipPos);
+                    const showTier = type === 'SIEGE';
+                    const tierText = !showTier ? '' : (r.tiers.length === 1
+                        ? `T${r.tiers[0]}`
+                        : `T${r.tiers[0]}-${r.tiers[r.tiers.length - 1]}`);
+                    const arrow = side === 'ATT' ? '→' : '←';
+                    const core = `${TYPE_LETTERS[type]}${r.range}`;
+                    const labelText = side === 'ATT'
+                        ? `${tierText ? tierText + ' ' : ''}${core} ${arrow}`
+                        : `${arrow} ${core}${tierText ? ' ' + tierText : ''}`;
 
-                const screenStart = mapToScreen(Math.min(enginePos, extentPos));
-                const screenEnd = mapToScreen(Math.max(enginePos, extentPos));
-                const color = TroopData.TYPES[g.type].color;
-                const yOffset = vOffsets[`${g.type}_${g.repTier}`] || 0;
+                    const tick = document.createElement('div');
+                    tick.className = 'bf-range-tip';
+                    tick.dataset.indSide = side;
+                    tick.dataset.indType = type;
+                    tick.style.left = `${screenX}%`;
+                    tick.style.top = `${y}%`;
+                    tick.style.background = color;
+                    container.appendChild(tick);
 
-                const bar = document.createElement('div');
-                bar.className = 'bf-range-indicator';
-                bar.dataset.indSide = side;
-                bar.dataset.indType = g.type;
-                bar.style.left = `${screenStart}%`;
-                bar.style.width = `${screenEnd - screenStart}%`;
-                bar.style.top = `${Y_POSITIONS[g.type] + yOffset}%`;
-                bar.style.background = color;
-                container.appendChild(bar);
-            }
+                    const label = document.createElement('div');
+                    label.className = 'bf-range-tip-label';
+                    label.dataset.indSide = side;
+                    label.dataset.indType = type;
+                    label.style.left = `${screenX}%`;
+                    label.style.top = `${y}%`;
+                    label.style.color = color;
+                    label.textContent = labelText;
+                    container.appendChild(label);
+                });
+            });
+        });
+
+        // Firefight zone per row — uses max reach on each side.
+        TYPES_WITH_RANGE.forEach((type) => {
+            const attEntries = reach.ATT[type];
+            const defEntries = reach.DEF[type];
+            if (!attEntries || !defEntries || !attEntries.length || !defEntries.length) return;
+
+            const att = attEntries[attEntries.length - 1]; // max range on ATT
+            const def = defEntries[defEntries.length - 1]; // max range on DEF
+
+            const zoneStart = Math.max(att.unitPos, def.tipPos);
+            const zoneEnd = Math.min(def.unitPos, att.tipPos);
+            if (zoneEnd <= zoneStart) return;
+
+            const screenStart = mapToScreen(zoneStart);
+            const screenEnd = mapToScreen(zoneEnd);
+            const y = Y_POSITIONS[type];
+
+            const zone = document.createElement('div');
+            zone.className = 'bf-firefight-zone';
+            zone.dataset.indType = type;
+            zone.style.left = `${screenStart}%`;
+            zone.style.width = `${screenEnd - screenStart}%`;
+            zone.style.top = `${y}%`;
+            container.appendChild(zone);
         });
     }
 
-    function renderAllSpeedProjections() {
-        ['ATT', 'DEF'].forEach((side) => {
-            const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
-            const snap = side === 'ATT' ? startAttacker : startDefender;
-            if (!army || !snap) return;
-            const vOffsets = computeVerticalOffsets(snap);
+    function highlightHoveredIndicators(type, side, repTier) {
+        const army = side === 'ATT' ? currentAttackerArmy : currentDefenderArmy;
+        if (!army) return;
 
-            // Group alive layers by (type, range)
-            const groups = {};
+        let layer = null;
+        if (repTier != null) {
+            layer = army.layers.find((l) => l.type === type && l.tier === repTier && l.count > 0);
+        }
+        if (!layer) {
+            // Fallback: pick the highest buffed range for this (type, side).
             army.layers.forEach((l) => {
-                if (l.count <= 0) return;
-                const stats = TroopData.getStats(l.type, l.tier);
-                const key = `${l.type}_R${stats.range}`;
-                if (!groups[key]) {
-                    groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
-                }
-                if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
+                if (l.type === type && l.count > 0 && (!layer || l.range > layer.range)) layer = l;
             });
+        }
+        if (!layer || !layer.range || layer.range <= 50) return;
 
-            for (const key in groups) {
-                const g = groups[key];
-                const enginePos = getLayerEnginePos(g.type, g.repTier, side);
-                const speed = getSpeed(g.type);
-                const projectedPos = side === 'ATT'
-                    ? Math.min(enginePos + speed, BATTLEFIELD_LENGTH)
-                    : Math.max(enginePos - speed, 0);
+        const enginePos = getLayerEnginePos(type, layer.tier, side);
+        const extentPos = side === 'ATT'
+            ? Math.min(enginePos + layer.range, BATTLEFIELD_LENGTH)
+            : Math.max(enginePos - layer.range, 0);
 
-                const screenX = mapToScreen(projectedPos);
-                const color = TroopData.TYPES[g.type].color;
-                const yOffset = vOffsets[`${g.type}_${g.repTier}`] || 0;
+        const screenStart = mapToScreen(Math.min(enginePos, extentPos));
+        const screenEnd = mapToScreen(Math.max(enginePos, extentPos));
+        const color = TroopData.TYPES[type].color;
 
-                const ghost = document.createElement('div');
-                ghost.className = 'bf-speed-projection';
-                ghost.dataset.indSide = side;
-                ghost.dataset.indType = g.type;
-                ghost.style.left = `${screenX}%`;
-                ghost.style.top = `${Y_POSITIONS[g.type] + yOffset}%`;
-                ghost.style.borderColor = color;
-                ghost.style.background = color;
-                container.appendChild(ghost);
-            }
-        });
-    }
-
-    function highlightHoveredIndicators(type, side) {
-        container.querySelectorAll(`.bf-range-indicator[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
-            el.style.opacity = '0.22';
-        });
-        container.querySelectorAll(`.bf-speed-projection[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
-            el.style.opacity = '0.30';
-        });
+        const bar = document.createElement('div');
+        bar.className = 'bf-range-indicator bf-range-bar-hover';
+        bar.dataset.indSide = side;
+        bar.dataset.indType = type;
+        bar.style.left = `${screenStart}%`;
+        bar.style.width = `${screenEnd - screenStart}%`;
+        bar.style.top = `${Y_POSITIONS[type]}%`;
+        bar.style.background = color;
+        container.appendChild(bar);
     }
 
     function resetHoveredIndicators(type, side) {
-        container.querySelectorAll(`.bf-range-indicator[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
-            el.style.opacity = '';
-        });
-        container.querySelectorAll(`.bf-speed-projection[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
-            el.style.opacity = '';
+        container.querySelectorAll(`.bf-range-bar-hover[data-ind-side="${side}"][data-ind-type="${type}"]`).forEach((el) => {
+            el.remove();
         });
     }
 
