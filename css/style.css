@@ -172,8 +172,10 @@ select { width: auto; text-align: left; }
     display: grid; grid-template-columns: 40px repeat(4, 1fr);
     gap: 0.2rem; padding: 0.2rem 0; font-weight: 600; color: #999;
 }
-.grid-header span { text-align: center; cursor: pointer; }
+.grid-header span { text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.05rem; }
 .grid-header span:hover { color: #e94560; }
+.clear-col-btn { font-size: 0.65rem; color: #555; line-height: 1; }
+.clear-col-btn:hover { color: #e94560; }
 .grid-row {
     display: grid; grid-template-columns: 40px repeat(4, 1fr);
     gap: 0.2rem; margin-bottom: 0.15rem;

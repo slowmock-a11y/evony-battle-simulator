@@ -81,12 +81,26 @@ var ArmyConfig = (function () {
             const info = TroopData.TYPES[type];
             const span = document.createElement('span');
             span.className = info.colorClass;
-            span.textContent = info.name.charAt(0); // G, R, M, S
             span.title = `Click to set all ${info.name}`;
             span.addEventListener('click', () => {
                 const val = prompt(`Set all ${info.name} tiers to:`, '0');
                 if (val !== null) setColumnValue(panelId, type, parseInt(val, 10) || 0);
             });
+
+            const letter = document.createElement('span');
+            letter.textContent = info.name.charAt(0); // G, R, M, S
+            span.appendChild(letter);
+
+            const clr = document.createElement('span');
+            clr.className = 'clear-col-btn';
+            clr.textContent = '×';
+            clr.title = `Clear all ${info.name}`;
+            clr.addEventListener('click', (e) => {
+                e.stopPropagation();
+                setColumnValue(panelId, type, 0);
+            });
+            span.appendChild(clr);
+
             gh.appendChild(span);
         });
         container.appendChild(gh);
