@@ -58,7 +58,6 @@ var Playback = (function () {
             return;
         }
         isPlaying = true;
-        const speed = getSpeed();
 
         function tick() {
             if (!isPlaying || currentIndex >= events.length) {
@@ -67,7 +66,7 @@ var Playback = (function () {
             }
             _advance();
             if (currentIndex < events.length) {
-                animationTimer = setTimeout(tick, speed);
+                animationTimer = setTimeout(tick, getSpeed());
             } else {
                 isPlaying = false;
             }

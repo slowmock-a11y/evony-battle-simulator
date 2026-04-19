@@ -441,13 +441,20 @@ var Battlefield = (function () {
             svgLine.setAttribute('y2', y2);
             svgLine.style.display = '';
 
-            // Animate dash
+            // Animate dash — duration adapts to playback speed; snap below 100ms
             const len = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            const playSpeed = parseInt(document.getElementById('speed-slider').value, 10) || 200;
             svgLine.style.strokeDasharray = len;
             svgLine.style.strokeDashoffset = len;
             svgLine.getBoundingClientRect();
-            svgLine.style.transition = 'stroke-dashoffset 0.25s ease-out';
-            svgLine.style.strokeDashoffset = '0';
+            if (playSpeed < 100) {
+                svgLine.style.transition = '';
+                svgLine.style.strokeDashoffset = '0';
+            } else {
+                const dur = Math.min(200, playSpeed - 40);
+                svgLine.style.transition = `stroke-dashoffset ${dur}ms ease-out`;
+                svgLine.style.strokeDashoffset = '0';
+            }
 
             // Attack info panel
             const srcName = event.sourceType.charAt(0).toUpperCase() + event.sourceType.slice(1);
