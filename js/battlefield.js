@@ -736,14 +736,13 @@ var Battlefield = (function () {
             if (!army || !snap) return;
             const vOffsets = computeVerticalOffsets(snap);
 
-            // Group alive layers by (type, range)
+            // Group alive layers by (type, buffed range)
             const groups = {};
             army.layers.forEach((l) => {
                 if (l.count <= 0) return;
-                const stats = TroopData.getStats(l.type, l.tier);
-                const key = `${l.type}_R${stats.range}`;
+                const key = `${l.type}_R${l.range}`;
                 if (!groups[key]) {
-                    groups[key] = { type: l.type, range: stats.range, repTier: l.tier };
+                    groups[key] = { type: l.type, range: l.range, repTier: l.tier };
                 }
                 if (l.tier > groups[key].repTier) groups[key].repTier = l.tier;
             });

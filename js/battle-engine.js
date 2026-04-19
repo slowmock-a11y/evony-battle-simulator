@@ -29,7 +29,10 @@ var BattleEngine = (function () {
             TroopData.TIERS.forEach((tier) => {
                 const count = (troopCounts[type] && troopCounts[type][tier]) || 0;
                 if (count > 0) {
-                    layers.push(createLayer(type, tier, count));
+                    const layer = createLayer(type, tier, count);
+                    const rangeBuff = buffs && buffs[type] && buffs[type].range || 0;
+                    if (rangeBuff) layer.range = Math.round(layer.range * (1 + rangeBuff / 100));
+                    layers.push(layer);
                 }
             });
         });
@@ -37,9 +40,9 @@ var BattleEngine = (function () {
             layers: layers,
             buffs: buffs || {
                 GROUND:  { atk: 0, def: 0, hp: 0 },
-                RANGED:  { atk: 0, def: 0, hp: 0 },
+                RANGED:  { atk: 0, def: 0, hp: 0, range: 0 },
                 MOUNTED: { atk: 0, def: 0, hp: 0 },
-                SIEGE:   { atk: 0, def: 0, hp: 0 }
+                SIEGE:   { atk: 0, def: 0, hp: 0, range: 0 }
             }
         };
     }

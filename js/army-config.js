@@ -18,9 +18,15 @@ var ArmyConfig = (function () {
 
     // --- Buff Inputs ---
 
+    const RANGE_BUFF_TYPES = new Set(['RANGED', 'SIEGE']);
+
     function buildBuffInputs(container, panelId) {
         TYPE_KEYS.forEach((type) => {
             const info = TroopData.TYPES[type];
+            const rangeField = RANGE_BUFF_TYPES.has(type)
+                ? `<span class="buff-stat-label">Range</span>
+                   <input type="number" value="0" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="range" />%`
+                : '';
             const row = document.createElement('div');
             row.className = 'buff-row';
             row.innerHTML = `
@@ -31,6 +37,7 @@ var ArmyConfig = (function () {
                 <input type="number" value="1500" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="def" />%
                 <span class="buff-stat-label">HP</span>
                 <input type="number" value="1500" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="hp" />%
+                ${rangeField}
             `;
             container.appendChild(row);
         });
