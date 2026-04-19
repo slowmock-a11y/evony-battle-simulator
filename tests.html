@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Engine Spec Tests</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222;
+         background: #fafafa; }
+  h1 { margin: 0 0 8px 0; font-size: 20px; }
+  p.sub { color: #666; margin: 0 0 20px 0; font-size: 13px; }
+  .summary { padding: 10px 14px; border-radius: 4px; margin-bottom: 18px;
+             font-weight: 600; font-size: 14px; }
+  .summary.ok  { background: #e1f3e0; color: #1b5e1c; border: 1px solid #7cc77f; }
+  .summary.bad { background: #fbe2e0; color: #8a1e17; border: 1px solid #d06c64; }
+  .suite { background: #fff; border: 1px solid #ddd; border-radius: 4px;
+           padding: 10px 14px; margin-bottom: 10px; }
+  .suite h2 { font-size: 14px; margin: 0 0 8px 0; color: #333; font-weight: 600; }
+  .row { padding: 4px 0; font-size: 13px; font-family: ui-monospace, Consolas, monospace; }
+  .row.pass { color: #2e7d2e; }
+  .row.fail { color: #9b1e14; }
+  .err { margin: 4px 0 6px 22px; color: #8a1e17; font-size: 12px;
+         white-space: pre-wrap; background: #fff4f3; padding: 4px 8px;
+         border-left: 3px solid #d06c64; border-radius: 2px; }
+</style>
+</head>
+<body>
+<h1>Engine Spec Tests</h1>
+<p class="sub">Behavioral compliance check for <code>js/battle-engine.js</code> against
+<code>openspec/specs/battle-mechanics-facts.md</code>. Refresh to re-run.</p>
+
+<div id="results"></div>
+
+<script src="js/troop-data.js"></script>
+<script src="js/battle-engine.js"></script>
+<script src="js/tests/test-runner.js"></script>
+
+<script src="js/tests/test-damage-formula.js"></script>
+<script src="js/tests/test-counter-formula.js"></script>
+<script src="js/tests/test-multipliers.js"></script>
+<script src="js/tests/test-phase-order.js"></script>
+<script src="js/tests/test-movement.js"></script>
+<script src="js/tests/test-engagement-lock.js"></script>
+<script src="js/tests/test-battle-end.js"></script>
+<script src="js/tests/test-spec-anomalies.js"></script>
+
+<script>
+TestRunner.run(document.getElementById('results'));
+</script>
+</body>
+</html>

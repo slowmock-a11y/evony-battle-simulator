@@ -480,10 +480,13 @@ var BattleEngine = (function () {
 
     return {
         createArmy: createArmy,
+        createLayer: createLayer,
         simulate: simulate,
         effectiveAtk: effectiveAtk,
         effectiveDef: effectiveDef,
         effectiveHp: effectiveHp,
-        deriveTypePositions: deriveTypePositions
+        deriveTypePositions: deriveTypePositions,
+        calculateDamage: calculateDamage,
+        calculateCounterKills: calculateCounterKills
     };
 })();
