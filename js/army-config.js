@@ -25,7 +25,8 @@ var ArmyConfig = (function () {
             const info = TroopData.TYPES[type];
             const rangeField = RANGE_BUFF_TYPES.has(type)
                 ? `<span class="buff-stat-label">Range</span>
-                   <input type="number" value="0" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="range" />%`
+                   <input type="number" value="0" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="range" />%
+                   <input type="number" value="0" data-panel="${panelId}" data-buff-type="${type}" data-buff-stat="rangeFlat" title="Flat range bonus (added after %)" />`
                 : '';
             const row = document.createElement('div');
             row.className = 'buff-row';
@@ -182,7 +183,10 @@ var ArmyConfig = (function () {
 
     function getBuffs(panelId) {
         const buffs = {};
-        TYPE_KEYS.forEach((t) => { buffs[t] = { atk: 0, def: 0, hp: 0 }; });
+        TYPE_KEYS.forEach((t) => {
+            buffs[t] = { atk: 0, def: 0, hp: 0 };
+            if (RANGE_BUFF_TYPES.has(t)) { buffs[t].range = 0; buffs[t].rangeFlat = 0; }
+        });
         document.querySelectorAll(`input[data-panel="${panelId}"][data-buff-type]`).forEach((inp) => {
             buffs[inp.dataset.buffType][inp.dataset.buffStat] = parseFloat(inp.value) || 0;
         });
