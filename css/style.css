@@ -192,6 +192,8 @@ select { width: auto; text-align: left; }
 .color-ranged { color: #4caf6e; }
 .color-mounted { color: #5b9bd5; }
 .color-siege { color: #e07040; }
+.color-sub-city { color: #b48cd9; }
+.color-duty { color: #888; }
 .bg-ground { background: #3a2e10; }
 .bg-ranged { background: #1a3320; }
 .bg-mounted { background: #1a2a3e; }
@@ -585,4 +587,129 @@ main { max-width: 100%; overflow-x: hidden; }
     .info-content { padding: 0.75rem; }
     .info-content h2 { font-size: 1.1rem; }
     .info-list { margin-left: 1rem; font-size: 0.78rem; }
+
+    /* Generals page responsive */
+    .generals-filters { flex-wrap: wrap; gap: 0.4rem; }
+    .generals-filters input[type="search"] { min-width: 140px; flex: 1 1 140px; }
+    .generals-table { font-size: 0.75rem; }
+    .generals-table th, .generals-table td { padding: 0.3rem 0.4rem; }
+    .generals-detail-table th { width: 45%; }
+}
+
+/* === Generals Page === */
+.generals-topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.generals-topbar .back-link { margin-bottom: 0; }
+.generals-topbar .generals-download-btn { margin-left: auto; flex: 0 0 auto; }
+.generals-filters {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin: 0.75rem 0 1rem;
+    flex-wrap: wrap;
+}
+.generals-filters input[type="search"],
+.generals-filters select {
+    background: #0f1629; border: 1px solid #334; color: #eee;
+    padding: 0.35rem 0.6rem; border-radius: 4px; font-size: 0.85rem;
+    font-family: inherit;
+}
+.generals-filters input[type="search"] { min-width: 200px; flex: 1 1 220px; }
+.generals-filters input[type="search"]:focus,
+.generals-filters select:focus { outline: none; border-color: #5b9bd5; }
+.generals-filters select.is-placeholder { color: #888; }
+.generals-filters select.is-placeholder option:not([class*="color-"]) { color: #eee; }
+.generals-filters select.color-ground   { color: #d4a843; }
+.generals-filters select.color-ranged   { color: #4caf6e; }
+.generals-filters select.color-mounted  { color: #5b9bd5; }
+.generals-filters select.color-siege    { color: #e07040; }
+.generals-filters select.color-sub-city { color: #b48cd9; }
+.generals-filters select.color-duty     { color: #888;    }
+.generals-filters select option.color-ground   { color: #d4a843; background: #0f1629; }
+.generals-filters select option.color-ranged   { color: #4caf6e; background: #0f1629; }
+.generals-filters select option.color-mounted  { color: #5b9bd5; background: #0f1629; }
+.generals-filters select option.color-siege    { color: #e07040; background: #0f1629; }
+.generals-filters select option.color-sub-city { color: #b48cd9; background: #0f1629; }
+.generals-filters select option.color-duty     { color: #888;    background: #0f1629; }
+.generals-select-wrap {
+    display: inline-flex; align-items: center; position: relative;
+}
+.generals-select-wrap > select { padding-right: 2.2rem; }
+.generals-select-wrap > .generals-select-clear {
+    position: absolute; right: 1.4rem; top: 50%; transform: translateY(-50%);
+    background: transparent; border: none; color: #888;
+    font-size: 0.7rem; line-height: 1; padding: 0.1rem 0.3rem;
+    cursor: pointer; border-radius: 3px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.1s, color 0.1s;
+}
+.generals-select-wrap.has-value > .generals-select-clear {
+    opacity: 1; pointer-events: auto;
+}
+.generals-select-wrap > .generals-select-clear:hover { color: #eee; background: rgba(255,255,255,0.08); }
+.generals-select-wrap > .generals-select-clear:focus { outline: none; color: #eee; }
+.generals-count { color: #888; font-size: 0.8rem; margin-left: auto; }
+
+.generals-download-btn {
+    background: #16213e; border: 1px solid #334; color: #bbb;
+    padding: 0.35rem 0.75rem; border-radius: 4px; font-size: 0.82rem;
+    font-family: inherit; cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.generals-download-btn:hover { background: #1a2a4a; color: #fff; border-color: #5b9bd5; }
+.generals-download-btn:focus { outline: none; border-color: #5b9bd5; }
+
+.generals-table-wrap { overflow-x: auto; }
+.generals-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.generals-table thead th {
+    background: #1a2540; color: #bbb; font-weight: 600; text-align: left;
+    padding: 0.45rem 0.6rem; border-bottom: 1px solid #334;
+    position: sticky; top: 0;
+}
+.generals-table thead th.num { text-align: right; }
+.generals-table thead th.sortable { cursor: pointer; user-select: none; transition: color 0.1s; white-space: nowrap; }
+.generals-table thead th.sortable:hover { color: #fff; }
+.generals-table thead th.sortable.active { color: #e94560; }
+.generals-table tbody td {
+    padding: 0.35rem 0.6rem; border-bottom: 1px solid #1a1a2e; color: #ddd;
+}
+.generals-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.generals-table tbody td.color-ground   { color: #d4a843; }
+.generals-table tbody td.color-ranged   { color: #4caf6e; }
+.generals-table tbody td.color-mounted  { color: #5b9bd5; }
+.generals-table tbody td.color-siege    { color: #e07040; }
+.generals-table tbody td.color-sub-city { color: #b48cd9; }
+.generals-table tbody td.color-duty     { color: #888;    }
+.generals-row { cursor: pointer; transition: background 0.1s; }
+.generals-row:hover { background: #1a2540; }
+.generals-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+.generals-row:nth-child(even):hover { background: #1a2540; }
+
+.generals-empty { color: #888; font-style: italic; padding: 1rem 0; }
+
+.generals-status { color: #888; font-size: 0.85rem; margin-top: 0.5rem; }
+.generals-status.error { color: #e94560; }
+
+.generals-back-btn {
+    background: #16213e; border: 1px solid #334; color: #bbb;
+    padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.82rem;
+    cursor: pointer; margin-bottom: 0.75rem;
+    transition: background 0.15s, color 0.15s;
+}
+.generals-back-btn:hover { background: #1a2a4a; color: #fff; }
+
+.generals-detail-name { font-size: 1.2rem; color: #e94560; margin: 0.25rem 0 1rem; }
+.generals-detail-wrap h3 {
+    font-size: 0.95rem; color: #ccc; margin-top: 1.25rem; margin-bottom: 0.4rem;
+    padding-bottom: 0.25rem; border-bottom: 1px solid #334;
+}
+.generals-detail-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.generals-detail-table th {
+    width: 40%; text-align: left; font-weight: 500; color: #999;
+    padding: 0.3rem 0.6rem; border-bottom: 1px solid #1a1a2e;
+    vertical-align: top;
+}
+.generals-detail-table td {
+    padding: 0.3rem 0.6rem; border-bottom: 1px solid #1a1a2e; color: #ddd;
+    font-variant-numeric: tabular-nums;
 }

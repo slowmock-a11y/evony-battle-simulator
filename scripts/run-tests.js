@@ -29,6 +29,8 @@ vm.createContext(context);
 const files = [
     'js/troop-data.js',
     'js/battle-engine.js',
+    'js/generals-data.js',
+    'js/covenants-data.js',
     'js/tests/test-runner.js',
     'js/tests/test-damage-formula.js',
     'js/tests/test-counter-formula.js',
@@ -37,7 +39,9 @@ const files = [
     'js/tests/test-movement.js',
     'js/tests/test-engagement-lock.js',
     'js/tests/test-battle-end.js',
-    'js/tests/test-spec-anomalies.js'
+    'js/tests/test-spec-anomalies.js',
+    'js/tests/test-generals-data.js',
+    'js/tests/test-covenants-data.js'
 ];
 
 for (const f of files) {

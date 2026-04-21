@@ -1,0 +1,878 @@
+[
+  {
+    "main": "Algernon Sidney",
+    "members": [
+      "William Wallace",
+      "John Churchill",
+      "Merlin"
+    ],
+    "gold_buffs": [
+      "Reinforcing Range Troop Attack 5%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Andre Massena",
+    "members": [
+      "Roland",
+      "Turenne",
+      "Betrand du Guesclin"
+    ],
+    "gold_buffs": [
+      "March Speed 15%",
+      "Enemy Ranged Troop and Siege Machine Attack -5%"
+    ]
+  },
+  {
+    "main": "Artemis",
+    "members": [
+      "Hermes",
+      "Queen Boudica",
+      "Hestia"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "In-Rally Mounted Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Beowulf",
+    "members": [
+      "King Arthur",
+      "Roland",
+      "Mordred"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "March Speed 15%"
+    ]
+  },
+  {
+    "main": "Brian Boru",
+    "members": [
+      "Queen Boudica",
+      "Henry V",
+      "Edward III"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Speed 10%",
+      "Attacking Ranged Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Champlain",
+    "members": [
+      "Turenne",
+      "Andre Massena",
+      "Suchet"
+    ],
+    "gold_buffs": [
+      "March Speed 5%",
+      "In-Rally Siege Machine HP 10%"
+    ]
+  },
+  {
+    "main": "Charles V",
+    "members": [
+      "Franz Joseph I",
+      "Isabella I",
+      "Maximillian I"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 10%",
+      "Attacking Ground Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Cheng Yaojin",
+    "members": [
+      "Li Jing",
+      "Li Shimin",
+      "Sun Ce"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 10%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Christina",
+    "members": [
+      "Gustavus Adolphus",
+      "Margaret I",
+      "Frigg"
+    ],
+    "gold_buffs": [
+      "Siege Machine training Speed 10%",
+      "In-Rally Siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Franz Joseph I",
+    "members": [
+      "Arminius",
+      "Prince Eugene",
+      "Raimondo"
+    ],
+    "gold_buffs": [
+      "March Speed 10%",
+      "Reinforcing Ranged Troops Attack 5%"
+    ]
+  },
+  {
+    "main": "Frigg",
+    "members": [
+      "Tomyris",
+      "Theodora",
+      "Gnarr"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 5%",
+      "March Speed 15%"
+    ]
+  },
+  {
+    "main": "George Monck",
+    "members": [
+      "Queen Victoria",
+      "Edward III",
+      "John Hunyadi"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "In-Rally Mounted Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Godfrey of Bouillon",
+    "members": [
+      "Richard the Lionheart",
+      "Baldwin IV",
+      "Philip II"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 5%",
+      "Ranged Troop and Siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Gunther",
+    "members": [
+      "Melisande",
+      "Douglas",
+      "Charles the Great"
+    ],
+    "gold_buffs": [
+      "Siege Machine training Speed 5%",
+      "In-Rally Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Haakon Haraldsson",
+    "members": [
+      "Margaret I",
+      "Harald III",
+      "Ragnar"
+    ],
+    "gold_buffs": [
+      "In_Rally Mounted Troop HP 5%",
+      "Mounted Troop Training Capacity 5%"
+    ]
+  },
+  {
+    "main": "Hermes",
+    "members": [
+      "Artemis",
+      "Scipio Africanus",
+      "Poligenus"
+    ],
+    "gold_buffs": [
+      "Reinforcing Mounted Troop HP 5%",
+      "Mounted Troop Training Speed 10%"
+    ]
+  },
+  {
+    "main": "Hersilia",
+    "members": [
+      "Mark Antony",
+      "Marcus Agripa",
+      "Romulus"
+    ],
+    "gold_buffs": [
+      "Siege Machine Defense 5%",
+      "In-Rally Siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Hestia",
+    "members": [
+      "Flavius Aetius",
+      "Zucca",
+      "Poligenus"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 5%",
+      "In-Rally Mounted Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Isaac Brock",
+    "members": [
+      "Edward the Black Prince",
+      "John Churchill",
+      "William Marshall"
+    ],
+    "gold_buffs": [
+      "Troop Death Into Troop Soul Rate in the Main City 5%",
+      "In-City Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "James Cook",
+    "members": [
+      "Aethelflaed",
+      "Elizabeth I",
+      "Edward Teach"
+    ],
+    "gold_buffs": [
+      "March Speed 5%",
+      "Ranged Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Jayavarmann II",
+    "members": [
+      "Martinus",
+      "Ly Thuong Kiet",
+      "Tran Hung Dao"
+    ],
+    "gold_buffs": [
+      "Training Speed 5%",
+      "Mounted Troop Training Capacity 10%"
+    ]
+  },
+  {
+    "main": "John Hunyadi",
+    "members": [
+      "Matthias I",
+      "Jadwiga",
+      "Suleiman the Magnificient"
+    ],
+    "gold_buffs": [
+      "Holy Palace Deserter Capacity 10%",
+      "Enemy Ranged Troop and Siege Machine HP -8%"
+    ]
+  },
+  {
+    "main": "Lucilla",
+    "members": [
+      "Narcissus",
+      "Alessandra",
+      "Aurelian"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 10%",
+      "Ground Troop Training Speed 10%"
+    ]
+  },
+  {
+    "main": "Marco Polo",
+    "members": [
+      "Genghis Khan",
+      "Basil II",
+      "Subutai"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "Mounted Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Marcus Agrippa",
+    "members": [
+      "Caesar",
+      "Gaius Octavius",
+      "Mark Antony"
+    ],
+    "gold_buffs": [
+      "All Resources Production 5%",
+      "Ranged Troop Training Capacity 10%"
+    ]
+  },
+  {
+    "main": "Maria Carolina",
+    "members": [
+      "Maria Theresa",
+      "Elizabeth I",
+      "Christina"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 5%",
+      "Ground Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Maurice de Saxe",
+    "members": [
+      "Charles the Great",
+      "Henry V",
+      "Prince Eugene"
+    ],
+    "gold_buffs": [
+      "Siege Machine Training Speed 10%",
+      "Siege Machine Defense 5%"
+    ]
+  },
+  {
+    "main": "Melisande",
+    "members": [
+      "Gunther",
+      "Eleanor",
+      "Catherine II"
+    ],
+    "gold_buffs": [
+      "March Seed 15%",
+      "Reinforcing Troops Defense 5%"
+    ]
+  },
+  {
+    "main": "Merlin",
+    "members": [
+      "King Arthur",
+      "Alfred the Great",
+      "Beowulf"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Speed 5%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Miltiades",
+    "members": [
+      "Leonidas I",
+      "Carus",
+      "Alexander the Great"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 10%",
+      "Ground Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Mu Guiying",
+    "members": [
+      "Elektra",
+      "Yue Fei",
+      "Guan Yu"
+    ],
+    "gold_buffs": [
+      "Hospital Capacity 5%",
+      "Siege Machine Training Capacity 10%"
+    ]
+  },
+  {
+    "main": "Napoleon Prime",
+    "members": [
+      "Andre Massena",
+      "Soult",
+      "Napoleon"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 10%",
+      "Mounted Troop Training Capacity 15%"
+    ]
+  },
+  {
+    "main": "Narcissus",
+    "members": [
+      "Lucilla",
+      "Ludwig",
+      "Martinus"
+    ],
+    "gold_buffs": [
+      "Grround Troop Attack 5%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Ragnar",
+    "members": [
+      "Sigurd",
+      "Cnut the Great",
+      "Harald"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 10%",
+      "In-Rally Ranged Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Romulus",
+    "members": [
+      "Pompey",
+      "Gaius Octavius",
+      "Hersilia"
+    ],
+    "gold_buffs": [
+      "March Speed 5%",
+      "Siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Sigurd",
+    "members": [
+      "Ragnar",
+      "Nordic Barbarian King",
+      "Harald III"
+    ],
+    "gold_buffs": [
+      "Training Speed 10%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Stephen II",
+    "members": [
+      "Robert Guiscard",
+      "Laudon",
+      "Totila"
+    ],
+    "gold_buffs": [
+      "Siege Machine Trainnig Capacity 10%",
+      "Siege Machine Defense 5%"
+    ]
+  },
+  {
+    "main": "Suchet",
+    "members": [
+      "Napoleon",
+      "Soult",
+      "Louis IX"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 5%",
+      "Holy Palace Deserter Capacity 10%"
+    ]
+  },
+  {
+    "main": "Sweyn Forkbeard",
+    "members": [
+      "Cnut the Great",
+      "Margaret I",
+      "Harald"
+    ],
+    "gold_buffs": [
+      "March Speed 5%",
+      "Ground Troop Training Capacity 10%"
+    ]
+  },
+  {
+    "main": "Tachibana Ginchiyo",
+    "members": [
+      "Himiko",
+      "Frigg",
+      "Hestia"
+    ],
+    "gold_buffs": [
+      "Raned Troop Trainnig Speed 10%",
+      "Reinforcing Ranged Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Theobald I",
+    "members": [
+      "Charles Martel",
+      "Philip II",
+      "Louis IX"
+    ],
+    "gold_buffs": [
+      "Siege Machine Training Capacity 10%",
+      "March Speed 10%"
+    ]
+  },
+  {
+    "main": "Theodosius I",
+    "members": [
+      "Nero",
+      "Septimius Severus",
+      "Aurelian"
+    ],
+    "gold_buffs": [
+      "Siege Machine Training Capacity 10%",
+      "Siege Machine Training Speed 10%"
+    ]
+  },
+  {
+    "main": "Totila",
+    "members": [
+      "Arminius",
+      "Pyrrhus",
+      "Charles XII"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 5%",
+      "Enemy Ranged Troop Attack -10%"
+    ]
+  },
+  {
+    "main": "Washington (Prime)",
+    "members": [
+      "Nathanael Greene",
+      "Casimir Pulaski",
+      "Washington"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "Mounted Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Zhang Fei",
+    "members": [
+      "Wei Qing",
+      "Guan Yu",
+      "Zhao Yun"
+    ],
+    "gold_buffs": [
+      "In-Rally Ground Troop HP 10%",
+      "Ground Troop Training Speed 10%"
+    ]
+  },
+  {
+    "main": "Artemisia I",
+    "members": [
+      "Seleucus I",
+      "Leonidas I",
+      "Alexander the Great"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 10%",
+      "Attacking Ranged Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Olav II",
+    "members": [
+      "Gustavus Adolphus",
+      "Sweyn Forkbeard",
+      "Charles XII"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 10%",
+      "Attacking Mounted Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Alexander Hamilton",
+    "members": [
+      "Casimir Pulaski",
+      "Nathanael Greene",
+      "Washington (Prime)"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 10%",
+      "Attacking Ground Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Gonzalo",
+    "members": [
+      "Isabella I",
+      "El Cid",
+      "Charles V"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 10%",
+      "In-Rally Ranged Troop Attack 10%"
+    ]
+  },
+  {
+    "main": "Mouri Motonari",
+    "members": [
+      "Minamoto No Yoshitsune",
+      "Maeda Toshiie",
+      "Ii Naomasa"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 5%",
+      "Mounted Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Gao Changgong",
+    "members": [
+      "Wei Qing",
+      "Yue Fei",
+      "Cheng Yaojin"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 5%",
+      "Ground Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Zhou Yu",
+    "members": [
+      "Sun Ce",
+      "Lu Xun",
+      "Zhang Fei"
+    ],
+    "gold_buffs": [
+      "Healing Speed 5%",
+      "In City Ground Troop and Mounted Troop Defense 10%"
+    ]
+  },
+  {
+    "main": "Ahmose I",
+    "members": [
+      "Shajar al-Durr",
+      "Thutmose III",
+      "Hatshepsut"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 5%",
+      "Ranged Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Hatshepsut",
+    "members": [
+      "Saladin",
+      "Ramses II",
+      "Ahmose I"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Speed 5%",
+      "Attacking Ranged Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Francis Drake",
+    "members": [
+      "William Marshal",
+      "Edward III",
+      "James Cook"
+    ],
+    "gold_buffs": [
+      "Siege Machine training Speed 10%",
+      "Reinforcing Siege Machine HP 5%"
+    ]
+  },
+  {
+    "main": "Louis XIV",
+    "members": [
+      "Turenne",
+      "Louis IX",
+      "Theobald I"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 10%",
+      "Mounted Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Louis II",
+    "members": [
+      "El Cid",
+      "Roland",
+      "Baldwin IV"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Capacity 10%",
+      "Attacking Ground troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Kiso Yoshinaka",
+    "members": [
+      "Hojo Ujiyasu",
+      "Tachibana Ginchiyo",
+      "Mouri Motonari"
+    ],
+    "gold_buffs": [
+      "Siege Machine Training Capacity 10%",
+      "Attacking Siege Machine HP 10%"
+    ]
+  },
+  {
+    "main": "Charles VI",
+    "members": [
+      "Matthias I",
+      "Prince Eugene",
+      "Louis XIV"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 10%",
+      "Attacking Ranged Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Henry IV",
+    "members": [
+      "Napoleon",
+      "Elizabeth I",
+      "Champlain"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 10%",
+      "In-Rally Mounted Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Shapur I",
+    "members": [
+      "Trajan",
+      "Carus",
+      "Septimius Severus"
+    ],
+    "gold_buffs": [
+      "Siege Machine Training Capacity 10%",
+      "In-Rally Siege Machine HP 5%"
+    ]
+  },
+  {
+    "main": "Lorenzo de' Medici",
+    "members": [
+      "Gaius Octavius",
+      "Aurelian",
+      "Niccolo Piccinino"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 10%",
+      "Ground Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Niccolo Piccinino",
+    "members": [
+      "Gnarr",
+      "Gonzalo",
+      "Lorenzo de' Medici"
+    ],
+    "gold_buffs": [
+      "Ground troop Training Capacity 10%",
+      "Ground Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Stephen I of Hungary",
+    "members": [
+      "Harald",
+      "John Hunyadi",
+      "Stephen II"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 10%",
+      "Mounted Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Rumyantsev",
+    "members": [
+      "Peter the Great",
+      "Dmitry",
+      "Vladimir the Great"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Speed 10%",
+      "In-Rally Ranged Troop HP 5%"
+    ]
+  },
+  {
+    "main": "Visconti",
+    "members": [
+      "Edward III",
+      "Marco Polo",
+      "Niccolo Piccinino"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Speed 10%",
+      "In-Rally Ranged Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Olaf Skotkonung",
+    "members": [
+      "Vladimir the great",
+      "Sweyn Forkbeard",
+      "Olav II"
+    ],
+    "gold_buffs": [
+      "Siege Machine training Speed 10%",
+      "In-Rally Siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Daniel Morgan",
+    "members": [
+      "Washington",
+      "Zachary Taylor",
+      "John Adams"
+    ],
+    "gold_buffs": [
+      "Siege Machine training Speed 10%",
+      "Reinforcing siege Machine Attack 5%"
+    ]
+  },
+  {
+    "main": "Francis I of France",
+    "members": [
+      "Suleiman the Magnificent",
+      "Charles V",
+      "Henry IV"
+    ],
+    "gold_buffs": [
+      "Ground Troop Training Speed 10%",
+      "Attacking Ground Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Tishtrya",
+    "members": [
+      "Gnarr",
+      "Artemis",
+      "Rostam"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Speed 5%",
+      "In Rally Mounted Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Rostam",
+    "members": [
+      "Cyrus the Great",
+      "Surena",
+      "Tishtrya"
+    ],
+    "gold_buffs": [
+      "Mounted Troop Training Capacity 5%",
+      "In Rally Mounted Troop Defense 5%"
+    ]
+  },
+  {
+    "main": "Vercingetorix",
+    "members": [
+      "Robert the Bruce",
+      "Margaret I",
+      "Brian Boru"
+    ],
+    "gold_buffs": [
+      "March Speed 5%",
+      "In-Rally Ground Troop Attack 5%"
+    ]
+  },
+  {
+    "main": "Marcian",
+    "members": [
+      "Aurelian",
+      "Totila",
+      "Theodosius I"
+    ],
+    "gold_buffs": [
+      "Ranged Troop Training Capacity 10%",
+      "Ranged Troop Defense 5%"
+    ]
+  }
+]
