@@ -127,23 +127,20 @@ select { width: auto; text-align: left; }
 /* === Setup Controls (load / save / name / notes) === */
 .setup-controls { margin-bottom: 0.75rem; }
 .setup-row {
-    display: flex; align-items: center; gap: 0.75rem;
-    justify-content: flex-end; flex-wrap: wrap;
-    background: #16213e; border: 1px solid #223; border-radius: 6px;
-    padding: 0.5rem 0.75rem;
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 0.4rem; padding: 0.75rem; background: #16213e;
+    border-radius: 6px; border: 1px solid #223;
+    font-size: 0.8rem; color: #999;
+    flex-wrap: wrap;
 }
-.setup-field {
-    display: flex; flex-direction: column; gap: 0.15rem;
-    font-size: 0.78rem;
+.setup-row input[type="text"] {
+    background: #0f1629; border: 1px solid #334; color: #ddd;
+    padding: 0.4rem 0.6rem; border-radius: 3px; font-size: 0.8rem;
+    font-family: inherit;
 }
-.setup-field-grow { flex: 1; min-width: 160px; }
-.setup-field-label {
-    font-size: 0.68rem; color: #888;
-    text-transform: uppercase; letter-spacing: 0.06em;
-}
-#setup-name { width: 180px; }
-#setup-notes { width: 100%; }
-.setup-buttons { display: flex; gap: 0.4rem; align-self: flex-end; }
+.setup-row input[type="text"]:focus { border-color: #e94560; outline: none; }
+#setup-name { width: 160px; }
+#setup-notes { flex: 1; min-width: 160px; max-width: 320px; }
 .setup-warning {
     background: #3a2a10; border: 1px solid #8B6914; border-radius: 6px;
     padding: 0.6rem 2rem 0.6rem 0.75rem;
@@ -166,9 +163,8 @@ select { width: auto; text-align: left; }
 }
 .battle-view-active .setup-controls { display: none; }
 @media (max-width: 600px) {
-    .setup-row { flex-direction: column; align-items: stretch; }
-    .setup-buttons { justify-content: flex-end; }
-    #setup-name { width: 100%; }
+    .setup-row { justify-content: center; }
+    #setup-name, #setup-notes { width: 100%; max-width: none; }
 }
 
 .army-row {
