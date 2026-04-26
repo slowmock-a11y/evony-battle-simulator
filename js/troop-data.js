@@ -2,38 +2,51 @@ var TroopData = (function () {
     'use strict';
 
     const TYPES = {
-        SIEGE:   { name: 'Siege',   color: '#e07040', bgClass: 'bg-siege',   borderClass: 'border-siege',   colorClass: 'color-siege'   },
-        RANGED:  { name: 'Ranged',  color: '#4caf6e', bgClass: 'bg-ranged',  borderClass: 'border-ranged',  colorClass: 'color-ranged'  },
-        MOUNTED: { name: 'Mounted', color: '#5b9bd5', bgClass: 'bg-mounted', borderClass: 'border-mounted', colorClass: 'color-mounted' },
-        GROUND:  { name: 'Ground',  color: '#d4a843', bgClass: 'bg-ground',  borderClass: 'border-ground',  colorClass: 'color-ground'  }
+        SIEGE:        { name: 'Siege',        color: '#e07040', bgClass: 'bg-siege',         borderClass: 'border-siege',         colorClass: 'color-siege'        },
+        RANGED:       { name: 'Ranged',       color: '#4caf6e', bgClass: 'bg-ranged',        borderClass: 'border-ranged',        colorClass: 'color-ranged'       },
+        MOUNTED:      { name: 'Mounted',      color: '#5b9bd5', bgClass: 'bg-mounted',       borderClass: 'border-mounted',       colorClass: 'color-mounted'      },
+        GROUND:       { name: 'Ground',       color: '#d4a843', bgClass: 'bg-ground',        borderClass: 'border-ground',        colorClass: 'color-ground'       },
+        ARCHER_TOWER: { name: 'Archer Tower', color: '#b48cd9', bgClass: 'bg-archer-tower',  borderClass: 'border-archer-tower',  colorClass: 'color-archer-tower' }
     };
 
-    // Phase order: fastest actual speed first (game-DB values)
-    const PHASE_ORDER = ['GROUND', 'MOUNTED', 'RANGED', 'SIEGE'];
+    // Phase order: fastest actual speed first (game-DB values).
+    // ARCHER_TOWER is a defender-only tail phase (speed 0).
+    const PHASE_ORDER = ['GROUND', 'MOUNTED', 'RANGED', 'SIEGE', 'ARCHER_TOWER'];
 
-    // Targeting priority chains (1 = first choice)
+    // Targeting priority chains (1 = first choice).
+    // Each non-AT chain has ARCHER_TOWER appended last (PROVISIONAL — assumes
+    // AT is the lowest-priority target after all troop types). Without this,
+    // a defender with only AT alive cannot be engaged.
     const TARGET_PRIORITY = {
-        SIEGE:   ['SIEGE', 'RANGED', 'GROUND', 'MOUNTED'],
-        RANGED:  ['MOUNTED', 'RANGED', 'GROUND', 'SIEGE'],
-        MOUNTED: ['GROUND', 'SIEGE', 'MOUNTED', 'RANGED'],
-        GROUND:  ['RANGED', 'SIEGE', 'GROUND', 'MOUNTED']
+        SIEGE:        ['SIEGE', 'RANGED', 'GROUND', 'MOUNTED', 'ARCHER_TOWER' /* PROVISIONAL */],
+        RANGED:       ['MOUNTED', 'RANGED', 'GROUND', 'SIEGE', 'ARCHER_TOWER' /* PROVISIONAL */],
+        MOUNTED:      ['GROUND', 'SIEGE', 'MOUNTED', 'RANGED', 'ARCHER_TOWER' /* PROVISIONAL */],
+        GROUND:       ['RANGED', 'SIEGE', 'GROUND', 'MOUNTED', 'ARCHER_TOWER' /* PROVISIONAL */],
+        ARCHER_TOWER: ['MOUNTED', 'RANGED', 'GROUND', 'SIEGE']  // PROVISIONAL — see view-archer-tower-investigation
     };
 
     // Damage multipliers: ATTACKER_TYPE -> DEFENDER_TYPE -> coefficient
     // Tier-dependent: T1-T10 and T11+ have different matrices
     // Source: community research by @DerrickDefies
     // https://www.youtube.com/watch?v=fZm_MtJ1kyg&t=102s
+    //
+    // ARCHER_TOWER row + column cells are PROVISIONAL. Each AT cell starts equal
+    // to the matching RANGED cell as a deliberate default until the investigation
+    // page resolves the open question. Cells are independently editable so future
+    // evidence updates a single value without unwinding aliases.
     const DAMAGE_MULTIPLIERS_LOW = {
-        GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
-        RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
-        MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 0.9 },
-        SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.5 }
+        GROUND:       { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1, ARCHER_TOWER: 1.2 /* PROVISIONAL */ },
+        RANGED:       { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1, ARCHER_TOWER: 1.0 /* PROVISIONAL */ },
+        MOUNTED:      { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 0.9, ARCHER_TOWER: 0.8 /* PROVISIONAL */ },
+        SIEGE:        { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.5, ARCHER_TOWER: 0.4 /* PROVISIONAL */ },
+        ARCHER_TOWER: { GROUND: 0.8 /* PROVISIONAL */, RANGED: 1.0 /* PROVISIONAL */, MOUNTED: 1.2 /* PROVISIONAL */, SIEGE: 1.1 /* PROVISIONAL */, ARCHER_TOWER: 1.0 /* PROVISIONAL */ }
     };
     const DAMAGE_MULTIPLIERS_HIGH = {
-        GROUND:  { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1 },
-        RANGED:  { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1 },
-        MOUNTED: { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 1.1 },
-        SIEGE:   { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.6 }
+        GROUND:       { GROUND: 1.0,  RANGED: 1.2, MOUNTED: 0.7,  SIEGE: 1.1, ARCHER_TOWER: 1.2 /* PROVISIONAL */ },
+        RANGED:       { GROUND: 0.8,  RANGED: 1.0, MOUNTED: 1.2,  SIEGE: 1.1, ARCHER_TOWER: 1.0 /* PROVISIONAL */ },
+        MOUNTED:      { GROUND: 1.2,  RANGED: 0.8, MOUNTED: 1.0,  SIEGE: 1.1, ARCHER_TOWER: 0.8 /* PROVISIONAL */ },
+        SIEGE:        { GROUND: 0.35, RANGED: 0.4, MOUNTED: 0.3,  SIEGE: 0.6, ARCHER_TOWER: 0.4 /* PROVISIONAL */ },
+        ARCHER_TOWER: { GROUND: 0.8 /* PROVISIONAL */, RANGED: 1.0 /* PROVISIONAL */, MOUNTED: 1.2 /* PROVISIONAL */, SIEGE: 1.1 /* PROVISIONAL */, ARCHER_TOWER: 1.0 /* PROVISIONAL */ }
     };
 
     function getMultiplier(attackerType, defenderType, attackerTier) {

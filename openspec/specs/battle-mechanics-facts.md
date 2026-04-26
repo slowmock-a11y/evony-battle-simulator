@@ -130,12 +130,13 @@ Speed and Range are constant across tiers per type, **with one exception**: Sieg
 
 Troops attack sequentially by **actual speed** (fastest first). When speed is tied, the defender acts first.
 
-| Phase | Type    | Actual Speed | Rationale                |
-|-------|---------|-------------|--------------------------|
-| 1     | Ground  | 350         | Fastest                  |
-| 2     | Mounted | 300         | Second fastest           |
-| 3     | Ranged  | 100         | Third                    |
-| 4     | Siege   | 75          | Slowest                  |
+| Phase | Type         | Actual Speed | Rationale                                   |
+|-------|--------------|--------------|---------------------------------------------|
+| 1     | Ground       | 350          | Fastest                                     |
+| 2     | Mounted      | 300          | Second fastest                              |
+| 3     | Ranged       | 100          | Third                                       |
+| 4     | Siege        | 75           | Slowest troop type                          |
+| 5     | Archer Tower | 0            | Defender-only fixture; fires last in round  |
 
 **Within each phase** (same-speed tie → **defender acts first**):
 1. Defender's troops strike attacker's target layer (full damage formula)
@@ -334,27 +335,31 @@ Source: @DerrickDefies video (cited above).
 
 ## Damage Multipliers
 
-Tier-dependent 4×4 coefficient matrices. Values below 1.0 are penalties; above 1.0 are bonuses. Two cells change at T11+.
+Tier-dependent 5×5 coefficient matrices (the AT row + column expand the original 4×4). Values below 1.0 are penalties; above 1.0 are bonuses. Two cells change at T11+ (Mounted→Siege, Siege→Siege). Cells involving ARCHER_TOWER are PROVISIONAL — see the Archer Tower investigation page (`view-archer-tower-investigation` in the app, or `openspec/changes/add-archer-tower/`).
 
 ### T1–T10
 
-| Attacker \ Target | Ground | Ranged | Mounted | Siege |
-|--------------------|--------|--------|---------|-------|
-| Ground             | 1.0    | 1.2    | 0.7     | 1.1   |
-| Ranged             | 0.8    | 1.0    | 1.2     | 1.1   |
-| Mounted            | 1.2    | 0.8    | 1.0     | 0.9   |
-| Siege              | 0.35   | 0.4    | 0.3     | 0.5   |
+| Attacker \ Target | Ground | Ranged | Mounted | Siege | AT (PROVISIONAL) |
+|--------------------|--------|--------|---------|-------|-------------------|
+| Ground             | 1.0    | 1.2    | 0.7     | 1.1   | 1.2*              |
+| Ranged             | 0.8    | 1.0    | 1.2     | 1.1   | 1.0*              |
+| Mounted            | 1.2    | 0.8    | 1.0     | 0.9   | 0.8*              |
+| Siege              | 0.35   | 0.4    | 0.3     | 0.5   | 0.4*              |
+| AT (PROVISIONAL)   | 0.8*   | 1.0*   | 1.2*    | 1.1*  | 1.0*              |
 
 ### T11–T16
 
-| Attacker \ Target | Ground | Ranged | Mounted | Siege   |
-|--------------------|--------|--------|---------|---------|
-| Ground             | 1.0    | 1.2    | 0.7     | 1.1     |
-| Ranged             | 0.8    | 1.0    | 1.2     | 1.1     |
-| Mounted            | 1.2    | 0.8    | 1.0     | **1.1** |
-| Siege              | 0.35   | 0.4    | 0.3     | **0.6** |
+| Attacker \ Target | Ground | Ranged | Mounted | Siege   | AT (PROVISIONAL) |
+|--------------------|--------|--------|---------|---------|-------------------|
+| Ground             | 1.0    | 1.2    | 0.7     | 1.1     | 1.2*              |
+| Ranged             | 0.8    | 1.0    | 1.2     | 1.1     | 1.0*              |
+| Mounted            | 1.2    | 0.8    | 1.0     | **1.1** | 0.8*              |
+| Siege              | 0.35   | 0.4    | 0.3     | **0.6** | 0.4*              |
+| AT (PROVISIONAL)   | 0.8*   | 1.0*   | 1.2*    | 1.1*    | 1.0*              |
 
-T16 uses the same coefficients as T11–T15 — no new tier band is introduced at T16.
+T16 uses the same coefficients as T11–T15 — no new tier band is introduced at T16. AT has no tier; AT-as-attacker uses either band (RANGED's row is band-stable, so AT's row mirroring it is also band-stable).
+
+**\*PROVISIONAL** — AT row + column cells start equal to the matching RANGED cell as a deliberate default. See `openspec/changes/add-archer-tower/specs/troop-data/spec.md` for the full per-cell list and the `view-archer-tower-investigation` page in the app for the differential test protocols.
 
 Key interactions:
 - Counter triangle with bonuses AND penalties: Range→Mounted 1.2× / Mounted→Range 0.8×, Mounted→Ground 1.2× / Ground→Mounted 0.7×, Ground→Range 1.2× / Range→Ground 0.8×
@@ -374,6 +379,30 @@ Source: community research by [@DerrickDefies](https://www.youtube.com/@DerrickD
 
 ---
 
+## Archer Tower
+
+The Archer Tower (AT) is a **defender-only static fixture** at the wall. The simulator models it as a synthetic engine layer with `count = 1` (HP-fraction semantics), `def = 0`, no tier, and `speed = 0`. Three user-typed absolute inputs configure it: ATK, HP, Range. A fourth toggle ("Attack after death") controls whether AT fires one final volley on the round it dies.
+
+**Confirmed simulator behaviour:**
+- AT fires in a dedicated tail phase `ARCHER_TOWER`, ordered after `SIEGE` (per round: Ground → Mounted → Ranged → Siege → AT).
+- AT does not move; movement evaluation is skipped for the AT type.
+- AT-related %-buff multipliers do not apply; AT.atk / .hp / .range are exactly the user's typed values.
+- AT counter-strikes incoming fire only when the attacker is within AT's range (range-gated rule, identical to troops).
+- AT counts toward `armyAlive`; defender stays alive while AT.count > 0 even with no troops.
+- A defender with all three AT inputs at 0 produces no AT layer; battles run identically to the pre-AT engine.
+
+**Unverified facts (see `view-archer-tower-investigation`):**
+- Whether defender ATK% / DEF% / HP% / Range% buffs scale AT.
+- Phantom-fire timing in the real game (current default: one final volley with toggle on, none with toggle off).
+- AT targeting chain (current default mirrors Ranged's chain: Mounted → Ranged → Ground → Siege).
+- All 16 AT-related multiplier cells (5 in AT row + 4 in AT column on existing rows).
+- AT.def = 0 hypothesis (vs hidden DEF in the real game).
+- Wall-level → AT-stat formula (out of scope; absolute inputs only for now).
+
+Cross-reference: `openspec/changes/add-archer-tower/` and the in-app investigation page.
+
+---
+
 ## Open Questions (Unconfirmed Values)
 
 The following values are used as-is from the game UI but have **not been confirmed** against the actual game database files:
@@ -385,6 +414,7 @@ The following values are used as-is from the game UI but have **not been confirm
 - **Battlefield length:** Two live hypotheses — fixed 1500 vs. `max(base_range) + 200`. See the Battlefield section above and `openspec/changes/2026-04-17-investigate-battlefield-size/` for the test protocol.
 - **Round cap:** Whether march-vs-march battles have a fixed round limit (often cited as 4, unconfirmed).
 - **T17 and beyond:** Unknown whether further tiers exist or are planned.
+- **Archer Tower:** Six open questions about buff scaling, phantom-fire timing, targeting chain, AT row/column multipliers, AT.def hypothesis, and Wall-level → AT-stat dependency. See the Archer Tower section above and `openspec/changes/add-archer-tower/` for protocols.
 
 **Recently resolved (2026-04-15):** Ground actual speed (350), Ranged actual speed (100), and Ranged actual range (500) are all confirmed — no UI-doubling beyond Mounted. The "Siege > Ground > Ranged & Mounted" range-ordering claim is disproven.
 

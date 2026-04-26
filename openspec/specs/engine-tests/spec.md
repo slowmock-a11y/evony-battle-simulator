@@ -87,3 +87,61 @@ Test fixtures SHALL NOT depend on `BATTLEFIELD_LENGTH = 1500` for their pass/fai
 - **WHEN** a movement test is written to verify "Mounted advances 300 per round when out of range"
 - **THEN** the test asserts `new_position − old_position === 300` for a single round, and does not assert a specific round number at which engagement occurs
 
+### Requirement: Archer Tower test suite covers phase order, no-movement, buff isolation, counter-attack, phantom-fire, and provisional matrix
+The test suite SHALL include a new file `js/tests/test-archer-tower.js` registered in `js/tests/test-runner.js` and loaded in `tests.html`. The suite SHALL exercise the AT capability's normative behaviours.
+
+#### Scenario: AT fires in the ARCHER_TOWER tail phase
+- **WHEN** a battle is run with a defender AT layer and any attacker composition
+- **THEN** the event log SHALL contain at least one attack event with `phase === 'ARCHER_TOWER'` and `side === 'DEF'`, occurring after every Siege-phase event of the same round
+
+#### Scenario: AT does not move
+- **WHEN** a multi-round battle runs with a defender AT
+- **THEN** every position snapshot in the event log SHALL show the AT's defender position unchanged (equal to the initial value)
+
+#### Scenario: AT.atk is not scaled by defender ATK% buff
+- **WHEN** the defender has `buffs.RANGED.atk = 100` (or any buff entry) and AT.atk is 5000
+- **THEN** AT's effective ATK in the damage formula SHALL be 5000 (verified by computing the damage from a known target and asserting it matches the no-buff prediction)
+
+#### Scenario: AT counter-attacks when attacker is in range
+- **WHEN** an attacker fires on AT from a distance ≤ AT.range and AT.count > 0 after the strike
+- **THEN** a counter event SHALL be emitted from AT in that exchange
+
+#### Scenario: AT does not counter-attack when attacker is out of range
+- **WHEN** an attacker fires on AT from a distance > AT.range
+- **THEN** no counter event SHALL be emitted from AT for that exchange
+
+#### Scenario: Phantom-fire toggle off — AT killed mid-round does not fire
+- **WHEN** AT is configured with `phantomFire: false` and is killed during the SIEGE phase of round N
+- **THEN** the event log SHALL contain no AT attack event for round N
+
+#### Scenario: Phantom-fire toggle on — AT killed mid-round fires once
+- **WHEN** AT is configured with `phantomFire: true`, was alive at the start of round N, and is killed during the SIEGE phase of round N
+- **THEN** the event log SHALL contain exactly one AT attack event in round N (in the ARCHER_TOWER phase) and zero AT attack events in subsequent rounds
+
+#### Scenario: Defender alone with AT keeps battle alive
+- **WHEN** the defender has zero troops and a live AT, and the attacker has any composition
+- **THEN** the battle SHALL continue past round 1 (not immediately end as ATTACKER win) until AT is destroyed
+
+#### Scenario: AT-as-attacker provisional multiplier
+- **WHEN** AT fires on a Mounted target and `getMultiplier('ARCHER_TOWER', 'MOUNTED')` is read
+- **THEN** the value SHALL equal 1.2 (PROVISIONAL — equal to RANGED → MOUNTED)
+
+#### Scenario: AT-as-target provisional multiplier
+- **WHEN** a Siege fires on AT and `getMultiplier('SIEGE', 'ARCHER_TOWER')` is read
+- **THEN** the value SHALL equal 0.4 (PROVISIONAL — equal to SIEGE → RANGED)
+
+#### Scenario: AT priority chain provisional default
+- **WHEN** the test reads `TroopData.TARGET_PRIORITY['ARCHER_TOWER']`
+- **THEN** the value SHALL equal `['MOUNTED', 'RANGED', 'GROUND', 'SIEGE']` (PROVISIONAL — equal to RANGED's chain)
+
+### Requirement: Existing test suite passes unmodified
+The pre-change test suite SHALL continue to pass without modification. No existing test SHALL need to be edited to accommodate the AT capability; the additive engine changes SHALL preserve every prior assertion's pass condition.
+
+#### Scenario: Existing tests pass
+- **WHEN** `node scripts/run-tests.js` is run after the AT capability is implemented
+- **THEN** every previously-passing test SHALL still pass (the new test file adds tests; it does not modify or skip existing ones)
+
+#### Scenario: Browser test runner regressions
+- **WHEN** `tests.html` is opened in a browser after the AT capability is implemented
+- **THEN** every test row that was green before the change SHALL still be green
+

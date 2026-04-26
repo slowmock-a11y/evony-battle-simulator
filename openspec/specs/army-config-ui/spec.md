@@ -91,3 +91,50 @@ Clicking a column header (troop type name) SHALL allow setting all tiers of that
 #### Scenario: Click column header
 - **WHEN** the user clicks the "Mounted" column header and enters 5000
 - **THEN** all 14 Mounted tier inputs are set to 5000
+
+### Requirement: Defender Buff section includes an Archer Tower row
+The defender army panel's Buff section SHALL include a fifth row labelled "Archer Tower" appended after the Ground / Ranged / Mounted / Siege rows. The attacker army panel's Buff section SHALL NOT include this row. The AT row SHALL contain three numeric inputs (ATK, HP, Range) and one boolean toggle ("Attack after death") with `data-archer-stat` attributes that namespace them away from the existing `data-buff-type` selectors.
+
+The numeric inputs SHALL be absolute (not percent) values. The rendered fields SHALL NOT show a `%` suffix and SHALL be visually distinguishable from the buff rows above (e.g. via a divider or label cue) to communicate the absolute-vs-percent distinction.
+
+#### Scenario: Defender panel shows AT row
+- **WHEN** the page loads
+- **THEN** the defender Buff section SHALL contain a fifth row with label "Archer Tower" and four controls: ATK input, HP input, Range input, and "Attack after death" checkbox
+
+#### Scenario: Attacker panel does not show AT row
+- **WHEN** the page loads
+- **THEN** the attacker Buff section SHALL contain only the four troop-type rows (Ground, Ranged, Mounted, Siege) with no Archer Tower row
+
+#### Scenario: AT inputs use absolute namespace
+- **WHEN** the user inspects the defender AT inputs
+- **THEN** each numeric input SHALL carry a `data-archer-stat` attribute (one of "atk", "hp", "range", "phantomFire") and SHALL NOT carry a `data-buff-type` attribute
+
+#### Scenario: AT inputs default to zero
+- **WHEN** the page loads
+- **THEN** the three AT numeric inputs SHALL show 0 and the "Attack after death" checkbox SHALL be unchecked
+
+#### Scenario: AT row visually distinct from buff rows
+- **WHEN** the user views the defender Buff section
+- **THEN** the AT row SHALL be visually separated from the four buff rows above (e.g. divider, distinct label colour, or "(absolute)" cue) so the absolute-input semantics are clear
+
+### Requirement: getArcherTower(panelId) reads AT inputs
+The army-config module SHALL expose `getArcherTower(panelId)` which reads the four `data-archer-stat` inputs from the given panel. The function SHALL return `{ atk, hp, range, phantomFire }` when `panelId === 'defender-panel'` AND at least one of `atk`, `hp`, `range` is greater than 0. In all other cases — `panelId === 'attacker-panel'` or all three numeric inputs at 0 — the function SHALL return `null`.
+
+#### Scenario: Defender with non-zero inputs returns object
+- **WHEN** the defender's AT inputs are ATK=5000, HP=100000, Range=800, phantomFire=true and `getArcherTower('defender-panel')` is called
+- **THEN** the function SHALL return `{ atk: 5000, hp: 100000, range: 800, phantomFire: true }`
+
+#### Scenario: Defender with all-zero inputs returns null
+- **WHEN** the defender's AT inputs are all 0 and `getArcherTower('defender-panel')` is called
+- **THEN** the function SHALL return `null`
+
+#### Scenario: Attacker panel always returns null
+- **WHEN** `getArcherTower('attacker-panel')` is called
+- **THEN** the function SHALL return `null` regardless of any AT-like data on that panel
+
+### Requirement: getBuffs is unaffected by AT inputs
+The existing `getBuffs(panelId)` function SHALL continue to read only `data-buff-type` inputs and SHALL NOT include any AT-related fields in its return value. AT inputs SHALL therefore not appear in any buff object passed to the engine.
+
+#### Scenario: getBuffs ignores AT inputs
+- **WHEN** the user enters AT values on the defender panel and `getBuffs('defender-panel')` is called
+- **THEN** the returned buffs object SHALL contain only the four troop-type entries (GROUND, RANGED, MOUNTED, SIEGE) with their atk/def/hp/range/rangeFlat fields, and SHALL NOT contain an `ARCHER_TOWER` key

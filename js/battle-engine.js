@@ -21,11 +21,13 @@ var BattleEngine = (function () {
         };
     }
 
-    function createArmy(troopCounts, buffs) {
+    function createArmy(troopCounts, buffs, archerTower) {
         // troopCounts: { GROUND: { 1: 1000, 2: 500, ... }, RANGED: {...}, ... }
         // buffs: { GROUND: { atk: 0, def: 0, hp: 0 }, ... }
+        // archerTower (optional, defender-only): { atk, hp, range, phantomFire }
         const layers = [];
         TroopData.PHASE_ORDER.forEach((type) => {
+            if (type === 'ARCHER_TOWER') return; // synthetic layer added below
             TroopData.TIERS.forEach((tier) => {
                 const count = (troopCounts[type] && troopCounts[type][tier]) || 0;
                 if (count > 0) {
@@ -39,6 +41,26 @@ var BattleEngine = (function () {
                 }
             });
         });
+        // Archer Tower is defender-only and synthesized as a count=1 fractional-HP layer.
+        // The buffs object intentionally has no ARCHER_TOWER key so effective* helpers
+        // fall through to the raw layer values — AT bypasses %-buff multiplication.
+        if (archerTower && (archerTower.atk > 0 || archerTower.hp > 0 || archerTower.range > 0)) {
+            layers.push({
+                type: 'ARCHER_TOWER',
+                tier: 1,
+                count: 1,
+                startCount: 1,
+                atk: archerTower.atk || 0,
+                def: 0,
+                hp: archerTower.hp || 0,
+                speed: 0,
+                range: archerTower.range || 0,
+                engagedTargetType: null,
+                phantomFire: !!archerTower.phantomFire,
+                aliveAtRoundStart: true,
+                phantomFireUsed: false
+            });
+        }
         return {
             layers: layers,
             buffs: buffs || {
@@ -115,6 +137,9 @@ var BattleEngine = (function () {
     }
 
     function evaluateMovement(type, positions, attackerArmy, defenderArmy) {
+        // Archer Tower never moves — it's a stationary defender fixture at the wall.
+        if (type === 'ARCHER_TOWER') return [];
+
         // Speed is read per-layer (layer.speed) because Siege T16 has speed 76
         // while Siege T1–T15 has speed 75. All other types are flat across tiers.
         //
@@ -352,6 +377,11 @@ var BattleEngine = (function () {
 
         while (armyAlive(attackerArmy) && armyAlive(defenderArmy) && round < maxRounds) {
             round++;
+            // Snapshot AT alive-state at round start so phantom-fire eligibility
+            // is judged against the round's starting condition, not its current one.
+            defenderArmy.layers.forEach((l) => {
+                if (l.type === 'ARCHER_TOWER') l.aliveAtRoundStart = l.count > 0;
+            });
             for (let p = 0; p < TroopData.PHASE_ORDER.length; p++) {
                 const phase = TroopData.PHASE_ORDER[p];
 
@@ -372,7 +402,13 @@ var BattleEngine = (function () {
                 // Attacker strikes second.
                 executePhase(phase, attackerArmy, defenderArmy, 'ATT', round, events, positions);
 
-                if (!armyAlive(attackerArmy) || !armyAlive(defenderArmy)) break;
+                // Allow the round to proceed into ARCHER_TOWER phase if defender's AT
+                // just died but is still phantom-fire-eligible — it gets one final volley.
+                const phantomFirePending = defenderArmy.layers.some((l) =>
+                    l.type === 'ARCHER_TOWER' && l.phantomFire && l.aliveAtRoundStart
+                    && !l.phantomFireUsed && l.count <= 0
+                );
+                if (!armyAlive(attackerArmy) || (!armyAlive(defenderArmy) && !phantomFirePending)) break;
             }
         }
 
@@ -390,9 +426,14 @@ var BattleEngine = (function () {
     }
 
     function executePhase(phase, actingArmy, enemyArmy, side, round, events, positions) {
-        // Get layers of this type, sorted highest tier first
+        // Get layers of this type, sorted highest tier first.
+        // ARCHER_TOWER may also fire on the round it dies if phantom-fire is enabled.
         const layers = actingArmy.layers
-            .filter((l) => l.count > 0 && l.type === phase)
+            .filter((l) => {
+                if (l.type !== phase) return false;
+                if (l.count > 0) return true;
+                return l.type === 'ARCHER_TOWER' && l.phantomFire && l.aliveAtRoundStart && !l.phantomFireUsed;
+            })
             .sort((a, b) => b.tier - a.tier);
 
         const sourceKey = side;
@@ -401,16 +442,33 @@ var BattleEngine = (function () {
 
         for (let j = 0; j < layers.length; j++) {
             const attacker = layers[j];
-            if (attacker.count <= 0) continue;
+            const isPhantomShot = attacker.type === 'ARCHER_TOWER' && attacker.count <= 0;
+            if (attacker.count <= 0 && !isPhantomShot) continue;
 
             const layerPos = positions[sourceKey][layerKey(phase, attacker.tier)];
+
+            // Phantom-fire: temporarily restore count to 1 so the damage formula
+            // produces a full-strength final volley, then restore and lock the flag
+            // so subsequent rounds do not fire again.
+            const savedCount = attacker.count;
+            if (isPhantomShot) {
+                attacker.count = 1;
+                attacker.phantomFireUsed = true;
+            }
+
             const target = selectTarget(attacker, enemyArmy, layerPos, enemyPositions);
-            if (!target) continue;
+            if (!target) {
+                if (isPhantomShot) attacker.count = savedCount;
+                continue;
+            }
 
             // Range guard: verify target is within attacker's actual range
             const targetPos = positions[enemyKey][layerKey(target.type, target.tier)];
             const distance = Math.abs(targetPos - layerPos);
-            if (distance > attacker.range) continue;
+            if (distance > attacker.range) {
+                if (isPhantomShot) attacker.count = savedCount;
+                continue;
+            }
 
             const countBefore = target.count;
             const result = calculateDamage(attacker, target, actingArmy.buffs, enemyArmy.buffs);
@@ -434,6 +492,11 @@ var BattleEngine = (function () {
                 distance: distance,
                 positions: snapshotPositions(positions)
             });
+
+            // Restore pre-shot count so the dead AT cannot counter-strike. The
+            // `attacker.count > 0` guard below then naturally rejects the counter.
+            if (isPhantomShot) attacker.count = savedCount;
+
             if (target.count > 0 && attacker.count > 0 && distance <= target.range) {
                 const attackerCountBefore = attacker.count;
                 const counterKills = calculateCounterKills(attacker, target, actingArmy.buffs, enemyArmy.buffs, result.kills);

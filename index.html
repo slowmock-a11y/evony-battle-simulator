@@ -36,7 +36,7 @@
       }
     }
     </script>
-    <link rel="stylesheet" href="css/style.css?v=a4e473f">
+    <link rel="stylesheet" href="css/style.css?v=25cbd3e">
 </head>
 <body>
     <header>
@@ -62,6 +62,28 @@
         <div class="battle-view-btn-row">
             <button id="btn-battle-view" class="btn btn-primary">&#9876; Battle View</button>
         </div>
+
+        <section id="setup-controls" class="setup-controls">
+            <div id="setup-warning" class="setup-warning" style="display:none"></div>
+            <div id="setup-fallback-note" class="setup-fallback-note" style="display:none">
+                Your browser does not support save-back; downloads land in your Downloads folder.
+            </div>
+            <div class="setup-row">
+                <label class="setup-field">
+                    <span class="setup-field-label">Setup name</span>
+                    <input type="text" id="setup-name" placeholder="e.g. Anti-Cav v3" />
+                </label>
+                <label class="setup-field setup-field-grow">
+                    <span class="setup-field-label">Notes</span>
+                    <input type="text" id="setup-notes" placeholder="Optional comment for the file" />
+                </label>
+                <div class="setup-buttons">
+                    <button type="button" id="setup-load" class="btn btn-sm">Load</button>
+                    <button type="button" id="setup-save" class="btn btn-sm">Save</button>
+                </div>
+            </div>
+            <input type="file" id="setup-file-fallback" accept=".json,application/json" style="display:none" />
+        </section>
 
         <section class="army-setup">
             <h3 class="section-divider">Buffs</h3>
@@ -109,6 +131,7 @@
             <span class="phase-dot" data-phase="RANGED">Ranged</span>
             <span class="phase-dot" data-phase="MOUNTED">Mounted</span>
             <span class="phase-dot" data-phase="GROUND">Ground</span>
+            <span class="phase-dot" data-phase="ARCHER_TOWER">Archer Tower</span>
         </section>
 
         <section class="battlefield-area">
@@ -129,6 +152,7 @@
                             <option value="RANGED">Ranged</option>
                             <option value="MOUNTED">Mounted</option>
                             <option value="GROUND">Ground</option>
+                            <option value="ARCHER_TOWER">Archer Tower</option>
                         </select>
                         <select id="log-filter-round"><option value="">All Rounds</option></select>
                         <label><input type="checkbox" id="log-filter-att" checked /> ATT</label>
@@ -285,20 +309,45 @@
                     <a href="https://theriagames.com/guide/layers/" target="_blank" rel="noopener">Theria Games &mdash; Layers Guide</a>
                 </p>
 
+                <!-- Archer Tower -->
+                <h3>Archer Tower</h3>
+                <p>A defender-only static fixture configured by three absolute-value inputs (ATK, HP, Range) plus an "Attack after death" toggle in the defender Buff section. AT has no DEF, no count, no tier — it is a single fortified position at the wall.</p>
+                <p><strong>Confirmed simulator behaviour:</strong></p>
+                <ul class="info-list">
+                    <li><strong>Defender-only.</strong> The attacker side has no AT inputs, no AT engine layer, and no AT marker on the battlefield.</li>
+                    <li><strong>Three absolute inputs.</strong> ATK / HP / Range are typed values, not percentages. No DEF, no troop count, no tier.</li>
+                    <li><strong>Stationary at the defender edge.</strong> Position is fixed at the back of the field; AT never moves.</li>
+                    <li><strong>Fires in the new ARCHER_TOWER tail phase.</strong> Per round the phase order becomes Ground &rarr; Mounted &rarr; Ranged &rarr; Siege &rarr; <span class="color-archer-tower">Archer Tower</span>.</li>
+                    <li><strong>Counter-strikes when in range.</strong> Same range-gated rule as troops &mdash; AT only counters if the attacker is within AT's range.</li>
+                    <li><strong>Counts toward defender alive.</strong> A defender with no troops but a live AT keeps the battle going until AT is destroyed.</li>
+                </ul>
+                <p style="color:#e9a045;"><strong>Unverified facts</strong> &mdash; the following defaults are provisional. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">See the Archer Tower investigation page</a> for hypotheses and differential test protocols.</p>
+                <ul class="info-list">
+                    <li style="color:#e9a045;"><strong>Do defender %-buffs scale AT?</strong> Currently NO &mdash; AT.atk / HP / Range use the user's typed values exactly. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>Phantom-fire timing.</strong> The "Attack after death" toggle controls whether AT fires one final volley on the round it dies (toggle on) or stops immediately (toggle off). Real-game timing unverified. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>AT targeting chain.</strong> Default mirrors Ranged: Mounted &rarr; Ranged &rarr; Ground &rarr; Siege. Whether real-game AT prioritizes differently is unknown. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>AT-as-attacker multipliers (5 cells).</strong> AT row in the damage matrix mirrors the Ranged row. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>AT-as-target multipliers (4 cells).</strong> AT column entries equal the Ranged column entries. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>AT.def = 0 hypothesis.</strong> Engine treats AT defence as 0 (only HP soaks damage). Hidden DEF in the real game has not been ruled out. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                    <li style="color:#e9a045;"><strong>Wall-level &rarr; AT-stat formula.</strong> Out of scope for this change. AT inputs stay absolute; a future change may auto-derive them from Wall level. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">[investigate]</a></li>
+                </ul>
+
                 <!-- Targeting Priority -->
                 <h3>Targeting Priority</h3>
                 <p>Each troop type has a fixed priority chain determining <strong>who</strong> it attacks. If the #1 target is dead or out of range, it falls through to #2, then #3, etc.</p>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Attacker &#x2193; / Target &rarr;</th><th class="color-siege">Siege</th><th class="color-ranged">Ranged</th><th class="color-mounted">Mounted</th><th class="color-ground">Ground</th></tr>
+                        <tr><th>Attacker &#x2193; / Target &rarr;</th><th class="color-siege">Siege</th><th class="color-ranged">Ranged</th><th class="color-mounted">Mounted</th><th class="color-ground">Ground</th><th class="color-archer-tower">AT*</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td class="color-siege"><strong>Siege</strong></td><td>1</td><td>2</td><td>4</td><td>3</td></tr>
-                        <tr><td class="color-ranged"><strong>Ranged</strong></td><td>4</td><td>2</td><td>1</td><td>3</td></tr>
-                        <tr><td class="color-mounted"><strong>Mounted</strong></td><td>2</td><td>4</td><td>3</td><td>1</td></tr>
-                        <tr><td class="color-ground"><strong>Ground</strong></td><td>2</td><td>1</td><td>4</td><td>3</td></tr>
+                        <tr><td class="color-siege"><strong>Siege</strong></td><td>1</td><td>2</td><td>4</td><td>3</td><td>5*</td></tr>
+                        <tr><td class="color-ranged"><strong>Ranged</strong></td><td>4</td><td>2</td><td>1</td><td>3</td><td>5*</td></tr>
+                        <tr><td class="color-mounted"><strong>Mounted</strong></td><td>2</td><td>4</td><td>3</td><td>1</td><td>5*</td></tr>
+                        <tr><td class="color-ground"><strong>Ground</strong></td><td>2</td><td>1</td><td>4</td><td>3</td><td>5*</td></tr>
+                        <tr><td class="color-archer-tower"><strong>Archer Tower*</strong></td><td>4*</td><td>2*</td><td>1*</td><td>3*</td><td>&mdash;</td></tr>
                     </tbody>
                 </table>
+                <p style="color:#e9a045;"><strong>*PROVISIONAL</strong> &mdash; AT row and AT column values are defaults that mirror the Ranged chain. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">See the Archer Tower investigation page</a>.</p>
                 <div class="info-chains">
                     <span class="color-siege">Siege</span> &rarr; Siege, Ranged, Ground, Mounted<br>
                     <span class="color-ranged">Ranged</span> &rarr; Mounted, Ranged, Ground, Siege<br>
@@ -341,27 +390,30 @@
                 <h4>T1&ndash;T10</h4>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th></tr>
+                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th><th><span class="color-archer-tower">AT*</span></th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td></tr>
-                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td></tr>
-                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td>0.9&times;</td></tr>
-                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td>0.5&times;</td></tr>
+                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td><td>1.2&times;*</td></tr>
+                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td><td>1.0&times;*</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td>0.9&times;</td><td>0.8&times;*</td></tr>
+                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td>0.5&times;</td><td>0.4&times;*</td></tr>
+                        <tr><td><span class="color-archer-tower">Archer Tower*</span></td><td>0.8&times;*</td><td>1.0&times;*</td><td>1.2&times;*</td><td>1.1&times;*</td><td>1.0&times;*</td></tr>
                     </tbody>
                 </table>
                 <h4>T11&ndash;T16</h4>
                 <table class="info-table">
                     <thead>
-                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th></tr>
+                        <tr><th>Attacker &darr; \ Target &rarr;</th><th><span class="color-ground">Ground</span></th><th><span class="color-ranged">Ranged</span></th><th><span class="color-mounted">Mounted</span></th><th><span class="color-siege">Siege</span></th><th><span class="color-archer-tower">AT*</span></th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td></tr>
-                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td></tr>
-                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td><strong>1.1&times;</strong></td></tr>
-                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td><strong>0.6&times;</strong></td></tr>
+                        <tr><td><span class="color-ground">Ground</span></td><td>1.0&times;</td><td>1.2&times;</td><td>0.7&times;</td><td>1.1&times;</td><td>1.2&times;*</td></tr>
+                        <tr><td><span class="color-ranged">Ranged</span></td><td>0.8&times;</td><td>1.0&times;</td><td>1.2&times;</td><td>1.1&times;</td><td>1.0&times;*</td></tr>
+                        <tr><td><span class="color-mounted">Mounted</span></td><td>1.2&times;</td><td>0.8&times;</td><td>1.0&times;</td><td><strong>1.1&times;</strong></td><td>0.8&times;*</td></tr>
+                        <tr><td><span class="color-siege">Siege</span></td><td>0.35&times;</td><td>0.4&times;</td><td>0.3&times;</td><td><strong>0.6&times;</strong></td><td>0.4&times;*</td></tr>
+                        <tr><td><span class="color-archer-tower">Archer Tower*</span></td><td>0.8&times;*</td><td>1.0&times;*</td><td>1.2&times;*</td><td>1.1&times;*</td><td>1.0&times;*</td></tr>
                     </tbody>
                 </table>
+                <p style="color:#e9a045;"><strong>*PROVISIONAL</strong> &mdash; AT row and column values mirror the Ranged row/column as defaults. <a href="#" data-view="archer-tower-investigation" style="color:#5b9bd5;">See the Archer Tower investigation page</a> for the differential test protocols.</p>
                 <div class="info-diagram">
                     Ranged &mdash;1.2&times;&rarr; Mounted &mdash;1.2&times;&rarr; Ground &mdash;1.2&times;&rarr; Ranged<br>
                     (reverse: 0.8&times; / 0.7&times; / 0.8&times;)
@@ -650,20 +702,147 @@
             </section>
         </div><!-- /view-battlefield-investigation -->
 
+        <div id="view-archer-tower-investigation" class="info-page" style="display:none">
+            <section class="info-content">
+                <a href="#" class="back-link" data-view="mechanics">&#8592; Back to Battle Mechanics</a>
+                <h2>Archer Tower &mdash; Open Investigation</h2>
+                <p class="info-lead">
+                    This page documents <strong>unresolved factual uncertainties</strong> about the Archer Tower (AT).
+                    The simulator commits to specific defaults so a battle can run, but several of those defaults
+                    are educated guesses pending in-game verification. Until the tests below resolve them,
+                    AT-related outcomes should be treated as provisional.
+                </p>
+                <p class="info-lead" style="color:#e9a045;">
+                    <strong>Status (2026-04-26):</strong> open question, confidence LOW. Six test protocols defined, awaiting in-game runs.
+                </p>
+
+                <h3>Why this matters</h3>
+                <p>
+                    AT participates in every defender battle that includes a wall. Its provisional defaults
+                    make assumptions about (a) whether buffs scale its stats, (b) what happens on the round it dies,
+                    (c) which troop type it prioritises, (d) the multiplier coefficients in its row/column,
+                    (e) whether it has hidden DEF, and (f) how its ATK/HP/Range derive from Wall level.
+                    Each unresolved assumption can systematically shift survivor counts &mdash;
+                    discovering the true value lets the simulator predict real-world outcomes more reliably.
+                </p>
+
+                <h3>1. Do defender %-buffs scale AT?</h3>
+                <p><strong>H1 &mdash; Buffs do not scale AT (simulator default):</strong> AT.atk, AT.hp, AT.range are exactly the user's typed values; defender ATK% / DEF% / HP% / Range% buffs are ignored.</p>
+                <p><strong>H2 &mdash; Buffs scale AT identically to troops:</strong> A defender with +100% ATK doubles AT's effective ATK.</p>
+                <p><strong>Differential test:</strong> Run two identical attacker compositions vs a defender consisting only of AT (no troops). Run A: defender %-buffs all 0. Run B: defender ATK% = +100% on every troop type. If H1 is correct, attacker losses to AT counter-fire are identical between runs. If H2 is correct, Run B doubles AT's contribution and the attacker takes much heavier losses.</p>
+                <table class="info-table">
+                    <thead><tr><th></th><th>H1 prediction</th><th>H2 prediction</th></tr></thead>
+                    <tbody>
+                        <tr><td>Attacker losses A vs B</td><td>identical (within RNG)</td><td>B losses much higher</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>2. Phantom-fire timing</h3>
+                <p><strong>H1 &mdash; AT fires one final volley on the round it dies (current default with toggle on):</strong> If AT was alive at round start and is killed mid-round, the AT phase emits one shot that round, then no further AT shots.</p>
+                <p><strong>H2 &mdash; AT stops firing immediately (toggle off):</strong> Once HP=0, no more shots.</p>
+                <p><strong>H3 &mdash; AT fires for N more rounds:</strong> A "lingering volley" mechanism extends past the dying round.</p>
+                <p><strong>Differential test:</strong> Configure AT with HP just barely killable in one round of attacker fire. Compare battle reports: count AT-attributed kills in the dying round and in the round after.</p>
+                <table class="info-table">
+                    <thead><tr><th></th><th>AT kills in dying round</th><th>AT kills in round N+1</th></tr></thead>
+                    <tbody>
+                        <tr><td>H1 (one final volley)</td><td>1 volley</td><td>0</td></tr>
+                        <tr><td>H2 (immediate stop)</td><td>0</td><td>0</td></tr>
+                        <tr><td>H3 (lingering)</td><td>1 volley</td><td>&gt; 0</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>3. AT targeting chain</h3>
+                <p><strong>H1 &mdash; AT mirrors Ranged's chain (current default):</strong> Mounted &rarr; Ranged &rarr; Ground &rarr; Siege.</p>
+                <p><strong>H2 &mdash; AT prioritises a different first target:</strong> e.g. Ground first, or Siege first.</p>
+                <p><strong>Differential test:</strong> Defender with only AT vs an attacker that fields one of each troop type at distance &lt;= AT.range. Observe which troop type AT kills first across multiple battles.</p>
+
+                <h3>4. AT-as-attacker multipliers (5 cells)</h3>
+                <p>The five cells in the AT row of the damage matrix (AT &rarr; Ground / Ranged / Mounted / Siege / AT) are currently 0.8 / 1.0 / 1.2 / 1.1 / 1.0, mirroring the Ranged row.</p>
+                <p><strong>H1 &mdash; AT row equals Ranged row (current default).</strong></p>
+                <p><strong>H2 &mdash; At least one cell differs.</strong> Any differential combat report that controls for everything except the AT-vs-target type matchup can probe a single cell.</p>
+                <p><strong>Differential test:</strong> Defender = AT only. Attacker = one troop type at fixed range. Compute observed AT damage per shot and divide by the predicted (no-multiplier) value. The ratio should equal the cell value if H1 holds.</p>
+
+                <h3>5. AT-as-target multipliers (4 cells)</h3>
+                <p>The four AT-column cells (Ground / Ranged / Mounted / Siege &rarr; AT) are currently 1.2 / 1.0 / 0.8 / 0.4, equal to the corresponding Ranged-column entries.</p>
+                <p><strong>H1 &mdash; AT column equals Ranged column (current default).</strong></p>
+                <p><strong>H2 &mdash; At least one cell differs.</strong></p>
+                <p><strong>Differential test:</strong> Single attacker troop type vs defender AT only. Measure damage per attacker shot, infer the multiplier from the formula. Compare to predicted Ranged-column value.</p>
+
+                <h3>6. AT.def = 0 hypothesis</h3>
+                <p><strong>H1 &mdash; AT has no DEF (current default):</strong> Damage to AT scales as <code>damage = ATK * mod</code> with no DEF reduction.</p>
+                <p><strong>H2 &mdash; AT has hidden DEF:</strong> Some non-zero DEF value reduces incoming damage proportionally.</p>
+                <p><strong>Differential test:</strong> Two attacker compositions with identical ATK but very different absolute magnitudes (e.g. 100 high-tier troops vs 10000 low-tier troops with matched aggregate ATK). If H1, observed AT HP loss tracks the simple <code>ATK * mod</code> prediction. If H2, the high-tier composition disproportionately bypasses the hidden DEF.</p>
+
+                <h3>Out of scope: Wall-level &rarr; AT-stat dependency</h3>
+                <p>
+                    The real game derives AT.atk / AT.hp / AT.range from Wall level + research. This change does
+                    not implement that derivation &mdash; the simulator uses absolute typed inputs. The
+                    <code>data/Master Generals Spreadsheet_wall.csv</code> file in this repository is a candidate
+                    primary source for a future change that auto-fills AT stats from Wall level.
+                </p>
+
+                <h3>Controlling for noise</h3>
+                <p>Every test above assumes:</p>
+                <ul class="info-list">
+                    <li>Identical generals on both sides between runs (or identical buff configurations).</li>
+                    <li>No Range-affecting research / skills / gear active (so AT.range corresponds to the typed value).</li>
+                    <li>Three repetitions per scenario, reporting the mean.</li>
+                    <li>Battle-report screenshots stored alongside numbers.</li>
+                </ul>
+
+                <h3>Reporting template</h3>
+                <table class="info-table">
+                    <thead>
+                        <tr><th>Question</th><th>Run</th><th>Setup</th><th>AT atk/hp/range</th><th>Observed result</th><th>Predicted (H1)</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1 Buffs scale AT?</td><td>A1</td><td>buffs 0%</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>1 Buffs scale AT?</td><td>B1</td><td>buffs +100%</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td></td></tr>
+                        <tr><td>2 Phantom timing</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Follow-up decision tree</h3>
+                <table class="info-table">
+                    <thead><tr><th>Test result</th><th>Action</th></tr></thead>
+                    <tbody>
+                        <tr><td>H1 confirmed for all six</td><td>Promote AT subsection in fact sheet from "provisional" to confirmed.</td></tr>
+                        <tr><td>H2 confirmed for any</td><td>Update the corresponding cell/flag in <code>js/troop-data.js</code> or <code>js/battle-engine.js</code>; revise the matching test in <code>js/tests/test-archer-tower.js</code>; move that entry off this page into the confirmed section of the fact sheet.</td></tr>
+                        <tr><td>Ambiguous</td><td>Keep the open question, add measured values, refine the test.</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Share your findings</h3>
+                <p>
+                    Even partial data is useful &mdash; please post any test results so the community can triangulate.
+                </p>
+                <ul class="info-list">
+                    <li><a href="https://github.com/slowmock-a11y/evony-battle-simulator/discussions" target="_blank" rel="noopener" style="color:#5b9bd5;">GitHub Discussions</a> &mdash; preferred (threaded, persistent).</li>
+                    <li><a href="https://github.com/slowmock-a11y/evony-battle-simulator/issues" target="_blank" rel="noopener" style="color:#5b9bd5;">Open an issue</a> if you have a decisive result.</li>
+                </ul>
+
+                <p class="info-section-refs" style="margin-top: 1rem;">
+                    This investigation also lives in the repository as an OpenSpec change under
+                    <code>openspec/changes/add-archer-tower/</code>.
+                </p>
+            </section>
+        </div><!-- /view-archer-tower-investigation -->
+
         <div id="view-generals" class="info-page" style="display:none"></div><!-- /view-generals -->
     </main>
 
-    <script src="js/generals-data.js?v=a4e473f"></script>
-    <script src="js/covenants-data.js?v=a4e473f"></script>
-    <script src="js/generals-page.js?v=a4e473f"></script>
-    <script src="js/info-pages.js?v=a4e473f"></script>
-    <script src="js/troop-data.js?v=a4e473f"></script>
-    <script src="js/battle-engine.js?v=a4e473f"></script>
-    <script src="js/army-config.js?v=a4e473f"></script>
-    <script src="js/battlefield.js?v=a4e473f"></script>
-    <script src="js/playback.js?v=a4e473f"></script>
-    <script src="js/battle-log.js?v=a4e473f"></script>
-    <script src="js/app.js?v=a4e473f"></script>
+    <script src="js/generals-data.js?v=25cbd3e"></script>
+    <script src="js/covenants-data.js?v=25cbd3e"></script>
+    <script src="js/generals-page.js?v=25cbd3e"></script>
+    <script src="js/info-pages.js?v=25cbd3e"></script>
+    <script src="js/troop-data.js?v=25cbd3e"></script>
+    <script src="js/battle-engine.js?v=25cbd3e"></script>
+    <script src="js/army-config.js?v=25cbd3e"></script>
+    <script src="js/battlefield.js?v=25cbd3e"></script>
+    <script src="js/playback.js?v=25cbd3e"></script>
+    <script src="js/battle-log.js?v=25cbd3e"></script>
+    <script src="js/setup-persistence.js?v=25cbd3e"></script>
+    <script src="js/app.js?v=25cbd3e"></script>
     <script data-goatcounter="https://slowmock.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

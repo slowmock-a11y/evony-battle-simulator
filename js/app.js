@@ -13,6 +13,7 @@ var App = (function () {
     function init() {
         ArmyConfig.init('attacker-panel');
         ArmyConfig.init('defender-panel');
+        SetupPersistence.init();
         Battlefield.init();
         BattleLog.init();
 
@@ -69,10 +70,11 @@ var App = (function () {
         const defCounts = ArmyConfig.getTroopCounts('defender-panel');
         attBuffs = ArmyConfig.getBuffs('attacker-panel');
         defBuffs = ArmyConfig.getBuffs('defender-panel');
+        const archerTower = ArmyConfig.getArcherTower('defender-panel');
 
-        // Simulate on throwaway copies
-        const simAtt = BattleEngine.createArmy(attCounts, attBuffs);
-        const simDef = BattleEngine.createArmy(defCounts, defBuffs);
+        // Simulate on throwaway copies (attacker side never gets an Archer Tower).
+        const simAtt = BattleEngine.createArmy(attCounts, attBuffs, null);
+        const simDef = BattleEngine.createArmy(defCounts, defBuffs, archerTower);
 
         const attTotal = simAtt.layers.reduce((s, l) => s + l.count, 0);
         const defTotal = simDef.layers.reduce((s, l) => s + l.count, 0);
@@ -85,8 +87,8 @@ var App = (function () {
         battleResult = BattleEngine.simulate(simAtt, simDef, { maxRounds: maxRounds });
 
         // Create fresh display armies (not mutated by simulation)
-        displayAtt = BattleEngine.createArmy(attCounts, attBuffs);
-        displayDef = BattleEngine.createArmy(defCounts, defBuffs);
+        displayAtt = BattleEngine.createArmy(attCounts, attBuffs, null);
+        displayDef = BattleEngine.createArmy(defCounts, defBuffs, archerTower);
 
         Battlefield.render(displayAtt, displayDef, attBuffs, defBuffs);
         Battlefield.updateSummary(displayAtt, displayDef);

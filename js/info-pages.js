@@ -1,7 +1,7 @@
 var InfoPages = (function () {
     'use strict';
 
-    const VIEWS = ['simulator', 'about', 'mechanics', 'battlefield-investigation', 'generals'];
+    const VIEWS = ['simulator', 'about', 'mechanics', 'battlefield-investigation', 'archer-tower-investigation', 'generals'];
     let suppressHash = false;
 
     function parseHash() {

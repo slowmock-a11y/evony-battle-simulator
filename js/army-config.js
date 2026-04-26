@@ -42,6 +42,28 @@ var ArmyConfig = (function () {
             `;
             container.appendChild(row);
         });
+
+        // Defender-only Archer Tower row: three absolute-value inputs + phantom-fire toggle.
+        // The data-archer-stat namespace keeps these out of getBuffs's [data-buff-type] selector.
+        if (panelId === 'defender-panel') {
+            const atInfo = TroopData.TYPES.ARCHER_TOWER;
+            const row = document.createElement('div');
+            row.className = 'buff-row archer-tower-row';
+            row.innerHTML = `
+                <span class="buff-label ${atInfo.colorClass}">${atInfo.name} <span class="absolute-cue">(absolute)</span></span>
+                <span class="buff-stat-label">ATK</span>
+                <input type="number" min="0" value="0" data-panel="${panelId}" data-archer-stat="atk" />
+                <span class="buff-stat-label">HP</span>
+                <input type="number" min="0" value="0" data-panel="${panelId}" data-archer-stat="hp" />
+                <span class="buff-stat-label">Range</span>
+                <input type="number" min="0" value="0" data-panel="${panelId}" data-archer-stat="range" />
+                <label class="archer-phantom-toggle" title="Fires one final volley on the round it dies">
+                    <input type="checkbox" data-panel="${panelId}" data-archer-stat="phantomFire" />
+                    Attack after death
+                </label>
+            `;
+            container.appendChild(row);
+        }
     }
 
     // --- Troop Grid ---
@@ -193,9 +215,74 @@ var ArmyConfig = (function () {
         return buffs;
     }
 
+    function getArcherTower(panelId) {
+        if (panelId !== 'defender-panel') return null;
+        function readNum(stat) {
+            const el = document.querySelector(`input[data-panel="${panelId}"][data-archer-stat="${stat}"]`);
+            return el ? (parseFloat(el.value) || 0) : 0;
+        }
+        const atk = readNum('atk');
+        const hp = readNum('hp');
+        const range = readNum('range');
+        if (atk <= 0 && hp <= 0 && range <= 0) return null;
+        const phantomEl = document.querySelector(`input[data-panel="${panelId}"][data-archer-stat="phantomFire"]`);
+        return { atk: atk, hp: hp, range: range, phantomFire: phantomEl ? phantomEl.checked : false };
+    }
+
+    function getDefaultCount(panelId) {
+        const inp = document.querySelector(`.default-count-input[data-panel="${panelId}"]`);
+        if (!inp) return 0;
+        const v = parseInt(inp.value, 10);
+        return (isNaN(v) || v < 0) ? 0 : v;
+    }
+
+    // --- Write Values ---
+
+    function setTroopCounts(panelId, counts) {
+        document.querySelectorAll(`input[data-panel="${panelId}"][data-type]`).forEach((inp) => {
+            const type = inp.dataset.type;
+            const tier = parseInt(inp.dataset.tier, 10);
+            const v = counts && counts[type] && typeof counts[type][tier] === 'number' ? counts[type][tier] : 0;
+            inp.value = String(Math.max(0, Math.floor(v)));
+        });
+    }
+
+    function setBuffs(panelId, buffs) {
+        document.querySelectorAll(`input[data-panel="${panelId}"][data-buff-type]`).forEach((inp) => {
+            const type = inp.dataset.buffType;
+            const stat = inp.dataset.buffStat;
+            const v = (buffs && buffs[type] && typeof buffs[type][stat] === 'number') ? buffs[type][stat] : 0;
+            inp.value = String(v);
+        });
+    }
+
+    function setArcherTower(panelId, archer) {
+        if (panelId !== 'defender-panel') return;
+        const a = archer || { atk: 0, hp: 0, range: 0, phantomFire: false };
+        ['atk', 'hp', 'range'].forEach((stat) => {
+            const el = document.querySelector(`input[data-panel="${panelId}"][data-archer-stat="${stat}"]`);
+            if (el) el.value = String(Math.max(0, parseFloat(a[stat]) || 0));
+        });
+        const phantomEl = document.querySelector(`input[data-panel="${panelId}"][data-archer-stat="phantomFire"]`);
+        if (phantomEl) phantomEl.checked = !!a.phantomFire;
+    }
+
+    function setDefaultCount(panelId, value) {
+        const inp = document.querySelector(`.default-count-input[data-panel="${panelId}"]`);
+        if (!inp) return;
+        const v = parseInt(value, 10);
+        inp.value = String(isNaN(v) || v < 0 ? 0 : v);
+    }
+
     return {
         init: init,
         getTroopCounts: getTroopCounts,
-        getBuffs: getBuffs
+        getBuffs: getBuffs,
+        getArcherTower: getArcherTower,
+        getDefaultCount: getDefaultCount,
+        setTroopCounts: setTroopCounts,
+        setBuffs: setBuffs,
+        setArcherTower: setArcherTower,
+        setDefaultCount: setDefaultCount
     };
 })();

@@ -13,10 +13,13 @@ var Battlefield = (function () {
 
     const BATTLEFIELD_LENGTH = 1500;
 
-    // Y positions: top = back line (long range), bottom = front line
-    const Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80 };
+    // Y positions: top = back line (long range), bottom = front line.
+    // ARCHER_TOWER sits at Y=100 (defender-only bottom row).
+    const Y_POSITIONS = { SIEGE: 20, RANGED: 40, MOUNTED: 60, GROUND: 80, ARCHER_TOWER: 100 };
 
-    const TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S' };
+    // Single-letter codes used in range-tip labels (e.g. "← A800"). The marker
+    // icon below uses a separate "AT" string so the tower is recognisable on its row.
+    const TYPE_LETTERS = { GROUND: 'G', RANGED: 'R', MOUNTED: 'M', SIEGE: 'S', ARCHER_TOWER: 'A' };
 
     // Engine positions (0–1500), updated from events
     let currentPositions = null;
@@ -24,7 +27,7 @@ var Battlefield = (function () {
     function defaultPositions() {
         return {
             ATT: { SIEGE: 0, RANGED: 0, MOUNTED: 0, GROUND: 0 },
-            DEF: { SIEGE: BATTLEFIELD_LENGTH, RANGED: BATTLEFIELD_LENGTH, MOUNTED: BATTLEFIELD_LENGTH, GROUND: BATTLEFIELD_LENGTH }
+            DEF: { SIEGE: BATTLEFIELD_LENGTH, RANGED: BATTLEFIELD_LENGTH, MOUNTED: BATTLEFIELD_LENGTH, GROUND: BATTLEFIELD_LENGTH, ARCHER_TOWER: BATTLEFIELD_LENGTH }
         };
     }
 
@@ -58,9 +61,11 @@ var Battlefield = (function () {
         const offsets = {};
         if (!layers) return offsets;
 
-        // Group layers by (type, range) — same range = same visual circle
+        // Group layers by (type, range) — same range = same visual circle.
+        // Skip ARCHER_TOWER: it has no tiers, no stats lookup, and renders standalone.
         const byTypeRange = {};
         layers.forEach((l) => {
+            if (l.type === 'ARCHER_TOWER') return;
             const stats = TroopData.getStats(l.type, l.tier);
             const key = `${l.type}_R${stats.range}`;
             if (!byTypeRange[key]) byTypeRange[key] = { type: l.type, range: stats.range, tiers: [] };
@@ -217,9 +222,18 @@ var Battlefield = (function () {
     }
 
     function placeLayerMarkers(army, startSnap, buffs, side) {
+        // Archer Tower has no tiers and is rendered as a separate fixture marker —
+        // skip it in the troop-grouping loop and render explicitly afterwards.
+        // AT also never appears on the attacker side.
+        if (side === 'DEF') {
+            const atStart = startSnap.find((sl) => sl.type === 'ARCHER_TOWER');
+            if (atStart) placeArcherTowerMarker(army, side);
+        }
+
         // Group layers by (type, range) — same range = same position always
         const groups = {};
         startSnap.forEach((sl) => {
+            if (sl.type === 'ARCHER_TOWER') return;
             const stats = TroopData.getStats(sl.type, sl.tier);
             const groupKey = `${sl.type}_R${stats.range}`;
             if (!groups[groupKey]) {
@@ -318,6 +332,60 @@ var Battlefield = (function () {
 
             container.appendChild(marker);
         }
+    }
+
+    function placeArcherTowerMarker(army, side) {
+        // Defender-only fixed-position marker at (BATTLEFIELD_LENGTH, Y=100).
+        // Renders an HP-fraction bar instead of a troop count.
+        if (side !== 'DEF') return;
+        const at = army.layers.find((l) => l.type === 'ARCHER_TOWER');
+        if (!at) return;
+
+        const info = TroopData.TYPES.ARCHER_TOWER;
+        const screenX = mapToScreen(BATTLEFIELD_LENGTH);
+        const screenY = Y_POSITIONS.ARCHER_TOWER;
+
+        const marker = document.createElement('div');
+        marker.className = 'unit-marker unit-marker-archer-tower';
+        marker.dataset.type = 'ARCHER_TOWER';
+        marker.dataset.tier = '1';
+        marker.dataset.tiers = '1';
+        marker.dataset.side = side;
+        if (at.count <= 0) marker.classList.add('eliminated');
+
+        marker.style.left = `${screenX}%`;
+        marker.style.top = `${screenY}%`;
+        marker.style.transform = 'translate(calc(-50% + 22px), -50%)';
+
+        const icon = document.createElement('div');
+        icon.className = `unit-icon icon-archer-tower`;
+        icon.textContent = 'AT';
+        marker.appendChild(icon);
+
+        const hpFrac = Math.max(0, Math.min(1, at.count));
+        const hpBar = document.createElement('div');
+        hpBar.className = 'archer-tower-hp-bar';
+        hpBar.innerHTML = `<div class="archer-tower-hp-fill" style="width:${hpFrac * 100}%"></div>`;
+        marker.appendChild(hpBar);
+
+        const label = document.createElement('div');
+        label.className = 'unit-label';
+        label.textContent = info.name;
+        marker.appendChild(label);
+
+        marker.addEventListener('mouseenter', (e) => {
+            tooltipEl.innerHTML = `
+                <div class="tt-title ${info.colorClass}">${info.name} (DEF)</div>
+                <div class="tt-row">ATK: ${Math.round(at.atk).toLocaleString()} · HP: ${Math.round(at.hp).toLocaleString()} · Range: ${Math.round(at.range).toLocaleString()}</div>
+                <div class="tt-row">HP fraction: ${Math.round(hpFrac * 100)}%${at.phantomFire ? ' · phantom-fire ON' : ''}</div>
+            `;
+            tooltipEl.style.display = 'block';
+            moveTooltip(e);
+        });
+        marker.addEventListener('mousemove', (e) => moveTooltip(e));
+        marker.addEventListener('mouseleave', () => hideTooltip());
+
+        container.appendChild(marker);
     }
 
     // --- Detail Panel ---
@@ -741,7 +809,10 @@ var Battlefield = (function () {
     // Tip markers + firefight-zone shade for Ranged and Siege rows.
     // One tip per unique buffed range per (type, side); zone uses max reach.
     function renderAllRangeIndicators() {
-        const TYPES_WITH_RANGE = ['RANGED', 'SIEGE'];
+        // ARCHER_TOWER is defender-only with one user-configured range; the loops
+        // below naturally produce zero entries on the attacker side and the
+        // firefight-zone branch's early return prevents a zone from rendering.
+        const TYPES_WITH_RANGE = ['RANGED', 'SIEGE', 'ARCHER_TOWER'];
 
         // Per (side, type): list of { range, repTier, unitPos, tipPos } for each unique alive buffed range.
         const reach = { ATT: {}, DEF: {} };

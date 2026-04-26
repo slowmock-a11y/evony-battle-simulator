@@ -123,6 +123,54 @@ select { width: auto; text-align: left; }
 
 /* === Army Setup === */
 .army-setup { margin-bottom: 1rem; }
+
+/* === Setup Controls (load / save / name / notes) === */
+.setup-controls { margin-bottom: 0.75rem; }
+.setup-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    justify-content: flex-end; flex-wrap: wrap;
+    background: #16213e; border: 1px solid #223; border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+}
+.setup-field {
+    display: flex; flex-direction: column; gap: 0.15rem;
+    font-size: 0.78rem;
+}
+.setup-field-grow { flex: 1; min-width: 160px; }
+.setup-field-label {
+    font-size: 0.68rem; color: #888;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+#setup-name { width: 180px; }
+#setup-notes { width: 100%; }
+.setup-buttons { display: flex; gap: 0.4rem; align-self: flex-end; }
+.setup-warning {
+    background: #3a2a10; border: 1px solid #8B6914; border-radius: 6px;
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    margin-bottom: 0.5rem; font-size: 0.78rem; color: #e9a045;
+    position: relative;
+}
+.setup-warning ul { margin: 0.4rem 0 0 1rem; padding: 0; color: #d8c099; }
+.setup-warning li { margin: 0.15rem 0; }
+.setup-warning code { color: #f0d090; background: rgba(0,0,0,0.2); padding: 0 0.25rem; border-radius: 2px; }
+.setup-warning-close {
+    position: absolute; top: 0.3rem; right: 0.4rem;
+    background: transparent; color: #c0a070; border: none;
+    font-size: 1.1rem; line-height: 1; cursor: pointer; padding: 0.2rem 0.4rem;
+}
+.setup-warning-close:hover { color: #fff; }
+.setup-fallback-note {
+    background: #16213e; border: 1px solid #334; border-radius: 4px;
+    padding: 0.4rem 0.6rem; margin-bottom: 0.5rem;
+    font-size: 0.72rem; color: #999;
+}
+.battle-view-active .setup-controls { display: none; }
+@media (max-width: 600px) {
+    .setup-row { flex-direction: column; align-items: stretch; }
+    .setup-buttons { justify-content: flex-end; }
+    #setup-name { width: 100%; }
+}
+
 .army-row {
     display: flex; gap: 0.75rem; align-items: flex-start;
 }
@@ -192,16 +240,19 @@ select { width: auto; text-align: left; }
 .color-ranged { color: #4caf6e; }
 .color-mounted { color: #5b9bd5; }
 .color-siege { color: #e07040; }
+.color-archer-tower { color: #b48cd9; }
 .color-sub-city { color: #b48cd9; }
 .color-duty { color: #888; }
 .bg-ground { background: #3a2e10; }
 .bg-ranged { background: #1a3320; }
 .bg-mounted { background: #1a2a3e; }
 .bg-siege { background: #3a1a10; }
+.bg-archer-tower { background: #2a1a3a; }
 .border-ground { border-color: #8B6914 !important; }
 .border-ranged { border-color: #2d8a4e !important; }
 .border-mounted { border-color: #4a7fb5 !important; }
 .border-siege { border-color: #c44e2e !important; }
+.border-archer-tower { border-color: #7c5aa3 !important; }
 
 /* === Controls Bar === */
 .controls-bar {
@@ -240,9 +291,16 @@ select { width: auto; text-align: left; }
 .battlefield {
     background: linear-gradient(180deg, #0d1a0d 0%, #1a2612 40%, #1a2612 60%, #0d1a0d 100%);
     border-radius: 6px; padding: 0;
-    width: 100%; aspect-ratio: 16 / 9; max-height: 420px;
+    /* Taller aspect ratio + larger max-height to accommodate the new
+       Archer Tower row at Y=100 without clipping the marker. */
+    width: 100%; aspect-ratio: 16 / 10; max-height: 500px;
     border: 1px solid #2a3a1a;
     position: relative; overflow: visible;
+}
+/* AT row at Y=100 sits at the container bottom — anchor the marker by its
+   bottom edge instead of its center so the full icon stays in-bounds. */
+.unit-marker.unit-marker-archer-tower {
+    transform: translate(calc(-50% + 22px), -100%) !important;
 }
 
 /* Center line */
@@ -278,6 +336,36 @@ select { width: auto; text-align: left; }
 .unit-icon.icon-ranged  { background: linear-gradient(135deg, #4caf6e, #2d8a4e); }
 .unit-icon.icon-mounted { background: linear-gradient(135deg, #5b9bd5, #4a7fb5); }
 .unit-icon.icon-siege   { background: linear-gradient(135deg, #e07040, #c44e2e); }
+.unit-icon.icon-archer-tower { background: linear-gradient(135deg, #b48cd9, #7c5aa3); }
+
+/* Archer Tower marker — defender-only fixture at the bottom row, shows HP fraction */
+.archer-tower-hp-bar {
+    width: 44px; height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px; margin-top: 3px;
+    overflow: hidden;
+}
+.archer-tower-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #b48cd9, #d6b3ff);
+    transition: width 0.3s ease;
+}
+
+/* Archer Tower row in the defender Buff section: a divider + "(absolute)" cue
+   visually separate the absolute-input row from the percent buff rows above. */
+.buff-row.archer-tower-row {
+    border-top: 1px dashed rgba(180, 140, 217, 0.35);
+    margin-top: 6px; padding-top: 6px;
+}
+.buff-row.archer-tower-row .absolute-cue {
+    font-size: 0.7rem; color: #aaa; font-weight: 400; margin-left: 4px;
+}
+.archer-phantom-toggle {
+    font-size: 0.78rem; color: #ccc;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-left: 6px; user-select: none;
+}
+.archer-phantom-toggle input[type="checkbox"] { margin: 0; }
 
 .unit-count {
     font-size: 0.72rem; font-weight: 700; color: #ddd;

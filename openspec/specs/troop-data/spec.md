@@ -66,30 +66,38 @@ T16 additionally breaks the historical pattern "Siege ATK = Siege HP": T16 Siege
 - **THEN** Speed=75 (the tier-dependent speed break is at T16, not T15)
 
 ### Requirement: Troop type metadata
-Each troop type SHALL have associated metadata: display name, color code for UI rendering, and the fixed targeting priority chain.
+Each troop type SHALL have associated metadata: display name, color code for UI rendering, and the fixed targeting priority chain. Metadata SHALL be defined for all five types — Ground, Ranged, Mounted, Siege, and Archer Tower. Archer Tower's metadata SHALL include a distinct color (different from Ranged) and a `colorClass` suffix (e.g. `color-archer-tower`) so battlefield, log, and detail views render AT separably from Ranged.
 
 #### Scenario: Mounted type metadata
 - **WHEN** the system looks up Mounted metadata
 - **THEN** it returns name="Mounted", color="#4a7fb5", targetPriority=[Ground, Siege, Mounted, Range]
 
+#### Scenario: Archer Tower type metadata
+- **WHEN** the system looks up Archer Tower metadata
+- **THEN** it returns name="Archer Tower", a distinct color (not equal to Ranged's), and targetPriority=[Mounted, Range, Ground, Siege] (PROVISIONAL — equal to Ranged's chain by default)
+
 ### Requirement: Complete damage multiplier matrix
-The `DAMAGE_MULTIPLIERS` object SHALL contain entries for all 16 attacker x defender type combinations (Ground, Ranged, Mounted, Siege). The `getMultiplier(attackerType, defenderType)` function SHALL return the exact coefficient from the matrix. Values below 1.0 represent penalties; values above 1.0 represent bonuses.
+The `DAMAGE_MULTIPLIERS` object SHALL contain entries for all 25 attacker × defender type combinations across the five types Ground, Ranged, Mounted, Siege, and Archer Tower. The `getMultiplier(attackerType, defenderType, attackerTier)` function SHALL return the exact coefficient from the matrix without any aliasing logic.
+
+The 16 cells involving the four original troop types SHALL be unchanged. Values below 1.0 represent penalties; values above 1.0 represent bonuses. The 9 new cells per band involving ARCHER_TOWER (5 in the ARCHER_TOWER row, 4 in the ARCHER_TOWER column on existing rows) SHALL each start at the matching RANGED cell as a **provisional default** and SHALL be tagged `// PROVISIONAL` in source. Each cell SHALL be a separate, independently editable named constant.
 
 Tier-dependent matrices:
 
 **T1-T10:**
-- Ground->Ground: 1.0, Ground->Ranged: 1.2, Ground->Mounted: 0.7, Ground->Siege: 1.1
-- Ranged->Ground: 0.8, Ranged->Ranged: 1.0, Ranged->Mounted: 1.2, Ranged->Siege: 1.1
-- Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: 0.9
-- Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: 0.5
+- Ground->Ground: 1.0, Ground->Ranged: 1.2, Ground->Mounted: 0.7, Ground->Siege: 1.1, Ground->ArcherTower: 1.2 (PROVISIONAL = Ground->Ranged)
+- Ranged->Ground: 0.8, Ranged->Ranged: 1.0, Ranged->Mounted: 1.2, Ranged->Siege: 1.1, Ranged->ArcherTower: 1.0 (PROVISIONAL = Ranged->Ranged)
+- Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: 0.9, Mounted->ArcherTower: 0.8 (PROVISIONAL = Mounted->Ranged)
+- Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: 0.5, Siege->ArcherTower: 0.4 (PROVISIONAL = Siege->Ranged)
+- ArcherTower->Ground: 0.8, ArcherTower->Ranged: 1.0, ArcherTower->Mounted: 1.2, ArcherTower->Siege: 1.1, ArcherTower->ArcherTower: 1.0 (all PROVISIONAL — row mirrors Ranged's row exactly)
 
 **T11-T16:**
-- Ground->Ground: 1.0, Ground->Ranged: 1.2, Ground->Mounted: 0.7, Ground->Siege: 1.1
-- Ranged->Ground: 0.8, Ranged->Ranged: 1.0, Ranged->Mounted: 1.2, Ranged->Siege: 1.1
-- Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: **1.1**
-- Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: **0.6**
+- Ground->Ground: 1.0, Ground->Ranged: 1.2, Ground->Mounted: 0.7, Ground->Siege: 1.1, Ground->ArcherTower: 1.2 (PROVISIONAL)
+- Ranged->Ground: 0.8, Ranged->Ranged: 1.0, Ranged->Mounted: 1.2, Ranged->Siege: 1.1, Ranged->ArcherTower: 1.0 (PROVISIONAL)
+- Mounted->Ground: 1.2, Mounted->Ranged: 0.8, Mounted->Mounted: 1.0, Mounted->Siege: **1.1**, Mounted->ArcherTower: 0.8 (PROVISIONAL)
+- Siege->Ground: 0.35, Siege->Ranged: 0.4, Siege->Mounted: 0.3, Siege->Siege: **0.6**, Siege->ArcherTower: 0.4 (PROVISIONAL)
+- ArcherTower->Ground: 0.8, ArcherTower->Ranged: 1.0, ArcherTower->Mounted: 1.2, ArcherTower->Siege: 1.1, ArcherTower->ArcherTower: 1.0 (all PROVISIONAL)
 
-(T16 uses the same coefficients as T11–T15 — the `attackerTier >= 11` branch in `getMultiplier()` already covers T16 without modification.)
+(T16 uses the same coefficients as T11–T15 — the `attackerTier >= 11` branch in `getMultiplier()` already covers T16 without modification. Archer Tower has no tier; calls with attackerType=ARCHER_TOWER use either band — RANGED's row is band-stable, so AT's row mirroring it is also band-stable.)
 
 #### Scenario: Counter bonus lookup
 - **WHEN** `getMultiplier('RANGED', 'MOUNTED')` is called
@@ -122,3 +130,37 @@ Tier-dependent matrices:
 #### Scenario: Siege vs Siege at T16
 - **WHEN** `getMultiplier('SIEGE', 'SIEGE')` is called for a T16 attacker
 - **THEN** it returns 0.6 (same as T11+ band)
+
+#### Scenario: AT-as-target uses provisional Ranged-equivalent column
+- **WHEN** `getMultiplier('MOUNTED', 'ARCHER_TOWER')` is called for any tier
+- **THEN** it returns 0.8 (PROVISIONAL — equal to MOUNTED → RANGED)
+
+#### Scenario: AT-as-attacker uses provisional Ranged-equivalent row
+- **WHEN** `getMultiplier('ARCHER_TOWER', 'MOUNTED')` is called
+- **THEN** it returns 1.2 (PROVISIONAL — AT row mirrors RANGED row, RANGED → MOUNTED = 1.2)
+
+#### Scenario: AT vs AT lookup
+- **WHEN** `getMultiplier('ARCHER_TOWER', 'ARCHER_TOWER')` is called
+- **THEN** it returns 1.0 (PROVISIONAL — equal to RANGED → RANGED)
+
+### Requirement: PHASE_ORDER includes ARCHER_TOWER tail
+`TroopData.PHASE_ORDER` SHALL be exactly `['GROUND', 'MOUNTED', 'RANGED', 'SIEGE', 'ARCHER_TOWER']`. The `ARCHER_TOWER` entry SHALL be the fifth and final element. Engine code that iterates PHASE_ORDER SHALL therefore process AT after SIEGE in every round.
+
+#### Scenario: PHASE_ORDER content and length
+- **WHEN** any caller reads `TroopData.PHASE_ORDER`
+- **THEN** the returned array SHALL have exactly five entries in the order GROUND, MOUNTED, RANGED, SIEGE, ARCHER_TOWER
+
+#### Scenario: PHASE_ORDER tail is ARCHER_TOWER
+- **WHEN** any caller reads the last entry of `TroopData.PHASE_ORDER`
+- **THEN** it SHALL equal `'ARCHER_TOWER'`
+
+### Requirement: TARGET_PRIORITY includes ARCHER_TOWER row
+`TroopData.TARGET_PRIORITY` SHALL include an `ARCHER_TOWER` entry. The default chain SHALL be `['MOUNTED', 'RANGED', 'GROUND', 'SIEGE']` and SHALL be tagged `// PROVISIONAL` in source — copied from RANGED's chain as a provisional default until evidence resolves the unverified-fact entry on the investigation page.
+
+#### Scenario: AT priority chain default
+- **WHEN** the engine reads `TroopData.TARGET_PRIORITY['ARCHER_TOWER']`
+- **THEN** it SHALL equal `['MOUNTED', 'RANGED', 'GROUND', 'SIEGE']`
+
+#### Scenario: Provisional tag in source
+- **WHEN** a developer reads `js/troop-data.js`
+- **THEN** the `TARGET_PRIORITY.ARCHER_TOWER` line SHALL carry a `// PROVISIONAL` comment referencing the investigation page

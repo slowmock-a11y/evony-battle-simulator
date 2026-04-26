@@ -13,6 +13,7 @@ const context = {
     JSON: JSON,
     Infinity: Infinity,
     isNaN: isNaN,
+    isFinite: isFinite,
     parseInt: parseInt,
     parseFloat: parseFloat,
     Error: Error,
@@ -21,6 +22,7 @@ const context = {
     Number: Number,
     String: String,
     Boolean: Boolean,
+    Date: Date,
     Promise: Promise
 };
 context.globalThis = context;
@@ -31,6 +33,7 @@ const files = [
     'js/battle-engine.js',
     'js/generals-data.js',
     'js/covenants-data.js',
+    'js/setup-persistence.js',
     'js/tests/test-runner.js',
     'js/tests/test-damage-formula.js',
     'js/tests/test-counter-formula.js',
@@ -40,8 +43,10 @@ const files = [
     'js/tests/test-engagement-lock.js',
     'js/tests/test-battle-end.js',
     'js/tests/test-spec-anomalies.js',
+    'js/tests/test-archer-tower.js',
     'js/tests/test-generals-data.js',
-    'js/tests/test-covenants-data.js'
+    'js/tests/test-covenants-data.js',
+    'js/tests/test-setup-persistence-codec.js'
 ];
 
 for (const f of files) {
