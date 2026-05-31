@@ -264,6 +264,9 @@
             statsEl.textContent = parts.join(' · ');
         }
 
+        document.querySelector('input[name="comma"][value="yes"]').checked = true;
+        document.querySelector('input[name="lineend"][value="crlf"]').checked = true;
+
         inputEl.addEventListener('input', update);
         document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', update));
 
