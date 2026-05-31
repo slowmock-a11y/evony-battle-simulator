@@ -179,7 +179,10 @@
             <h2>Coordinate Formatter</h2>
             <p class="tool-desc">Moves trailing coordinates to the start of each line so Evony chat recognizes them as clickable links.</p>
 
-            <label for="input">Input — one entry per line, ending with x y coordinates (0–1200)</label>
+            <div class="output-header">
+                <label for="input">Input — one entry per line, ending with x y coordinates (0–1200)</label>
+                <button class="copy-btn" id="clearBtn">Clear</button>
+            </div>
             <textarea id="input" placeholder="Ruined Stronghold 456 789&#10;Iron Mine T4 1200 0&#10;Alliance HQ 33 1100"></textarea>
 
             <div class="options-row">
@@ -263,6 +266,11 @@
 
         inputEl.addEventListener('input', update);
         document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', update));
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            inputEl.value = '';
+            update();
+        });
 
         copyBtn.addEventListener('click', () => {
             const text = outputEl.textContent;
