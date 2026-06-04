@@ -275,10 +275,10 @@
             return root === 1 ? 1 : 1 + root / 2;
         }
 
-        // Output grows as 4*K-5 lines, so cap it to keep a single message under
-        // Evony's length limit. 35 lines == 10 coordinates.
-        const MAX_LINES = 35;
-        const MAX_COORDS = Math.floor((MAX_LINES + 5) / 4); // 10
+        // Output grows as 4*K-5 lines, so cap the coordinate count to keep a single
+        // message under Evony's length limit. 9 coordinates == 31 lines.
+        const MAX_COORDS = 9;
+        const MAX_LINES = 4 * MAX_COORDS - 5; // 31
 
         function update() {
             const lines = inputEl.value.split(/\r?\n/);
