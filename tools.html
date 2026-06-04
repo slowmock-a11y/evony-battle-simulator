@@ -301,13 +301,13 @@
 
             const warnEl = document.getElementById('warn');
             if (K > 0) {
-                let msg = '⚠ Evony verlinkt in einer Nachricht nur jede zweite Koordinate und verschiebt '
-                        + 'das Sprungziel. Damit alle korrekt klicken, wird der Output mit Wiederholungen und '
-                        + '„dummy"-Zeilen aufgefüllt — er ist daher viel länger als die Eingabe und auf '
-                        + MAX_LINES + ' Zeilen (max. ' + MAX_COORDS + ' Koordinaten) begrenzt.';
+                let msg = '⚠ Evony only links every other coordinate in a message and shifts the jump '
+                        + 'target. To make them all click correctly, the output is padded with repeats and '
+                        + '"dummy" lines — so it is much longer than the input and capped at '
+                        + MAX_LINES + ' lines (max. ' + MAX_COORDS + ' coordinates).';
                 if (dropped > 0) {
-                    msg += ' Es ' + (dropped === 1 ? 'wurde 1 weitere Koordinate' : 'wurden ' + dropped + ' weitere Koordinaten')
-                         + ' weggelassen — sende sie in einer zweiten Nachricht.';
+                    msg += ' ' + (dropped === 1 ? '1 further coordinate was' : dropped + ' further coordinates were')
+                         + ' dropped — send them in a second message.';
                 }
                 warnEl.textContent = msg;
                 warnEl.classList.toggle('limit', dropped > 0);
