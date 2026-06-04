@@ -166,6 +166,18 @@
             text-align: right;
         }
 
+        .warn {
+            font-size: 0.78rem;
+            color: #f0c674;
+            background: #2a2410;
+            border: 1px solid #5a4a1a;
+            border-radius: 4px;
+            padding: 0.55rem 0.7rem;
+            margin-bottom: 0.6rem;
+            line-height: 1.45;
+        }
+        .warn.limit { color: #f1a0a0; background: #2e1414; border-color: #6a2a2a; }
+
         @media (max-width: 600px) {
             body { padding: 0 0.75rem 2rem; }
             main { margin-top: 1rem; }
@@ -198,7 +210,7 @@
     <main>
         <div class="tool-card">
             <h2>Coordinate Formatter</h2>
-            <p class="tool-desc">Converts coordinates so Evony chat recognizes them as clickable links.</p>
+            <p class="tool-desc">Makes <em>all</em> coordinates clickable inside a single Evony chat message. Evony's parser only links every other coordinate and shifts the jump target, so the output is padded with repeats and dummy lines to cancel that out — paste the whole block as one message.</p>
 
             <div class="output-header">
                 <label for="input">Input — one entry per line, ending with x y coordinates (0–1200)</label>
@@ -206,28 +218,11 @@
             </div>
             <textarea id="input" placeholder="Ruined Stronghold 456 789&#10;Iron Mine T4 1200 0&#10;Alliance HQ 33 1100"></textarea>
 
-            <div class="options-row">
-                <fieldset class="option-group" style="border:none">
-                    <legend>Trailing comma</legend>
-                    <div class="radio-row">
-                        <label><input type="radio" name="comma" value="yes" checked> on</label>
-                        <label><input type="radio" name="comma" value="no"> off</label>
-                    </div>
-                </fieldset>
-
-                <fieldset class="option-group" style="border:none">
-                    <legend>Line ending</legend>
-                    <div class="radio-row">
-                        <label><input type="radio" name="lineend" value="crlf" checked> Windows (CRLF)</label>
-                        <label><input type="radio" name="lineend" value="lf"> Linux (LF)</label>
-                    </div>
-                </fieldset>
-            </div>
-
             <div class="output-header">
                 <span class="output-label">Output</span>
                 <button class="copy-btn" id="copyBtn">Copy</button>
             </div>
+            <div class="warn" id="warn" hidden></div>
             <div class="output-box" id="output"></div>
             <div class="stats" id="stats"></div>
         </div>
@@ -261,40 +256,97 @@
             return x + ' ' + y + ' ' + tokens.slice(0, tokens.length - 2).join(' ');
         }
 
-        function update() {
-            const addComma = document.querySelector('input[name="comma"]:checked').value === 'yes';
-            const useCrlf  = document.querySelector('input[name="lineend"]:checked').value === 'crlf';
+        // Evony links only odd-positioned coordinates in a message, and a link at
+        // token position p jumps to token position (p+1)/2. Treating positions that
+        // share that mapping as one "chain" and filling every chain with a single
+        // value makes every clickable link display and jump to the same place.
+        //
+        //   - chain root for position 1 is itself; even positions are roots too.
+        //   - an odd position q>1 has parent (q+1)/2.
+        //   - root 1 holds coord #1; even root e holds coord #(1 + e/2).
+        //   - coord #i first becomes clickable at position 1 (i==1) or 4*i-5.
+        // So K coords need a block of 4*K-5 positions (3 for K==2, 1 for K==1).
 
+        function rootOf(p) {
+            while (p !== 1 && p % 2 === 1) p = (p + 1) / 2;
+            return p;
+        }
+        function coordIndex(root) {
+            return root === 1 ? 1 : 1 + root / 2;
+        }
+
+        // Output grows as 4*K-5 lines, so cap it to keep a single message under
+        // Evony's length limit. 35 lines == 10 coordinates.
+        const MAX_LINES = 35;
+        const MAX_COORDS = Math.floor((MAX_LINES + 5) / 4); // 10
+
+        function update() {
             const lines = inputEl.value.split(/\r?\n/);
-            const results = [];
+            const entries = [];
             let skipped = 0;
 
             for (const line of lines) {
                 if (!line.trim()) continue;
                 const out = transformLine(line);
                 if (out === null) { skipped++; continue; }
-                results.push(addComma ? out + ',' : out);
+                const t = out.split(/\s+/);
+                entries.push({ coord: t[0] + ' ' + t[1], label: t.slice(2).join(' ') });
             }
 
-            const sep = useCrlf ? '\r\n' : '\n';
-            const withSeparators = [];
-            for (const r of results) {
-                withSeparators.push(r);
-                withSeparators.push('001 001 dummy');
+            const total = entries.length;
+            const dropped = Math.max(0, total - MAX_COORDS);
+            const used = dropped > 0 ? entries.slice(0, MAX_COORDS) : entries;
+            const K = used.length;
+            const outLines = [];
+
+            const warnEl = document.getElementById('warn');
+            if (K > 0) {
+                let msg = '⚠ Evony verlinkt in einer Nachricht nur jede zweite Koordinate und verschiebt '
+                        + 'das Sprungziel. Damit alle korrekt klicken, wird der Output mit Wiederholungen und '
+                        + '„dummy"-Zeilen aufgefüllt — er ist daher viel länger als die Eingabe und auf '
+                        + MAX_LINES + ' Zeilen (max. ' + MAX_COORDS + ' Koordinaten) begrenzt.';
+                if (dropped > 0) {
+                    msg += ' Es ' + (dropped === 1 ? 'wurde 1 weitere Koordinate' : 'wurden ' + dropped + ' weitere Koordinaten')
+                         + ' weggelassen — sende sie in einer zweiten Nachricht.';
+                }
+                warnEl.textContent = msg;
+                warnEl.classList.toggle('limit', dropped > 0);
+                warnEl.hidden = false;
+            } else {
+                warnEl.hidden = true;
             }
-            outputEl.textContent = withSeparators.join(sep);
+
+            if (K > 0) {
+                const m = K === 1 ? 1 : 4 * K - 5;
+
+                // position -> the (1-based) coord whose real label sits there
+                const primaryPos = {};
+                for (let i = 1; i <= K; i++) primaryPos[i === 1 ? 1 : 4 * i - 5] = i;
+
+                for (let p = 1; p <= m; p++) {
+                    const idx = coordIndex(rootOf(p));
+                    if (idx <= K) {
+                        const e = used[idx - 1];
+                        const label = primaryPos[p] === idx ? e.label : 'dummy';
+                        outLines.push(label ? e.coord + ' ' + label : e.coord);
+                    } else {
+                        // filler position with no clickable member — keeps the
+                        // numbering contiguous so later targets line up
+                        outLines.push('1 1 dummy');
+                    }
+                }
+            }
+
+            outputEl.textContent = outLines.join('\n');
 
             const parts = [];
-            if (results.length > 0) parts.push(results.length + ' line' + (results.length !== 1 ? 's' : ''));
+            if (K > 0) parts.push(K + ' coord' + (K !== 1 ? 's' : '') + ' → ' + outLines.length + ' lines');
+            if (dropped > 0) parts.push(dropped + ' dropped');
             if (skipped > 0) parts.push(skipped + ' skipped');
             statsEl.textContent = parts.join(' · ');
         }
 
-        document.querySelector('input[name="comma"][value="yes"]').checked = true;
-        document.querySelector('input[name="lineend"][value="crlf"]').checked = true;
-
         inputEl.addEventListener('input', update);
-        document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', update));
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             inputEl.value = '';
