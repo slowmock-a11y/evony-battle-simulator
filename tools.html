@@ -259,7 +259,7 @@
             const withSeparators = [];
             for (const r of results) {
                 withSeparators.push(r);
-                withSeparators.push('-');
+                withSeparators.push('0 0 - dummy');
             }
             outputEl.textContent = withSeparators.join(sep);
 
