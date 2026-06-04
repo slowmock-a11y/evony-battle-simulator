@@ -256,7 +256,12 @@
             }
 
             const sep = useCrlf ? '\r\n' : '\n';
-            outputEl.textContent = results.join(sep);
+            const withSeparators = [];
+            for (const r of results) {
+                withSeparators.push(r);
+                withSeparators.push('-');
+            }
+            outputEl.textContent = withSeparators.join(sep);
 
             const parts = [];
             if (results.length > 0) parts.push(results.length + ' line' + (results.length !== 1 ? 's' : ''));
